@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% comment %}A narrow, centred shell for account pages that are a title plus a form.
+   The heading comes from `seo.title`, so the page title and the <h1> can
+   never drift apart. Child templates fill `auth_body`.{% endcomment %}
+
+{% block content %}
+<section class="shell shell--narrow section section--tight">
+  <div style="max-width:520px;margin:0 auto" class="stack u-gap-22">
+    <h1 class="display-3">{% block auth_title %}{{ seo.title }}{% endblock %}</h1>
+    {% block auth_body %}{% endblock %}
+  </div>
+</section>
+{% endblock %}

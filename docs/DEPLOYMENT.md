@@ -1,0 +1,135 @@
+# Deployment
+
+A single modest server runs this comfortably. The shape below is nginx +
+gunicorn + PostgreSQL behind Cloudflare; adapt freely, but keep the protected
+media arrangement intact.
+
+## Recommended stack
+
+| Piece | Choice | Why |
+| --- | --- | --- |
+| Python | 3.12 | Supported, and allows Django 5.2 LTS |
+| Django | 5.2 LTS | Security support into 2028 |
+| Database | PostgreSQL 16 | Real backups, concurrent writes |
+| App server | gunicorn, 3 workers | Simple and dependable |
+| Web server | nginx | TLS, static files, protected media |
+| CDN / DNS | Cloudflare | TLS, caching, rate limiting, DDoS |
+| Video | Cloudflare Stream | Signed playback, no server bandwidth |
+| Payments | SSLCommerz | bKash, Nagad, local and international cards |
+| Email | Any SMTP provider | Receipts and password resets |
+
+On Python 3.12, change the pin in `requirements.txt` to `Django>=5.2,<6` and
+run the test suite before deploying. The code targets both lines.
+
+## Environment
+
+Copy `.env.example` and fill it in. The ones that must be right:
+
+```
+DJANGO_SECRET_KEY=<50+ random characters, never reused>
+DJANGO_DEBUG=0
+DJANGO_ALLOWED_HOSTS=dhakabassist.com,www.dhakabassist.com
+DJANGO_CSRF_TRUSTED_ORIGINS=https://dhakabassist.com,https://www.dhakabassist.com
+SITE_BASE_URL=https://dhakabassist.com
+DJANGO_DB_URL=postgres://user:password@localhost:5432/dhakabassist
+DJANGO_PROTECTED_MEDIA_ROOT=/srv/dhakabassist/protected
+DJANGO_PROTECTED_MEDIA_INTERNAL_URL=/_protected/
+PAYMENT_GATEWAY=sslcommerz
+```
+
+`DJANGO_DEBUG=0` is what turns on HTTPS redirection, HSTS and secure cookies.
+Confirm with `manage.py check --deploy`, which must report no issues.
+
+## Deploying
+
+```bash
+.venv/bin/python -m pip install -r requirements.txt && .venv/bin/python manage.py migrate && .venv/bin/python manage.py collectstatic --noinput
+```
+
+`collectstatic` hashes and gzips every static file; with `DJANGO_DEBUG=0` it
+writes the manifest WhiteNoise needs, so skipping it breaks the site.
+
+Then restart gunicorn.
+
+## nginx
+
+Static files are served directly. Protected media is handed back to nginx
+after Django has checked access — Django never streams the bytes itself, so a
+large video does not occupy a worker.
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name dhakabassist.com www.dhakabassist.com;
+
+    client_max_body_size 512M;   # course video uploads
+
+    location /static/ {
+        alias /srv/dhakabassist/staticfiles/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Reachable only via Django's X-Accel-Redirect, never from outside.
+    location /_protected/ {
+        internal;
+        alias /srv/dhakabassist/protected/;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
+
+The `internal` directive is what makes this safe: nginx will only serve that
+location in response to Django's own header, never to a direct request. Test
+it — `curl https://your-domain/_protected/anything` must return 404.
+
+## Rate limiting
+
+Configure in Cloudflare rather than in the application: limit `/login/`,
+`/register/` and `/password/reset/` to roughly 10 requests per minute per IP.
+
+## Backups
+
+Three things must be backed up, and one of them is not the database:
+
+1. **PostgreSQL** — nightly `pg_dump`, kept off the server, retained 30 days.
+2. **`PROTECTED_MEDIA_ROOT`** — the course material. If videos are on
+   Cloudflare Stream this is small; if not, it is the largest item.
+3. **`.env`** — kept in a password manager, not in the backup set.
+
+Static files and the virtualenv do not need backing up; they are rebuilt.
+
+**Test the restore.** A backup nobody has restored is not a backup. Restore
+into a scratch database once a quarter and check a student can sign in.
+
+## Monitoring
+
+- Uptime: point a checker at `/healthz`, which returns `ok` without touching
+  the database.
+- Errors: set `ADMINS` in settings, or add Sentry.
+- Logs: gunicorn and nginx, rotated, kept two weeks.
+
+## What the owner must hold
+
+Per the brief, the course owner — not the developer — must own the domain,
+the Cloudflare account, the payment gateway account, the hosting account, the
+database, the video library and the source code. Developers are given access
+to these accounts; they do not register them in their own name.
+
+## Going live
+
+1. `manage.py check --deploy` reports no issues.
+2. `manage.py test` passes.
+3. Real SSLCommerz credentials in place; one live payment made and refunded.
+4. Video playback confirmed for an enrolled student, and confirmed to fail
+   for a signed-out visitor and an unenrolled one.
+5. `curl https://your-domain/_protected/anything` returns 404.
+6. Password reset email received at a real address.
+7. Sitemap submitted; `robots.txt` and `llms.txt` resolve.
+8. A backup taken and restored once.

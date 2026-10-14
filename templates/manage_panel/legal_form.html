@@ -1,0 +1,46 @@
+{% extends "manage_panel/base.html" %}
+{% load static %}
+
+{% block extra_js %}<script src="{% static 'js/manage.js' %}" defer></script>{% endblock %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <nav class="manage-head__crumbs" aria-label="Breadcrumb">
+      <a href="{% url 'manage:content' %}">Site content</a> / {{ page.title }}
+    </nav>
+    <h1>{{ page.title }}</h1>
+  </div>
+  <div class="cluster" style="--cluster-gap:10px">
+    <a class="btn btn--sm btn--outline" href="{{ page.get_absolute_url }}">View page</a>
+    <button class="btn btn--sm" type="submit" form="legal-form">Save changes</button>
+  </div>
+</header>
+
+<form method="post" id="legal-form" class="stack u-gap-20" novalidate style="max-width:860px">
+  {% csrf_token %}
+  {% include "includes/form_errors.html" %}
+
+  <section class="panel panel--padded field-grid" aria-label="Basics">
+    {% include "includes/field.html" with field=form.title %}
+    {% include "includes/field.html" with field=form.slug %}
+    {% include "includes/field.html" with field=form.meta_description %}
+    <label class="check" style="align-self:end">{{ form.is_published }} Published</label>
+  </section>
+
+  <section class="panel" aria-labelledby="body-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="body-title">Page text</h2>
+      <div class="md-tools">
+        <button type="button" data-md-tool="H2" data-md-target="{{ form.body_markdown.id_for_label }}">H2</button>
+        <button type="button" data-md-tool="B" data-md-target="{{ form.body_markdown.id_for_label }}">B</button>
+        <button type="button" data-md-tool="I" data-md-target="{{ form.body_markdown.id_for_label }}">I</button>
+        <button type="button" data-md-tool="List" data-md-target="{{ form.body_markdown.id_for_label }}">List</button>
+        <button type="button" data-md-tool="Link" data-md-target="{{ form.body_markdown.id_for_label }}">Link</button>
+      </div>
+    </div>
+    {{ form.body_markdown }}
+    <p class="panel__foot">Markdown. Headings, bold, lists and links are supported.</p>
+  </section>
+</form>
+{% endblock %}

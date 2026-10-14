@@ -1,0 +1,109 @@
+{% extends "manage_panel/base.html" %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <p class="manage-head__date">{% now "l, j F Y" %}</p>
+    <h1>Overview</h1>
+  </div>
+  <a class="btn btn--sm btn--outline" href="{% url 'manage:orders' %}">All orders</a>
+</header>
+
+<div class="grid-rule grid-rule--kpi">
+  {% for kpi in kpis %}
+    <div class="kpi">
+      <span class="kpi__key">{{ kpi.key }}</span>
+      <span class="kpi__value">{{ kpi.value }}</span>
+      <span class="kpi__detail">{{ kpi.detail }}</span>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="manage-grid">
+
+  {# --------------------------------------------------------- recent orders #}
+  <section class="panel" aria-labelledby="recent-orders">
+    <div class="panel__head">
+      <h2 class="panel__title" id="recent-orders">Recent orders</h2>
+      <a class="btn-link btn-link--sm" href="{% url 'manage:orders' %}">All orders</a>
+    </div>
+    <div class="table-wrap">
+      <table class="dtable">
+        <caption class="visually-hidden">The five most recent orders</caption>
+        <thead>
+          <tr><th scope="col">Student</th><th scope="col">Amount</th><th scope="col">Status</th></tr>
+        </thead>
+        <tbody>
+          {% for order in recent_orders %}
+            <tr>
+              <th scope="row">
+                <span class="dtable__name">{{ order.student.get_full_name }}</span>
+                <span class="dtable__sub">{{ order.reference }} · {{ order.get_method_display }}</span>
+              </th>
+              <td class="u-nowrap">{{ order.amount_display }}</td>
+              <td>
+                <span class="badge badge--status {% if order.status == 'paid' %}badge--ok{% elif order.status == 'failed' %}badge--err{% elif order.status == 'refunded' %}badge--neutral{% else %}badge--current{% endif %}">
+                  {{ order.get_status_display }}
+                </span>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3" class="muted">No orders yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {# ---------------------------------------------------------------- funnel #}
+  <section class="panel" aria-labelledby="funnel-title">
+    <div class="panel__head" style="display:block">
+      <h2 class="panel__title" id="funnel-title">Students reaching each module</h2>
+      {% if course %}
+        <p class="u-fs-13 muted" style="margin-top:2px">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}
+          {% if course.free_module %} · Module {{ course.free_module.number }} is the free preview{% endif %}</p>
+      {% endif %}
+    </div>
+    <div style="padding:16px 20px" class="stack u-gap-10">
+      {% for row in funnel %}
+        <div class="funnel-row">
+          <span>{{ row.number }} {{ row.title|truncatechars:22 }}</span>
+          <span class="meter meter--sm" style="background:var(--track-admin)">
+            <span class="meter__fill" style="width:{{ row.width }}%"></span>
+          </span>
+          <span class="funnel-row__count">{{ row.count }}</span>
+        </div>
+      {% empty %}
+        <p class="muted u-fs-14">No module activity yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+{% if unhandled_messages %}
+  <section class="panel" aria-labelledby="messages-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="messages-title">New contact messages</h2>
+      <a class="btn-link btn-link--sm" href="{% url 'manage:content' %}">All messages</a>
+    </div>
+    <div class="table-wrap">
+      <table class="dtable">
+        <caption class="visually-hidden">Unhandled contact messages</caption>
+        <thead><tr><th scope="col">From</th><th scope="col">Message</th><th scope="col">Received</th></tr></thead>
+        <tbody>
+          {% for item in unhandled_messages %}
+            <tr>
+              <th scope="row">
+                <span class="dtable__name">{{ item.name }}</span>
+                <span class="dtable__sub">{{ item.email }}</span>
+              </th>
+              <td>{{ item.message|truncatechars:90 }}</td>
+              <td class="muted u-nowrap">{{ item.created_at|date:"j M" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endif %}
+{% endblock %}

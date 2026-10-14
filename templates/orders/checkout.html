@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static money %}
+
+{% block content %}
+<section class="shell" style="max-width:1080px;padding-block:48px 88px">
+  <form method="post" class="duo duo--start duo--tight" novalidate>
+    {% csrf_token %}
+
+    <div class="stack u-gap-24">
+      <h1 class="display-2" style="font-size:44px">Checkout</h1>
+
+      <div class="stack u-gap-6">
+        <p class="u-fs-15 u-bold">Account</p>
+        <p class="u-fs-16">{{ user.get_full_name }} · {{ user.email }}</p>
+      </div>
+
+      <fieldset class="stack u-gap-12" style="border:0;padding:0;margin:0">
+        <legend class="u-fs-15 u-bold" style="padding:0">Payment method</legend>
+        {% for method in methods %}
+          <label class="option" style="position:relative">
+            <input type="radio" name="method" value="{{ method.value }}"
+                   {% if method.value == selected %}checked{% endif %} required>
+            <span class="option__radio" aria-hidden="true"></span>
+            <span class="stack u-gap-6" style="flex:1">
+              <span class="option__label">{{ method.label }}</span>
+              <span class="option__hint">{{ method.hint }}</span>
+            </span>
+          </label>
+        {% endfor %}
+      </fieldset>
+
+      <p class="form-note">You will be redirected to the secure payment page. Card details are
+        handled by the payment provider and never stored on {{ site.name }}.</p>
+    </div>
+
+    {# ---------------------------------------------------------- summary #}
+    <aside class="panel stack u-gap-18" aria-label="Order summary">
+      <p class="u-fs-15 u-bold">Order summary</p>
+
+      <div class="cluster" style="--cluster-gap:16px">
+        <img src="{% static 'img/logo-mark.svg' %}" alt="" width="56" height="56" style="width:56px;height:56px;flex:none">
+        <span class="stack u-gap-6">
+          <span class="u-serif" style="font-size:20px;font-weight:600">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}</span>
+          <span class="u-fs-14 muted">{{ course.module_count }} modules · lifetime access</span>
+        </span>
+      </div>
+
+      <div class="stack u-gap-10" style="border-top:1px solid var(--line);padding-top:16px;font-size:16px">
+        <div class="split" style="align-items:baseline">
+          <span>Course</span><span>{{ course.price|taka:2 }}</span>
+        </div>
+        <div class="split muted" style="align-items:baseline">
+          <span>Gateway fee</span><span>Included</span>
+        </div>
+        <div class="split u-bold u-fs-19"
+             style="align-items:baseline;border-top:1px solid var(--ink);padding-top:12px;margin-top:4px">
+          <span>Total</span><span>{{ course.price|taka:2 }}</span>
+        </div>
+      </div>
+
+      <button class="btn btn--block" type="submit">
+        Pay {{ course.price|taka }}
+      </button>
+
+      <p class="u-fs-13 muted u-center">By paying you agree to the
+        <a href="{% url 'pages:legal' 'terms' %}">Terms</a> and
+        <a href="{% url 'pages:legal' 'refunds' %}">Refund Policy</a>.</p>
+    </aside>
+  </form>
+</section>
+{% endblock %}

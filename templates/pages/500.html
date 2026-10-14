@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="shell shell--narrow section section--loose stack u-gap-20 u-center">
+  <p class="eyebrow" style="align-self:center">500</p>
+  <h1 class="display-2">Something went wrong</h1>
+  <p class="lede" style="margin-inline:auto">The error has been logged. Please try again in a moment —
+    your progress and any completed payment are safe.</p>
+  <a class="btn" href="{% url 'pages:home' %}" style="align-self:center">Back to the home page</a>
+</section>
+{% endblock %}

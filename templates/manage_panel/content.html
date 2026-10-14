@@ -1,0 +1,97 @@
+{% extends "manage_panel/base.html" %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <h1>Site content</h1>
+</header>
+
+<div class="manage-grid">
+
+  {# ----------------------------------------------------------------- FAQs #}
+  <section class="panel" aria-labelledby="faqs-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="faqs-title">Frequently asked questions</h2>
+      <span class="u-fs-13 muted">{{ faqs|length }}</span>
+    </div>
+
+    {% for faq in faqs %}
+      <div class="asset-row">
+        <span class="asset-row__name">
+          <span>{{ faq.question }}</span>
+          <span class="asset-row__meta">{{ faq.answer|truncatechars:70 }}</span>
+        </span>
+        <a class="btn-link btn-link--sm" href="{% url 'admin:pages_faq_change' faq.pk %}">Edit</a>
+      </div>
+    {% empty %}
+      <p class="asset-row muted">No questions yet.</p>
+    {% endfor %}
+
+    <form method="post" action="{% url 'manage:faq_create' %}" class="stack u-gap-12" style="padding:16px 18px">
+      {% csrf_token %}
+      {% include "includes/field.html" with field=faq_form.question %}
+      {% include "includes/field.html" with field=faq_form.answer %}
+      <button class="btn btn--sm btn--outline" type="submit" style="align-self:flex-start">Add question</button>
+    </form>
+  </section>
+
+  {# ---------------------------------------------------------- legal pages #}
+  <section class="panel" aria-labelledby="legal-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="legal-title">Legal pages</h2>
+    </div>
+    {% for page in legal_pages %}
+      <div class="asset-row">
+        <span class="asset-row__name">
+          <span>{{ page.title }}</span>
+          <span class="asset-row__meta">
+            Updated {{ page.updated_at|timesince }} ago
+            {% if not page.is_published %} · unpublished{% endif %}
+          </span>
+        </span>
+        <a class="btn-link btn-link--sm" href="{% url 'manage:legal_edit' page.slug %}">Edit</a>
+      </div>
+    {% empty %}
+      <p class="asset-row muted">No legal pages yet. Run <code>manage.py seed_demo</code> or add them in the
+        <a href="{% url 'admin:pages_legalpage_changelist' %}">database admin</a>.</p>
+    {% endfor %}
+  </section>
+</div>
+
+{# ------------------------------------------------------- contact messages #}
+<section class="panel" aria-labelledby="contact-title">
+  <div class="panel__head">
+    <h2 class="panel__title" id="contact-title">Contact messages</h2>
+  </div>
+  <div class="table-wrap">
+    <table class="dtable">
+      <caption class="visually-hidden">Messages sent through the contact form</caption>
+      <thead>
+        <tr><th scope="col">From</th><th scope="col">Message</th><th scope="col">Received</th>
+            <th scope="col">Handled</th></tr>
+      </thead>
+      <tbody>
+        {% for item in contact_messages %}
+          <tr>
+            <th scope="row">
+              <span class="dtable__name">{{ item.name }}</span>
+              <span class="dtable__sub"><a href="mailto:{{ item.email }}">{{ item.email }}</a></span>
+            </th>
+            <td>{{ item.message|truncatechars:120 }}</td>
+            <td class="muted u-nowrap">{{ item.created_at|date:"j M Y" }}</td>
+            <td>
+              <form method="post" action="{% url 'manage:message_handled' item.pk %}">
+                {% csrf_token %}
+                <button class="switch" type="submit" role="switch"
+                        aria-checked="{{ item.is_handled|yesno:'true,false' }}"
+                        aria-label="Mark message from {{ item.name }} as {% if item.is_handled %}not handled{% else %}handled{% endif %}"></button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4" class="muted">No messages yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

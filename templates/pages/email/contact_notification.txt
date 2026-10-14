@@ -1,0 +1,9 @@
+A new message was sent through the DhakaBassist website.
+
+From:    {{ message.name }} <{{ message.email }}>
+Sent:    {{ message.created_at|date:"j F Y, H:i" }}
+
+{{ message.message }}
+
+---
+Reply directly to this email to answer {{ message.name }}.

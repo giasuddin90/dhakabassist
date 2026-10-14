@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="shell shell--narrow section section--loose stack u-gap-20 u-center">
+  <p class="eyebrow" style="align-self:center">404</p>
+  <h1 class="display-2">We could not find that page</h1>
+  <p class="lede" style="margin-inline:auto">The link may be out of date. The course curriculum and your
+    account are both one click away.</p>
+  <div class="cluster" style="justify-content:center;margin-top:8px">
+    <a class="btn" href="{% url 'courses:list' %}">Browse the course</a>
+    <a class="btn btn--outline" href="{% url 'pages:home' %}">Back to the home page</a>
+  </div>
+</section>
+{% endblock %}

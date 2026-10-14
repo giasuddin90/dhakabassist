@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load money %}
+
+{% block content %}
+{% comment %}Local stand-in for the gateway's hosted page. It handles no card details;
+   it exists so the success and failure paths can both be exercised.{% endcomment %}
+<section class="shell shell--narrow section section--tight">
+  <div style="max-width:480px;margin:0 auto" class="stack u-gap-22">
+    <p class="badge badge--status badge--current" style="align-self:flex-start">Sandbox gateway</p>
+    <h1 class="display-3">Confirm payment</h1>
+    <p class="lede">This is the local test gateway. No real payment is taken and no card
+      details are collected. Choose an outcome to continue.</p>
+
+    <div class="panel stack u-gap-10">
+      <div class="split" style="align-items:baseline"><span class="muted">Order</span><span>{{ order.reference }}</span></div>
+      <div class="split" style="align-items:baseline"><span class="muted">Course</span><span>{{ order.course.title }}</span></div>
+      <div class="split" style="align-items:baseline"><span class="muted">Method</span><span>{{ method_label }}</span></div>
+      <div class="split u-bold" style="align-items:baseline;border-top:1px solid var(--ink);padding-top:10px">
+        <span>Total</span><span>{{ order.amount|taka:2 }}</span>
+      </div>
+    </div>
+
+    <form method="post" action="{% url 'orders:sandbox_complete' order.reference %}" class="cluster">
+      {% csrf_token %}
+      <button class="btn" type="submit" name="result" value="success">Payment succeeded</button>
+      <button class="btn btn--outline" type="submit" name="result" value="failure">Payment failed</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% load static %}
+<header class="masthead">
+  <div class="shell masthead__inner">
+    <a class="brand" href="{% url 'pages:home' %}">
+      <img class="brand__mark" src="{% static 'img/logo-mark.svg' %}" alt="" width="38" height="38">
+      <img class="brand__word" src="{% static 'img/logo-text.svg' %}" alt="{{ site.name }}" width="106" height="26">
+    </a>
+
+    <button class="nav-toggle" type="button" data-nav-toggle
+            aria-expanded="false" aria-controls="primary-nav" aria-label="Menu">
+      <svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true" focusable="false">
+        <path d="M0 1h20M0 7h20M0 13h20" stroke="currentColor" stroke-width="1.6" fill="none"/>
+      </svg>
+    </button>
+
+    <nav class="nav" id="primary-nav" aria-label="Main">
+      <a href="{% url 'courses:list' %}"{% if nav_active == 'course' %} aria-current="page"{% endif %}>Course</a>
+      <a href="{% url 'pages:about' %}"{% if nav_active == 'about' %} aria-current="page"{% endif %}>About</a>
+      <a href="{% url 'pages:faq' %}"{% if nav_active == 'faq' %} aria-current="page"{% endif %}>FAQ</a>
+      <a href="{% url 'pages:about' %}#contact"{% if nav_active == 'contact' %} aria-current="page"{% endif %}>Contact</a>
+    </nav>
+
+    <div class="masthead__actions">
+      {% if user.is_authenticated %}
+        {% if user.is_staff %}
+          <a class="btn-link btn-link--sm" href="{% url 'manage:overview' %}">Admin</a>
+        {% endif %}
+        <a class="avatar-link" href="{% url 'courses:dashboard' %}">
+          <span class="avatar" aria-hidden="true">{{ user.initials }}</span>My courses
+        </a>
+      {% else %}
+        <a class="btn-link" href="{% url 'accounts:login' %}">Log in</a>
+        {% if primary_course %}
+          <a class="btn btn--md" href="{% url 'orders:checkout' primary_course.slug %}">Enroll</a>
+        {% else %}
+          <a class="btn btn--md" href="{% url 'courses:list' %}">Enroll</a>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</header>

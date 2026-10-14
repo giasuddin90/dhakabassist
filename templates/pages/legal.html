@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article class="shell shell--narrow section section--tight stack u-gap-24">
+  {% include "includes/breadcrumbs.html" %}
+  <h1 class="display-2">{{ page.title }}</h1>
+  <p class="u-fs-14 muted">Last updated {{ page.updated_at|date:"j F Y" }}</p>
+  <div class="prose">{{ body }}</div>
+</article>
+{% endblock %}

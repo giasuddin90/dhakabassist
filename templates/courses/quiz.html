@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="shell" style="max-width:760px;padding-block:40px 96px" data-quiz>
+  <div class="stack u-gap-28">
+
+    <div class="split" style="align-items:center">
+      <a class="btn-link btn-link--sm" href="{{ module.get_absolute_url }}">Back to lesson</a>
+      <p class="u-fs-15 muted">{{ quiz.display_title }}</p>
+    </div>
+
+    {% if finished %}
+      {# ----------------------------------------------------------- result #}
+      <div class="u-center stack u-gap-18" style="align-items:center;padding:40px 0">
+        <p class="quiz-score">{{ attempt.score_percent }}%</p>
+        <h1 class="display-3">Module {{ module.number_plain }} complete</h1>
+        {% if next_state %}
+          <p class="u-fs-18" style="line-height:1.6;max-width:44ch">
+            Module {{ next_state.module.number_plain }} · {{ next_state.module.title }} is now
+            {% if next_state.is_unlocked %}unlocked{% else %}available once you enroll{% endif %}.
+          </p>
+        {% else %}
+          <p class="u-fs-18" style="line-height:1.6;max-width:44ch">
+            That was the last module. Well done — the whole course is behind you.
+          </p>
+        {% endif %}
+        <div class="cluster" style="justify-content:center">
+          <a class="btn btn--outline" href="{% url 'courses:dashboard' %}">Back to my courses</a>
+          {% if next_state %}
+            <a class="btn" href="{{ next_state.module.get_absolute_url }}">
+              {% if next_state.is_unlocked %}Start Module {{ next_state.module.number_plain }}{% else %}Enroll to continue{% endif %}
+            </a>
+          {% endif %}
+        </div>
+        {% if quiz.allow_unlimited_retries %}
+          <form method="post" action="{% url 'courses:quiz_restart' course.slug module.slug %}">
+            {% csrf_token %}
+            <button class="btn-link btn-link--sm" type="submit">Take the quiz again</button>
+          </form>
+        {% endif %}
+      </div>
+
+    {% elif question %}
+      {# --------------------------------------------------------- question #}
+      <div class="quiz-dots" aria-hidden="true">
+        {% for dot in dots %}<span class="is-{{ dot.state }}"></span>{% endfor %}
+      </div>
+
+      <p class="u-fs-14 muted">Question {{ question_number }} of {{ question_total }}</p>
+      <h1 class="display-4" style="font-size:34px;line-height:1.2;text-wrap:pretty">{{ question.text }}</h1>
+
+      {% if question.notation %}
+        <figure style="margin:0">
+          <img src="{{ question.notation.get_absolute_url }}" alt="{{ question.notation.alt_text }}"
+               loading="lazy" decoding="async" style="width:100%;background:var(--cream);border:1px solid var(--line);border-radius:var(--radius);padding:20px">
+        </figure>
+      {% endif %}
+
+      {% if question.audio %}
+        <div class="audio-row">
+          <audio controls preload="none" style="width:100%">
+            <source src="{{ question.audio.get_absolute_url }}" type="audio/mpeg">
+            <a href="{{ question.audio.get_absolute_url }}">Download the audio</a>
+          </audio>
+          {% if question.audio.duration_display %}
+            <span class="u-fs-14 muted u-nowrap">{{ question.audio.duration_display }}</span>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <div class="stack u-gap-12">
+        {% for choice in question.choices.all %}
+          <form method="post" action="{% url 'courses:quiz_answer' course.slug module.slug %}" data-answer-form>
+              {% csrf_token %}
+              <input type="hidden" name="question" value="{{ question.id }}">
+              <input type="hidden" name="choice" value="{{ choice.id }}">
+              <button class="answer{% if choice.id in picks %}{% if choice.is_correct %} is-correct{% else %} is-wrong{% endif %}{% endif %}"
+                      type="submit"
+                      {% if solved or choice.id in picks %}disabled{% endif %}>
+                <span class="answer__letter" aria-hidden="true">{{ choice.letter }}</span>
+                <span class="answer__text">{{ choice.text }}</span>
+                <span class="answer__note" data-answer-note>
+                  {% if choice.id in picks %}{% if choice.is_correct %}Correct{% else %}Try again{% endif %}{% endif %}
+                </span>
+              </button>
+            </form>
+        {% endfor %}
+      </div>
+
+      <div class="split" style="align-items:center;min-height:52px">
+        <p class="u-fs-16" data-quiz-feedback aria-live="polite"
+           style="color:{% if solved %}var(--ok){% elif picks %}var(--err){% else %}var(--text-muted){% endif %}">
+          {% if solved %}{{ question.explanation|default:"Correct." }}
+          {% elif picks %}Not quite. Try another answer.
+          {% else %}Choose one answer.{% endif %}
+        </p>
+        <form method="post" action="{% url 'courses:quiz_advance' course.slug module.slug %}"
+              data-quiz-next{% if not solved %} hidden{% endif %}>
+          {% csrf_token %}
+          <button class="btn" type="submit">{% if is_last %}Finish quiz{% else %}Next question{% endif %}</button>
+        </form>
+      </div>
+
+    {% else %}
+      <p class="u-fs-17">This quiz has no questions yet.</p>
+      <a class="btn" href="{{ module.get_absolute_url }}" style="align-self:flex-start">Back to the lesson</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load static money %}
+
+{% block content %}
+<section class="shell" style="padding-block:40px 80px;display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
+
+  <div style="flex:999 1 520px;min-width:0" class="stack u-gap-40">
+    <div class="stack u-gap-16">
+      {% include "includes/breadcrumbs.html" %}
+      <h1 class="display-2">{{ course.title }}</h1>
+      {% if course.subtitle %}<p class="eyebrow">{{ course.subtitle }}</p>{% endif %}
+      <p class="prose" style="line-height:1.65">{{ course.summary }}</p>
+    </div>
+
+    <div class="grid-rule grid-rule--facts">
+      {% for key, value in facts %}
+        <div class="fact">
+          <span class="fact__key">{{ key }}</span>
+          <span class="fact__value">{{ value }}</span>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if description %}
+      <div class="prose">{{ description }}</div>
+    {% endif %}
+
+    <div class="stack u-gap-18" id="curriculum">
+      <div class="split" style="align-items:baseline">
+        <h2 class="display-4">Curriculum</h2>
+        <p class="u-fs-15 muted">
+          Module {{ course.free_module.number_plain|default:'1' }} is free. Each module unlocks
+          when you pass the previous quiz with 100%.
+        </p>
+      </div>
+
+      <div class="ruled" data-accordion>
+        {% for state in module_states %}
+          {% with module=state.module %}
+            <details class="disclose"{% if state.is_current %} open{% endif %}>
+              <summary>
+                <span class="u-serif" style="font-size:24px" aria-hidden="true">{{ module.number }}</span>
+                <span class="stack u-gap-6">
+                  <span class="cluster" style="--cluster-gap:10px">
+                    <span class="module-row__title">{{ module.title }}</span>
+                    {% if module.title_bn %}<span class="muted u-fs-15">{{ module.title_bn }}</span>{% endif %}
+                    {% if module.is_free %}<span class="badge">FREE</span>{% endif %}
+                  </span>
+                  <span class="u-fs-14 muted">{{ module.meta_line }}</span>
+                </span>
+                <span class="disclose__sign" aria-hidden="true"><span class="is-closed">+</span><span class="is-open">–</span></span>
+              </summary>
+              <div class="disclose__panel">
+                <p class="u-fs-16" style="line-height:1.6;max-width:60ch">{{ module.summary }}</p>
+                {% for lesson in module.lessons.all %}
+                  <span class="bullet">{{ lesson.title }}</span>
+                {% endfor %}
+                {% if state.is_unlocked %}
+                  <a class="btn-link" href="{{ module.get_absolute_url }}" style="align-self:flex-start">
+                    {% if state.is_complete %}Review this module{% else %}Open this module{% endif %}
+                  </a>
+                {% endif %}
+              </div>
+            </details>
+          {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {# --------------------------------------------------------------- sidebar #}
+  <aside class="panel panel--framed u-sticky stack u-gap-18"
+         style="flex:1 1 300px;max-width:400px" id="pricing" aria-label="Enrolment">
+    <div class="media media--wide" style="border-radius:var(--radius-sm)">
+      <span class="media__overlay">
+        <span class="play" style="width:52px;height:52px" aria-hidden="true">{% include "includes/icon_play.html" with size=16 height=18 %}</span>
+      </span>
+    </div>
+
+    <p class="cluster" style="--cluster-gap:10px;align-items:baseline">
+      <span class="price price--sm">{{ course.price|taka }}</span>
+      <span class="muted u-fs-15">one-time</span>
+    </p>
+
+    {% if access.is_enrolled %}
+      <a class="btn btn--block" href="{% url 'courses:dashboard' %}">Go to my courses</a>
+    {% else %}
+      <a class="btn btn--block" href="{% url 'orders:checkout' course.slug %}">Enroll now</a>
+      {% if not user.is_authenticated and course.free_module %}
+        <a class="btn btn--outline btn--block" href="{% url 'accounts:register' %}">
+          Try Module {{ course.free_module.number_plain }} free
+        </a>
+      {% elif course.free_module %}
+        <a class="btn btn--outline btn--block" href="{{ course.free_module.get_absolute_url }}">
+          Open Module {{ course.free_module.number_plain }}
+        </a>
+      {% endif %}
+    {% endif %}
+
+    <div class="stack u-gap-10 u-fs-15">
+      {% for item in includes %}
+        <div class="tick">{% include "includes/icon_tick.html" with size=14 %}<span>{{ item }}</span></div>
+      {% endfor %}
+    </div>
+
+    {% include "includes/payment_chips.html" %}
+
+    <p class="u-fs-13 muted" style="line-height:1.5">
+      7-day refund if you have completed fewer than two modules.
+      <a href="{% url 'pages:legal' 'refunds' %}">Refund policy</a>
+    </p>
+  </aside>
+</section>
+{% endblock %}

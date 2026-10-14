@@ -1,0 +1,82 @@
+{% extends "manage_panel/base.html" %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <h1>Students</h1>
+  <form method="get" class="cluster" style="--cluster-gap:10px">
+    {{ form.q }}
+    <button class="btn btn--sm btn--outline" type="submit">Search</button>
+    {% if query %}<a class="btn-link btn-link--sm" href="{% url 'manage:students' %}">Clear</a>{% endif %}
+  </form>
+</header>
+
+<section class="panel" aria-label="Students">
+  <div class="table-wrap">
+    <table class="dtable dtable--wide">
+      <caption class="visually-hidden">Registered students and their progress</caption>
+      <thead>
+        <tr>
+          <th scope="col">Student</th>
+          <th scope="col">Joined</th>
+          <th scope="col">Progress</th>
+          <th scope="col">Last active</th>
+          <th scope="col">Enrolled</th>
+          <th scope="col">Access</th>
+          <th scope="col"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <th scope="row">
+              <span class="dtable__name">{{ row.student.get_full_name }}</span>
+              <span class="dtable__sub">{{ row.student.email }}</span>
+            </th>
+            <td class="u-nowrap">{{ row.student.date_joined|date:"j M Y" }}</td>
+            <td>
+              <span class="cluster" style="--cluster-gap:10px">
+                <span class="meter meter--sm" style="flex:1">
+                  <span class="meter__fill" style="width:{{ row.width }}%"></span>
+                </span>
+                <span class="u-fs-13 u-nowrap">{{ row.completed }}/{{ row.total }}</span>
+              </span>
+            </td>
+            <td class="muted u-nowrap">{% if row.last_active %}{{ row.last_active|timesince }} ago{% else %}—{% endif %}</td>
+            <td>
+              {% if row.is_enrolled %}
+                <span class="badge badge--status badge--ok">Paid</span>
+              {% else %}
+                <span class="badge badge--status badge--locked">Free</span>
+              {% endif %}
+            </td>
+            <td>
+              <form method="post" action="{% url 'manage:student_access' row.student.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button class="switch" type="submit"
+                        role="switch" aria-checked="{{ row.student.access_enabled|yesno:'true,false' }}"
+                        aria-label="{% if row.student.access_enabled %}Suspend{% else %}Restore{% endif %} access for {{ row.student.get_full_name }}"></button>
+              </form>
+            </td>
+            <td>
+              {% if not row.is_enrolled and primary_course %}
+                <form method="post" action="{% url 'manage:student_grant' row.student.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="course" value="{{ primary_course.slug }}">
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button class="btn-link btn-link--sm" type="submit">Grant access</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="muted">
+            {% if query %}No students match “{{ query }}”.{% else %}No students yet.{% endif %}
+          </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="panel__foot">Showing {{ rows|length }} of {{ total }} student{{ total|pluralize }}.</p>
+</section>
+{% endblock %}

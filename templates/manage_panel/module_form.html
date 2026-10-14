@@ -1,0 +1,156 @@
+{% extends "manage_panel/base.html" %}
+{% load static %}
+
+{% block extra_js %}<script src="{% static 'js/manage.js' %}" defer></script>{% endblock %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <nav class="manage-head__crumbs" aria-label="Breadcrumb">
+      <a href="{% url 'manage:courses' %}">Courses</a> /
+      <a href="{% url 'manage:courses' %}?course={{ course.slug }}">{{ course.title }}</a> /
+      {% if module.pk %}Module {{ module.number }}{% else %}New module{% endif %}
+    </nav>
+    <h1>{{ module.title|default:"New module" }}</h1>
+  </div>
+  <div class="cluster" style="--cluster-gap:10px">
+    {% if module.pk %}
+      <span class="u-fs-13 muted">Saved {{ module.updated_at|timesince }} ago</span>
+      <a class="btn btn--sm btn--outline" href="{{ module.get_absolute_url }}">Preview as student</a>
+    {% endif %}
+    <button class="btn btn--sm" type="submit" form="module-form">
+      {% if module.pk %}Save changes{% else %}Create module{% endif %}
+    </button>
+  </div>
+</header>
+
+<div class="manage-grid manage-grid--editor">
+
+  {# ------------------------------------------------------------- main form #}
+  <form method="post" id="module-form" class="stack u-gap-20" novalidate>
+    {% csrf_token %}
+    {% include "includes/form_errors.html" %}
+
+    <div class="panel panel--padded field-grid">
+      {% include "includes/field.html" with field=form.number %}
+      {% include "includes/field.html" with field=form.title %}
+      {% include "includes/field.html" with field=form.title_bn %}
+      {% include "includes/field.html" with field=form.slug %}
+      {% include "includes/field.html" with field=form.access %}
+      {% include "includes/field.html" with field=form.status %}
+    </div>
+
+    <div class="panel panel--padded">
+      {% include "includes/field.html" with field=form.summary %}
+    </div>
+
+    {# ------------------------------------------------------------- video #}
+    <section class="panel" aria-labelledby="video-title">
+      <div class="panel__head">
+        <h2 class="panel__title" id="video-title">Video</h2>
+        {% if module.video_uid %}
+          <span class="badge badge--status badge--ok">Ready · signed playback</span>
+        {% else %}
+          <span class="badge badge--status badge--locked">No video yet</span>
+        {% endif %}
+      </div>
+      <div class="panel--padded field-grid" style="padding:20px">
+        {% include "includes/field.html" with field=form.video_provider %}
+        {% include "includes/field.html" with field=form.video_uid %}
+        {% include "includes/field.html" with field=form.video_duration_seconds %}
+        <label class="check" style="align-self:end">
+          {{ form.video_has_subtitles }} {{ form.video_has_subtitles.label }}
+        </label>
+      </div>
+      <p class="panel__foot">Students never receive a direct file link: Cloudflare playback is
+        signed per request, and a protected file is streamed only after the enrolment check.</p>
+    </section>
+
+    {# ------------------------------------------------------- lesson notes #}
+    <section class="panel" aria-labelledby="notes-title">
+      <div class="panel__head">
+        <h2 class="panel__title" id="notes-title">Lesson notes</h2>
+        <div class="md-tools">
+          {% for tool in md_tools %}
+            <button type="button" data-md-tool="{{ tool }}" data-md-target="{{ form.notes_markdown.id_for_label }}">{{ tool }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      {{ form.notes_markdown }}
+      <div class="panel__foot cluster" style="--cluster-gap:16px">
+        <span>Markdown</span>
+        <span>Images and audio can be inserted from the panels on the right</span>
+      </div>
+    </section>
+  </form>
+
+  {# ------------------------------------------------------------ media side #}
+  <div class="stack u-gap-20">
+    {% if module.pk %}
+      {% for group in media_groups %}
+        <section class="panel" aria-labelledby="group-{{ group.kind }}">
+          <div class="panel__head">
+            <h2 class="panel__title" id="group-{{ group.kind }}">{{ group.title }}</h2>
+            <span class="u-fs-13 muted">{{ group.items|length }}</span>
+          </div>
+
+          {% for asset in group.items %}
+            <div class="asset-row">
+              <span class="asset-row__name">
+                <span>{{ asset.title }}</span>
+                <span class="asset-row__meta">{{ asset.detail_line }}</span>
+              </span>
+              <form method="post" action="{% url 'manage:asset_delete' asset.pk %}">
+                {% csrf_token %}
+                <button class="btn-link btn-link--sm" type="submit">Remove</button>
+              </form>
+            </div>
+          {% empty %}
+            <p class="asset-row muted">Nothing uploaded yet.</p>
+          {% endfor %}
+
+          <form method="post" enctype="multipart/form-data"
+                action="{% url 'manage:asset_upload' course.slug module.slug %}"
+                class="stack u-gap-10" style="padding:14px 18px 16px">
+            {% csrf_token %}
+            <input type="hidden" name="asset-kind" value="{{ group.kind }}">
+            <label class="field">Title<input type="text" name="asset-title" required maxlength="200"></label>
+            <label class="field">File<input type="file" name="asset-file" required></label>
+            {% if group.kind == 'notation' %}
+              <label class="field">Alt text<input type="text" name="asset-alt_text" required maxlength="255">
+                <span class="field__help">Describes the figure for screen readers.</span></label>
+            {% endif %}
+            {% if group.kind == 'audio' %}
+              <label class="field">Duration (seconds)<input type="number" name="asset-duration_seconds" min="0" value="0"></label>
+            {% endif %}
+            <button class="btn btn--sm btn--outline" type="submit">Upload</button>
+          </form>
+
+          <p class="dropzone">{{ group.drop }}</p>
+        </section>
+      {% endfor %}
+
+      {# ---------------------------------------------------------- quiz #}
+      <section class="panel panel--padded stack u-gap-12" aria-labelledby="quiz-card">
+        <h2 class="panel__title" id="quiz-card">Quiz</h2>
+        <p class="u-fs-14 muted">
+          {% if quiz %}
+            {{ module.quiz_question_count }} question{{ module.quiz_question_count|pluralize }}
+            {% if quiz.require_perfect_score %}· 100% required to unlock the next module{% endif %}
+          {% else %}
+            No quiz yet.
+          {% endif %}
+        </p>
+        <a class="btn btn--sm btn--outline" href="{% url 'manage:quiz_edit' course.slug module.slug %}"
+           style="align-self:flex-start">{% if quiz %}Edit quiz{% else %}Create quiz{% endif %}</a>
+      </section>
+    {% else %}
+      <section class="panel panel--padded stack u-gap-10">
+        <h2 class="panel__title">Media and quiz</h2>
+        <p class="u-fs-14 muted">Save the module first. Audio, notation, downloads and the quiz
+          can then be added here.</p>
+      </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+User-agent: *
+Allow: /
+# Signed-in and payment paths hold student and order data, so they stay out
+# of every index. The views also send `noindex` headers.
+Disallow: /my-courses/
+Disallow: /learn/
+Disallow: /account/
+Disallow: /enroll/
+Disallow: /payment/
+Disallow: /receipt/
+Disallow: /login/
+Disallow: /register/
+Disallow: /logout/
+Disallow: /password/
+Disallow: /manage/
+Disallow: /django-admin/
+Disallow: /module/
+Disallow: /asset/
+
+# AI answer engines: the public pages and llms.txt are the intended source.
+User-agent: GPTBot
+Allow: /$
+Allow: /courses
+Allow: /about
+Allow: /faq
+Allow: /legal
+Allow: /llms.txt
+Disallow: /learn/
+Disallow: /my-courses/
+Disallow: /account/
+
+User-agent: ClaudeBot
+Allow: /$
+Allow: /courses
+Allow: /about
+Allow: /faq
+Allow: /legal
+Allow: /llms.txt
+Disallow: /learn/
+Disallow: /my-courses/
+Disallow: /account/
+
+User-agent: PerplexityBot
+Allow: /$
+Allow: /courses
+Allow: /about
+Allow: /faq
+Allow: /legal
+Allow: /llms.txt
+Disallow: /learn/
+Disallow: /my-courses/
+Disallow: /account/
+
+Sitemap: {{ base_url }}/sitemap.xml

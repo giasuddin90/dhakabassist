@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<section style="padding:64px 24px 96px;display:flex;justify-content:center">
+  <div style="width:100%;max-width:440px" class="stack u-gap-26">
+
+    <p style="display:flex;justify-content:center;margin:0">
+      <img src="{% static 'img/logo-mark.svg' %}" alt="" width="64" height="64" style="width:64px;height:64px">
+    </p>
+
+    <h1 class="display-3 u-center" style="font-size:38px">
+      {% if mode == 'register' %}Create your account{% else %}Welcome back{% endif %}
+    </h1>
+
+    <div class="segmented">
+      <a href="{% url 'accounts:login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}"
+         {% if mode == 'login' %}aria-current="page"{% endif %}>Log in</a>
+      <a href="{% url 'accounts:register' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}"
+         {% if mode == 'register' %}aria-current="page"{% endif %}>Create account</a>
+    </div>
+
+    <form method="post" class="stack u-gap-16" novalidate>
+      {% csrf_token %}
+      {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
+      {% include "includes/form_errors.html" %}
+
+      {% if mode == 'register' %}
+        {% include "includes/field.html" with field=form.full_name %}
+        {% include "includes/field.html" with field=form.email %}
+        {% include "includes/field.html" with field=form.password1 %}
+        {% include "includes/field.html" with field=form.password2 %}
+      {% else %}
+        {% include "includes/field.html" with field=form.username %}
+        {% include "includes/field.html" with field=form.password %}
+        <div class="split" style="align-items:center;font-size:15px">
+          <label class="check">{{ form.remember_me }} Keep me logged in</label>
+          <a href="{% url 'accounts:password_reset' %}">Forgot password?</a>
+        </div>
+      {% endif %}
+
+      <button class="btn btn--block" type="submit" style="margin-top:6px">
+        {% if mode == 'register' %}Create account{% else %}Log in{% endif %}
+      </button>
+
+      {% if mode == 'register' %}
+        <p class="form-note u-center">
+          Your free account includes Module 1. By creating an account you agree to the
+          <a href="{% url 'pages:legal' 'terms' %}">Terms</a> and
+          <a href="{% url 'pages:legal' 'privacy' %}">Privacy Policy</a>.
+        </p>
+      {% endif %}
+    </form>
+  </div>
+</section>
+{% endblock %}

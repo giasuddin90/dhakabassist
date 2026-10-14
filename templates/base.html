@@ -1,0 +1,60 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>{% block title %}{{ seo.full_title }}{% endblock %}</title>
+  <meta name="description" content="{% block description %}{{ seo.description }}{% endblock %}">
+  <meta name="robots" content="{{ seo.robots|default:'index, follow' }}">
+  {% if seo.canonical %}<link rel="canonical" href="{{ seo.canonical }}">{% endif %}
+  <meta name="author" content="{{ site.instructor }}">
+  <meta name="theme-color" content="#F1E9D2">
+
+  {# Open Graph and Twitter, so a shared link renders the same everywhere. #}
+  <meta property="og:site_name" content="{{ site.name }}">
+  <meta property="og:type" content="{{ seo.kind|default:'website' }}">
+  <meta property="og:locale" content="{{ site.locale }}">
+  <meta property="og:title" content="{{ seo.full_title }}">
+  <meta property="og:description" content="{{ seo.description }}">
+  <meta property="og:url" content="{{ seo.canonical }}">
+  <meta property="og:image" content="{{ seo.image }}">
+  <meta property="og:image:alt" content="{{ site.instructor }} playing bass">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ seo.full_title }}">
+  <meta name="twitter:description" content="{{ seo.description }}">
+  <meta name="twitter:image" content="{{ seo.image }}">
+
+  <link rel="icon" href="{% static 'img/logo-mark.svg' %}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{% static 'img/logo-mark.svg' %}">
+
+  {# The two fonts above the fold, so text paints once rather than twice. #}
+  <link rel="preload" href="{% static 'fonts/fraunces-var.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{% static 'fonts/atkinson-400-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+  {% block extra_css %}{% endblock %}
+
+  {# One @graph per page: Organization plus whatever the view added. #}
+  <script type="application/ld+json">{{ seo.json_ld }}</script>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="page">
+    {% block chrome %}{% include "includes/masthead.html" %}{% endblock %}
+
+    <main class="page__main" id="main">
+      {% block messages %}
+        {% if messages %}<div class="shell" style="padding-top:20px">{% include "includes/messages.html" %}</div>{% endif %}
+      {% endblock %}
+      {% block content %}{% endblock %}
+    </main>
+
+    {% block footer %}{% include "includes/footer.html" %}{% endblock %}
+  </div>
+
+  <script src="{% static 'js/site.js' %}" defer></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

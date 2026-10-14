@@ -1,0 +1,42 @@
+{% load static %}
+<footer class="site-footer on-dark">
+  <div class="shell site-footer__inner">
+    <div class="site-footer__cols">
+      <div class="stack u-gap-14" style="max-width:320px">
+        <img src="{% static 'img/logo-text-light.svg' %}" alt="{{ site.name }}"
+             width="122" height="30" style="height:30px;align-self:flex-start" loading="lazy" decoding="async">
+        <p class="u-fs-15" style="line-height:1.6">{{ site.tagline }}</p>
+      </div>
+
+      <nav class="site-footer__links" aria-label="Footer">
+        <div class="site-footer__group">
+          <span class="site-footer__label">Course</span>
+          <a href="{% url 'courses:list' %}">Curriculum</a>
+          {% if primary_course %}<a href="{{ primary_course.get_absolute_url }}#pricing">Pricing</a>{% endif %}
+          <a href="{% url 'pages:faq' %}">FAQ</a>
+        </div>
+        <div class="site-footer__group">
+          <span class="site-footer__label">{{ site.name }}</span>
+          <a href="{% url 'pages:about' %}">About</a>
+          <a href="{% url 'pages:about' %}#contact">Contact</a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'courses:dashboard' %}">My courses</a>
+          {% else %}
+            <a href="{% url 'accounts:login' %}">Log in</a>
+          {% endif %}
+        </div>
+        <div class="site-footer__group">
+          <span class="site-footer__label">Legal</span>
+          <a href="{% url 'pages:legal' 'terms' %}">Terms &amp; Conditions</a>
+          <a href="{% url 'pages:legal' 'privacy' %}">Privacy Policy</a>
+          <a href="{% url 'pages:legal' 'refunds' %}">Refund Policy</a>
+        </div>
+      </nav>
+    </div>
+
+    <div class="site-footer__base">
+      <span>&copy; {% now "Y" %} {{ site.name }}. All rights reserved.</span>
+      <span>Payments secured by SSLCOMMERZ</span>
+    </div>
+  </div>
+</footer>

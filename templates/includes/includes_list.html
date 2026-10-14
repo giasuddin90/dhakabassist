@@ -1,0 +1,6 @@
+{% comment %}The "what you get" tick list, shared by the pricing panel and the paywall.{% endcomment %}
+<div class="stack u-gap-10">
+  {% for item in includes %}
+    <div class="tick">{% include "includes/icon_tick.html" %}<span>{{ item }}</span></div>
+  {% endfor %}
+</div>

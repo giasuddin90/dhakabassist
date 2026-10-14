@@ -1,0 +1,115 @@
+{% extends "manage_panel/base.html" %}
+{% load static %}
+
+{% block extra_js %}<script src="{% static 'js/manage.js' %}" defer></script>{% endblock %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <nav class="manage-head__crumbs" aria-label="Breadcrumb">
+      <a href="{% url 'manage:courses' %}?course={{ course.slug }}">{{ course.title }}</a> /
+      <a href="{% url 'manage:module_edit' course.slug module.slug %}">Module {{ module.number }}</a> / Quiz
+    </nav>
+    <h1>{{ quiz.display_title }}</h1>
+  </div>
+  <button class="btn btn--sm" type="submit" form="question-form">Save question</button>
+</header>
+
+<div class="manage-grid manage-grid--quiz">
+
+  {# ------------------------------------------------------- question list #}
+  <div class="stack u-gap-16">
+    <section class="panel question-list" aria-label="Questions">
+      {% for item in questions %}
+        <a href="?q={{ forloop.counter }}" data-question-link
+           {% if item.pk == question.pk %}aria-current="true"{% endif %}
+           style="display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line-soft);text-decoration:none;font-size:14px;line-height:1.4;{% if item.pk == question.pk %}background:var(--highlight-strong){% endif %}">
+          <span class="question-list__n">Q{{ forloop.counter }}</span>
+          <span>{{ item.text|truncatechars:70 }}</span>
+        </a>
+      {% endfor %}
+      <form method="post" action="{% url 'manage:question_add' course.slug module.slug %}">
+        {% csrf_token %}
+        <button type="submit"
+                style="width:100%;padding:13px 16px;background:none;border:0;font-size:14px;font-weight:700;cursor:pointer;color:var(--ink);text-align:left">
+          + Add question
+        </button>
+      </form>
+    </section>
+
+    {# ------------------------------------------------------------ rules #}
+    <form method="post" action="{% url 'manage:quiz_settings' course.slug module.slug %}"
+          class="panel panel--padded stack u-gap-12">
+      {% csrf_token %}
+      <p class="u-bold u-fs-14">Rules</p>
+      {% include "includes/field.html" with field=quiz_form.title %}
+      <label class="switch-row">
+        {{ quiz_form.require_perfect_score.label }}
+        {{ quiz_form.require_perfect_score }}
+      </label>
+      <label class="switch-row">
+        {{ quiz_form.allow_unlimited_retries.label }}
+        {{ quiz_form.allow_unlimited_retries }}
+      </label>
+      <button class="btn btn--sm btn--outline" type="submit" style="align-self:flex-start">Save rules</button>
+    </form>
+  </div>
+
+  {# --------------------------------------------------------- question edit #}
+  <form method="post" id="question-form" data-question-form
+        class="panel panel--padded stack u-gap-18" novalidate>
+    {% csrf_token %}
+    {% include "includes/form_errors.html" %}
+
+    <label class="field" for="{{ form.text.id_for_label }}">
+      Question {{ question_index|add:1 }}
+      {{ form.text }}
+      {% for error in form.text.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
+    </label>
+
+    <div class="field-grid" style="grid-template-columns:1fr 1fr">
+      {% include "includes/field.html" with field=form.notation %}
+      {% include "includes/field.html" with field=form.audio %}
+    </div>
+    <p class="u-fs-13 muted">Notation and audio come from this module's media panels.
+      <a href="{% url 'manage:module_edit' course.slug module.slug %}">Upload more</a>.</p>
+
+    {# ------------------------------------------------------ answer options #}
+    <div class="stack u-gap-10">
+      <div class="split" style="align-items:baseline">
+        <span class="u-bold u-fs-13">Answer options</span>
+        <span class="u-fs-13 muted">Select the correct answer</span>
+      </div>
+
+      {{ formset.management_form }}
+      {% for option, radio in option_rows %}
+        <div class="answer-edit">
+          <label class="answer-edit__radio">
+            {{ radio.tag }}<span aria-hidden="true"></span>
+            <span class="visually-hidden">Mark option {{ option.instance.letter }} as the correct answer</span>
+          </label>
+          <span class="u-bold u-fs-14" style="width:16px" aria-hidden="true">{{ option.instance.letter }}</span>
+          {{ option.id }}{{ option.text }}
+          {% if option.instance.is_correct %}<span class="answer-edit__tag">Correct answer</span>{% endif %}
+        </div>
+        {% for error in option.text.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
+      {% endfor %}
+      {% for error in form.correct.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
+    </div>
+
+    {% include "includes/field.html" with field=form.explanation help="Shown once the correct answer is selected." %}
+
+    <div class="split" style="align-items:center">
+      <button class="btn btn--sm" type="submit">Save question</button>
+      {% if questions|length > 1 %}
+        <button class="btn-link btn-link--sm" type="submit" form="delete-question-{{ question.pk }}">Delete this question</button>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+{% if questions|length > 1 %}
+  <form method="post" id="delete-question-{{ question.pk }}"
+        action="{% url 'manage:question_delete' question.pk %}" hidden>{% csrf_token %}</form>
+{% endif %}
+{% endblock %}

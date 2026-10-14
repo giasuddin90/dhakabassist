@@ -1,0 +1,43 @@
+{% extends "manage_panel/base.html" %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <nav class="manage-head__crumbs" aria-label="Breadcrumb">
+      <a href="{% url 'manage:courses' %}">Courses</a> / {% if course %}{{ course.title }}{% else %}New course{% endif %}
+    </nav>
+    <h1>{% if course %}Course settings{% else %}New course{% endif %}</h1>
+  </div>
+  <button class="btn btn--sm" type="submit" form="course-form">
+    {% if course %}Save changes{% else %}Create course{% endif %}
+  </button>
+</header>
+
+<form method="post" id="course-form" class="stack u-gap-20" novalidate style="max-width:860px">
+  {% csrf_token %}
+  {% include "includes/form_errors.html" %}
+
+  <section class="panel panel--padded field-grid" aria-label="Basics">
+    {% include "includes/field.html" with field=form.title %}
+    {% include "includes/field.html" with field=form.subtitle %}
+    {% include "includes/field.html" with field=form.slug %}
+    {% include "includes/field.html" with field=form.level %}
+    {% include "includes/field.html" with field=form.price %}
+    {% include "includes/field.html" with field=form.status %}
+    {% include "includes/field.html" with field=form.requires %}
+    {% include "includes/field.html" with field=form.trailer_label %}
+    {% include "includes/field.html" with field=form.trailer_duration %}
+  </section>
+
+  <section class="panel panel--padded stack u-gap-16" aria-label="Description">
+    {% include "includes/field.html" with field=form.summary %}
+    {% include "includes/field.html" with field=form.description %}
+  </section>
+
+  <section class="panel panel--padded stack u-gap-16" aria-labelledby="seo-title">
+    <h2 class="panel__title" id="seo-title">Search appearance</h2>
+    {% include "includes/field.html" with field=form.meta_title help="Up to 70 characters. Falls back to the course title." %}
+    {% include "includes/field.html" with field=form.meta_description help="Up to 170 characters. Falls back to the summary." %}
+  </section>
+</form>
+{% endblock %}

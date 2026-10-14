@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load money %}
+
+{% block content %}
+<section class="shell" style="max-width:1080px;padding-block:48px 88px">
+  <div style="max-width:560px;margin:24px auto" class="u-center stack u-gap-20">
+    <span style="width:72px;height:72px;border-radius:50%;background:var(--ink);display:grid;place-items:center;align-self:center" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 16 16" focusable="false"><path d="M2 8.5l3.5 3.5L14 4" fill="none" stroke="#F1E9D2" stroke-width="2"/></svg>
+    </span>
+
+    <h1 class="display-2" style="font-size:44px">
+      {% if order.status == 'paid' %}You are enrolled{% else %}Order {{ order.get_status_display|lower }}{% endif %}
+    </h1>
+
+    {% if order.status == 'paid' %}
+      <p class="u-fs-18" style="line-height:1.6">Payment of {{ order.amount|taka }}
+        received. A receipt has been sent to {{ order.student.email }}.</p>
+    {% else %}
+      <p class="u-fs-18" style="line-height:1.6">{{ order.failure_reason|default:"This order has not been paid." }}</p>
+    {% endif %}
+
+    <div class="panel stack u-gap-8" style="width:100%;text-align:left;font-size:15px">
+      <div class="split" style="align-items:baseline"><span class="muted">Order</span><span>{{ order.reference }}</span></div>
+      <div class="split" style="align-items:baseline"><span class="muted">Method</span><span>{{ order.get_method_display }}</span></div>
+      <div class="split" style="align-items:baseline"><span class="muted">Date</span><span>{{ order.paid_at|default:order.created_at|date:"j M Y" }}</span></div>
+      {% if order.gateway_reference %}
+        <div class="split" style="align-items:baseline"><span class="muted">Gateway reference</span><span class="u-mono u-fs-13">{{ order.gateway_reference }}</span></div>
+      {% endif %}
+    </div>
+
+    {% if order.status == 'paid' and first_module %}
+      <a class="btn" href="{{ first_module.get_absolute_url }}" style="align-self:center">Start Module {{ first_module.number_plain }}</a>
+    {% else %}
+      <a class="btn" href="{% url 'orders:checkout' order.course.slug %}" style="align-self:center">Try again</a>
+    {% endif %}
+
+    <a class="btn-link btn-link--sm" href="{% url 'accounts:orders' %}">Order history</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="shell shell--wide learn">
+
+  {# --------------------------------------------------------- module nav #}
+  <aside class="learn__aside" aria-label="Course modules">
+    <div class="stack u-gap-8">
+      <p class="u-serif u-fs-19" style="font-weight:600;font-size:20px">{{ course.title }}</p>
+      <div class="meter meter--sm" role="progressbar"
+           aria-valuenow="{{ access.percent_complete }}" aria-valuemin="0" aria-valuemax="100"
+           aria-label="Course progress">
+        <span class="meter__fill" style="width:{{ access.percent_complete }}%"></span>
+      </div>
+      <p class="u-fs-13 muted">{{ access.completed_count }} of {{ access.total_count }} complete</p>
+    </div>
+
+    <nav class="module-nav">
+      {% for state in module_states %}
+        {% with m=state.module %}
+          {% if state.is_unlocked %}
+            <a href="{{ m.get_absolute_url }}"
+               class="module-nav__item{% if m.id == module.id %} is-current{% endif %}"
+               {% if m.id == module.id %}aria-current="page"{% endif %}>
+              <span class="module-nav__dot{% if state.is_complete %} is-done{% endif %}" aria-hidden="true">
+                {% if state.is_complete %}
+                  <svg width="11" height="11" viewBox="0 0 16 16" focusable="false"><path d="M2 8.5l3.5 3.5L14 4" fill="none" stroke="#F1E9D2" stroke-width="2.4"/></svg>
+                {% endif %}
+              </span>
+              <span><span class="module-nav__number">{{ m.number }}</span>{{ m.title }}</span>
+            </a>
+          {% else %}
+            <span class="module-nav__item is-locked">
+              <span class="module-nav__dot" aria-hidden="true">{% include "includes/icon_lock.html" with size=10 height=11 %}</span>
+              <span><span class="module-nav__number">{{ m.number }}</span>{{ m.title }}
+                <span class="visually-hidden">(locked)</span></span>
+            </span>
+          {% endif %}
+        {% endwith %}
+      {% endfor %}
+    </nav>
+  </aside>
+
+  {# ------------------------------------------------------------- lesson #}
+  <article class="learn__main">
+    <header class="stack u-gap-8">
+      <p class="u-fs-14 muted">Module {{ module.number }}{% if module.title_bn %} · {{ module.title_bn }}{% endif %}</p>
+      <h1 class="display-3">{{ module.title }}</h1>
+      {% if module.summary %}<p class="u-fs-17 muted" style="line-height:1.6;max-width:62ch">{{ module.summary }}</p>{% endif %}
+    </header>
+
+    {# ------------------------------------------------------------- video #}
+    {% if playback %}
+      <div class="media media--wide">
+        {% if playback.kind == "iframe" %}
+          <iframe src="{{ playback.src }}" title="{{ module.title }} — video lesson"
+                  loading="lazy" allow="accelerometer; gyroscope; encrypted-media; picture-in-picture;"
+                  allowfullscreen></iframe>
+        {% else %}
+          <video controls preload="metadata"
+                 data-position-url="{% url 'courses:video_position' module.pk %}"
+                 data-start-at="{{ progress.video_position_seconds|default:0 }}"
+                 data-csrf="{{ csrf_token }}"
+                 {% if module.video_has_subtitles %}aria-describedby="subtitle-note"{% endif %}>
+            <source src="{{ playback.src }}" type="video/mp4">
+            Your browser cannot play this video.
+            <a href="{{ playback.src }}">Open the video file</a> instead.
+          </video>
+        {% endif %}
+      </div>
+      {% if module.video_duration_display or module.video_has_subtitles %}
+        <p class="u-fs-14 muted" id="subtitle-note">
+          {% if module.video_duration_display %}{{ module.video_duration_display }}{% endif %}
+          {% if module.video_has_subtitles %}{% if module.video_duration_display %} · {% endif %}English subtitles{% endif %}
+        </p>
+      {% endif %}
+    {% endif %}
+
+    {# -------------------------------------------------------------- tabs #}
+    <div class="tabs" role="tablist" aria-label="Lesson material" data-tabs>
+      <button type="button" role="tab" id="tab-notes" data-tab="notes"
+              aria-controls="panel-notes" aria-selected="true">Lesson notes</button>
+      {% if module.audio_assets %}
+        <button type="button" role="tab" id="tab-audio" data-tab="audio"
+                aria-controls="panel-audio" aria-selected="false" tabindex="-1">Audio</button>
+      {% endif %}
+      {% if module.download_assets %}
+        <button type="button" role="tab" id="tab-files" data-tab="files"
+                aria-controls="panel-files" aria-selected="false" tabindex="-1">Downloads</button>
+      {% endif %}
+    </div>
+
+    {% comment %}Every panel is rendered server-side, so the content is present
+       without JavaScript; the tab script only hides the inactive ones.{% endcomment %}
+    <section class="prose" id="panel-notes" role="tabpanel" aria-labelledby="tab-notes">
+      {% if notes %}{{ notes }}{% else %}<p class="muted">Notes for this module are being prepared.</p>{% endif %}
+    </section>
+
+    {% if module.audio_assets %}
+      <section id="panel-audio" role="tabpanel" aria-labelledby="tab-audio" class="stack u-gap-12" style="max-width:700px">
+        {% for asset in module.audio_assets %}
+          <div class="audio-row">
+            <div class="stack u-gap-8" style="flex:1;min-width:0">
+              <p class="u-fs-16 u-bold">{{ asset.title }}</p>
+              <audio controls preload="none" style="width:100%">
+                <source src="{{ asset.get_absolute_url }}" type="audio/mpeg">
+                <a href="{{ asset.get_absolute_url }}">Download the audio</a>
+              </audio>
+            </div>
+            {% if asset.duration_display %}<span class="u-fs-14 muted u-nowrap">{{ asset.duration_display }}</span>{% endif %}
+          </div>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    {% if module.download_assets %}
+      <section id="panel-files" role="tabpanel" aria-labelledby="tab-files" class="ruled" style="max-width:700px">
+        {% for asset in module.download_assets %}
+          <div class="split" style="padding:16px 0;align-items:center">
+            <span class="stack u-gap-6">
+              <span class="u-fs-16 u-bold">{{ asset.title }}</span>
+              <span class="u-fs-14 muted">{{ asset.detail_line }}</span>
+            </span>
+            <a class="u-fs-15" href="{{ asset.get_absolute_url }}" download>Download</a>
+          </div>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    {# -------------------------------------------------------------- quiz #}
+    {% if quiz and module.quiz_question_count %}
+      <div class="panel panel--framed split" style="margin-top:12px;background:transparent;align-items:center;padding:24px 26px">
+        <div class="stack u-gap-6">
+          <p class="u-serif" style="font-size:22px;font-weight:600">{{ quiz.display_title }}</p>
+          <p class="u-fs-15 muted">
+            {{ module.quiz_question_count }} question{{ module.quiz_question_count|pluralize }}
+            {% if quiz.require_perfect_score %}· answer all correctly to unlock the next module{% endif %}
+          </p>
+        </div>
+        <a class="btn" href="{% url 'courses:quiz' course.slug module.slug %}">
+          {% if state.is_complete %}Retake quiz{% else %}Start quiz{% endif %}
+        </a>
+      </div>
+    {% endif %}
+  </article>
+</div>
+{% endblock %}

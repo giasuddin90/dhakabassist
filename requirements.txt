@@ -1,0 +1,29 @@
+# Direct dependencies. Transitive packages are resolved by pip.
+#
+# Django is pinned to the 4.2 LTS line because the only interpreter available
+# on the development machine is Python 3.9. The code targets both 4.2 and 5.2;
+# on Python 3.12 upgrade this to `Django>=5.2,<6` and re-run the test suite.
+Django>=4.2,<5
+
+# Lesson notes and legal pages are authored in Markdown and sanitised before
+# they are rendered.
+Markdown>=3.5
+bleach>=6.1
+
+# Image resizing for uploaded course artwork.
+pillow>=10.0
+
+# Hashed, compressed static files served by the application server.
+whitenoise>=6.6
+
+# Reads the local .env in development.
+python-dotenv>=1.0
+
+# Only needed when Cloudflare Stream signed playback is configured.
+# PyJWT>=2.8
+
+# Only needed when DJANGO_DB_URL points at PostgreSQL.
+# psycopg[binary]>=3.1
+
+# Production application server.
+# gunicorn>=21.2

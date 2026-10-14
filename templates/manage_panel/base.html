@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_class %}manage{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/manage.css' %}">{% endblock %}
+{% block extra_head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{# The panel replaces the public chrome entirely. #}
+{% block chrome %}{% endblock %}
+{% block footer %}{% endblock %}
+{# Rendered inside `manage-main` instead, so it sits within the panel. #}
+{% block messages %}{% endblock %}
+
+{% block content %}
+<div class="manage-shell">
+
+  <aside class="manage-side">
+    <a class="manage-side__brand" href="{% url 'manage:overview' %}">
+      <img src="{% static 'img/logo-mark.svg' %}" alt="" width="34" height="34">
+      <span>
+        <span class="manage-side__name">{{ site.name }}</span>
+        <span class="manage-side__role">Admin</span>
+      </span>
+    </a>
+
+    <nav class="manage-nav" aria-label="Administration">
+      <a href="{% url 'manage:overview' %}"{% if section == 'overview' %} aria-current="page"{% endif %}>Overview</a>
+      <a href="{% url 'manage:courses' %}"{% if section == 'courses' %} aria-current="page"{% endif %}>
+        Courses<span class="manage-nav__count">{{ counts.courses }}</span>
+      </a>
+      <a href="{% url 'manage:quizzes' %}"{% if section == 'quiz' %} aria-current="page"{% endif %}>Quizzes</a>
+      <a href="{% url 'manage:students' %}"{% if section == 'students' %} aria-current="page"{% endif %}>
+        Students<span class="manage-nav__count">{{ counts.students }}</span>
+      </a>
+      <a href="{% url 'manage:orders' %}"{% if section == 'orders' %} aria-current="page"{% endif %}>
+        Orders{% if counts.orders %}<span class="manage-nav__count">{{ counts.orders }} pending</span>{% endif %}
+      </a>
+      <a href="{% url 'manage:content' %}"{% if section == 'content' %} aria-current="page"{% endif %}>
+        Site content{% if counts.messages %}<span class="manage-nav__count">{{ counts.messages }} new</span>{% endif %}
+      </a>
+    </nav>
+
+    <div class="manage-side__foot">
+      <a href="{% url 'pages:home' %}">View website</a>
+      <a href="{% url 'admin:index' %}">Database admin</a>
+      <div class="manage-side__user">
+        <span class="avatar avatar--lg" aria-hidden="true">{{ user.initials }}</span>
+        <span>
+          <span class="u-bold u-fs-14" style="display:block">{{ user.get_full_name }}</span>
+          <span class="u-fs-13 muted">{% if user.is_superuser %}Owner{% else %}Staff{% endif %}</span>
+        </span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="manage-main">
+    {% include "includes/messages.html" %}
+    {% block manage_content %}{% endblock %}
+  </main>
+</div>
+{% endblock %}

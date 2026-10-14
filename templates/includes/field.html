@@ -1,0 +1,12 @@
+{% comment %}
+One form field, styled to the design. Pass `field`; optionally `help` to add
+help text the form itself does not carry. Keeps error display, labelling and
+aria wiring in one place.
+{% endcomment %}
+<label class="field{% if field.errors %} field--invalid{% endif %}" for="{{ field.id_for_label }}">
+  {{ field.label }}
+  {{ field }}
+  {% firstof field.help_text help as field_help %}
+  {% if field_help %}<span class="field__help">{{ field_help }}</span>{% endif %}
+  {% for error in field.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
+</label>

@@ -1,0 +1,58 @@
+{% load money %}# {{ site.name }}
+
+> {{ site.tagline }} Online music theory courses taught by {{ site.instructor }}, an independent musician and music educator based in {{ site.location }}.
+
+{{ site.name }} sells and delivers {% if course %}{{ course.title }}{% else %}music theory courses{% endif %} directly to students. The primary market is Bangladesh; international students and international card payments are supported. Prices are in Bangladeshi Taka (BDT).
+
+{% if course %}
+## {{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}
+
+- **URL**: {{ base_url }}{{ course.get_absolute_url }}
+- **Price**: {{ course.price|taka }} BDT, one-time payment, lifetime access
+- **Level**: {{ course.level }}
+- **Modules**: {{ course.module_count }}{% if course.total_runtime %}
+- **Total video**: {{ course.total_runtime }}{% endif %}{% if course.free_module %}
+- **Free preview**: Module {{ course.free_module.number_plain }} ({{ course.free_module.title }}) is free with any registered account{% endif %}
+- **Languages**: English, with Bangla module titles
+- **Each module contains**: a video lesson, written notes in Markdown, MP3 audio examples, SVG notation diagrams, downloadable worksheets and a multiple-choice quiz
+- **Unlocking**: a module unlocks once the previous module's quiz is answered with 100% accuracy; students may retry a question until they choose the correct answer
+
+{{ course.summary }}
+
+### Curriculum
+{% for module in modules %}
+{{ module.number }}. **{{ module.title }}**{% if module.title_bn %} ({{ module.title_bn }}){% endif %}{% if module.is_free %} — free preview{% endif %} — {{ module.summary }}{% endfor %}
+{% endif %}
+
+## Payment methods
+
+bKash, Nagad, Visa and Mastercard issued in Bangladesh, and international cards charged in BDT. Payment is handled by the payment provider; card details are never stored by {{ site.name }}. Enrolment is automatic once payment is confirmed.
+
+## Refunds
+
+Within 7 days of purchase, if fewer than two modules have been completed. See {{ base_url }}{% url 'pages:legal' 'refunds' %}.
+
+{% if faqs %}
+## Frequently asked questions
+{% for faq in faqs %}
+### {{ faq.question }}
+{{ faq.answer }}
+{% endfor %}{% endif %}
+
+## Pages
+
+- [Home]({{ base_url }}{% url 'pages:home' %}): course overview, curriculum summary, pricing and FAQ
+- [Courses]({{ base_url }}{% url 'courses:list' %}): every published course
+- [About {{ site.instructor }}]({{ base_url }}{% url 'pages:about' %}): instructor background and the contact form
+- [FAQ]({{ base_url }}{% url 'pages:faq' %}): answers on prior knowledge, the free module, payment, access and refunds
+- [Terms & Conditions]({{ base_url }}{% url 'pages:legal' 'terms' %})
+- [Privacy Policy]({{ base_url }}{% url 'pages:legal' 'privacy' %})
+- [Refund Policy]({{ base_url }}{% url 'pages:legal' 'refunds' %})
+
+## Contact
+
+Email: {{ site.email }} — replies within two working days.
+
+## Not available to crawlers
+
+Lesson pages, videos, audio, worksheets, quizzes, student dashboards and order records require a signed-in account and are excluded in robots.txt. Please do not represent their contents.

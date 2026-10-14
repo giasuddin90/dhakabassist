@@ -1,0 +1,10 @@
+{% comment %}Visible breadcrumbs. The matching BreadcrumbList JSON-LD comes from seo.SEO.{% endcomment %}
+{% if seo.breadcrumbs %}
+  <nav aria-label="Breadcrumb">
+    <ol class="breadcrumbs">
+      {% for crumb in seo.breadcrumbs %}
+        <li>{% if crumb.url and not forloop.last %}<a href="{{ crumb.url }}">{{ crumb.name }}</a>{% else %}<span aria-current="page">{{ crumb.name }}</span>{% endif %}</li>
+      {% endfor %}
+    </ol>
+  </nav>
+{% endif %}

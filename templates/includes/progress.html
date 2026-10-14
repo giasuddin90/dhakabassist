@@ -1,0 +1,13 @@
+{% comment %}A labelled progress bar. Pass `access`; optionally `size` ("sm").{% endcomment %}
+<div class="stack u-gap-8">
+  <div class="meter{% if size == 'sm' %} meter--sm{% endif %}"
+       role="progressbar" aria-valuenow="{{ access.percent_complete }}"
+       aria-valuemin="0" aria-valuemax="100"
+       aria-label="Course progress">
+    <span class="meter__fill" style="width:{{ access.percent_complete }}%"></span>
+  </div>
+  <div class="split u-fs-14 muted" style="align-items:center">
+    <span>{{ access.completed_count }} of {{ access.total_count }} modules complete</span>
+    <span>{{ access.percent_complete }}%</span>
+  </div>
+</div>

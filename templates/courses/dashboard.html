@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="shell" style="max-width:1080px;padding-block:48px 88px">
+  <div class="stack u-gap-40">
+
+    <div class="split">
+      <div class="stack u-gap-8">
+        <p class="u-fs-16 muted">Welcome back, {{ user.get_short_name }}</p>
+        <h1 class="display-2">My courses</h1>
+      </div>
+      <div class="cluster" style="--cluster-gap:20px;font-size:15px">
+        <a href="{% url 'accounts:settings' %}">Account settings</a>
+        <a href="{% url 'accounts:orders' %}">Order history</a>
+        <form method="post" action="{% url 'accounts:logout' %}" style="display:contents">
+          {% csrf_token %}
+          <button class="btn-link btn-link--sm" type="submit">Log out</button>
+        </form>
+      </div>
+    </div>
+
+    {% for card in cards %}
+      {% with course=card.course access=card.access resume=card.resume %}
+        <div class="stack u-gap-40">
+
+          {# ------------------------------------------------- resume panel #}
+          <div class="panel panel--framed panel--flush"
+               style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));overflow:hidden">
+            <div style="padding:30px" class="stack u-gap-16">
+              <p class="eyebrow">
+                {% if access.completed_count %}Continue where you left off{% else %}Start here{% endif %}
+              </p>
+              <h2 class="u-serif" style="font-size:30px;font-weight:500;line-height:1.15">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}</h2>
+              {% if resume %}
+                <p class="u-fs-17">Module {{ resume.module.number_plain }} · {{ resume.module.title }}</p>
+              {% endif %}
+              {% include "includes/progress.html" with access=access %}
+              {% if resume and resume.is_unlocked %}
+                <a class="btn" href="{{ resume.module.get_absolute_url }}" style="align-self:flex-start;margin-top:4px">
+                  {% if access.completed_count %}Resume lesson{% else %}Start Module {{ resume.module.number_plain }}{% endif %}
+                </a>
+              {% elif not access.is_enrolled %}
+                <a class="btn" href="{% url 'orders:checkout' course.slug %}" style="align-self:flex-start;margin-top:4px">
+                  Enroll to continue
+                </a>
+              {% endif %}
+            </div>
+
+            <div class="media" style="border-radius:0;min-height:240px">
+              {% if resume and resume.is_unlocked %}
+                <a class="media__overlay" href="{{ resume.module.get_absolute_url }}"
+                   aria-label="Resume Module {{ resume.module.number_plain }}">
+                  <span class="play" style="width:60px;height:60px" aria-hidden="true">{% include "includes/icon_play.html" with size=18 height=20 %}</span>
+                </a>
+              {% else %}
+                <span class="media__overlay">
+                  <span class="play" style="width:60px;height:60px;opacity:.5" aria-hidden="true">{% include "includes/icon_play.html" with size=18 height=20 %}</span>
+                </span>
+              {% endif %}
+              {% if card.resume_at %}
+                <span style="position:absolute;left:20px;bottom:16px;color:var(--parchment);font-size:14px">Resume at {{ card.resume_at }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          {# ------------------------------------------------------ modules #}
+          <div class="stack u-gap-16">
+            <h2 class="display-4" style="font-size:28px">Modules</h2>
+            <ul class="ruled" style="list-style:none;padding:0;margin:0">
+              {% for state in card.states %}
+                {% with module=state.module %}
+                  <li>
+                    {% if state.is_unlocked %}
+                      <a href="{{ module.get_absolute_url }}"
+                         style="display:grid;grid-template-columns:52px 1fr auto;gap:16px;align-items:center;padding:18px 0;text-decoration:none">
+                        <span class="u-serif" style="font-size:22px" aria-hidden="true">{{ module.number }}</span>
+                        <span class="stack u-gap-6">
+                          <span class="u-fs-18 u-bold">{{ module.title }}</span>
+                          <span class="u-fs-14 muted">{{ module.meta_line }}</span>
+                        </span>
+                        <span class="badge badge--status {% if state.is_complete %}badge--complete{% else %}badge--current{% endif %}">
+                          {{ state.status_label }}
+                        </span>
+                      </a>
+                    {% else %}
+                      <span style="display:grid;grid-template-columns:52px 1fr auto;gap:16px;align-items:center;padding:18px 0;opacity:.55">
+                        <span class="u-serif" style="font-size:22px" aria-hidden="true">{{ module.number }}</span>
+                        <span class="stack u-gap-6">
+                          <span class="u-fs-18 u-bold">{{ module.title }}</span>
+                          <span class="u-fs-14 muted">{{ module.meta_line }}</span>
+                        </span>
+                        <span class="badge badge--status badge--locked">Locked</span>
+                      </span>
+                    {% endif %}
+                  </li>
+                {% endwith %}
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      {% endwith %}
+
+    {% empty %}
+      <div class="panel panel--framed stack u-gap-18">
+        <h2 class="display-4">You have not enrolled yet</h2>
+        <p class="u-fs-17" style="line-height:1.6">Create your free account gives you Module 1.
+          Enroll once to unlock every module, with lifetime access.</p>
+        <a class="btn" href="{% url 'courses:list' %}" style="align-self:flex-start">Browse the course</a>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

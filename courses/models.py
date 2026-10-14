@@ -1,0 +1,561 @@
+"""Course content, enrolment, progress and quizzes.
+
+Shape: Course -> Module -> (video, markdown notes, MediaAsset*, Quiz).
+A module is reachable when it is the free preview, or when the student is
+enrolled and has passed every earlier module's quiz.
+"""
+
+from django.conf import settings
+from django.core.validators import MinValueValidator
+from django.db import models
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.functional import cached_property
+from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
+
+from .storage import protected_storage
+
+
+class TimeStampedModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+
+    class Meta:
+        abstract = True
+
+
+class PublishedCourseManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(status=Course.Status.PUBLISHED)
+
+
+class Course(TimeStampedModel):
+    class Status(models.TextChoices):
+        DRAFT = "draft", _("Draft")
+        PUBLISHED = "published", _("Published")
+
+    title = models.CharField(_("title"), max_length=160)
+    slug = models.SlugField(_("slug"), max_length=180, unique=True)
+    subtitle = models.CharField(_("subtitle"), max_length=200, blank=True)
+    summary = models.TextField(
+        _("summary"),
+        help_text=_("One or two sentences. Used on cards and in search results."),
+    )
+    description = models.TextField(
+        _("description"), help_text=_("Markdown. Shown on the course page.")
+    )
+    level = models.CharField(_("level"), max_length=60, default="Beginner")
+    price = models.DecimalField(
+        _("price (BDT)"), max_digits=10, decimal_places=2, default=3500
+    )
+    status = models.CharField(
+        _("status"), max_length=12, choices=Status.choices, default=Status.DRAFT
+    )
+    trailer_label = models.CharField(
+        _("trailer label"), max_length=60, blank=True, default="Watch the trailer"
+    )
+    trailer_duration = models.CharField(
+        _("trailer duration"), max_length=16, blank=True
+    )
+    # A later part can require an earlier one, which covers the Part 1 -> Part 2
+    # progression in the brief without a separate bundling model.
+    requires = models.ForeignKey(
+        "self",
+        verbose_name=_("requires"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="unlocks",
+        help_text=_("Students must own this course first."),
+    )
+    position = models.PositiveIntegerField(_("position"), default=0)
+
+    meta_title = models.CharField(_("meta title"), max_length=70, blank=True)
+    meta_description = models.CharField(
+        _("meta description"), max_length=170, blank=True
+    )
+
+    objects = models.Manager()
+    published = PublishedCourseManager()
+
+    class Meta:
+        verbose_name = _("course")
+        verbose_name_plural = _("courses")
+        ordering = ("position", "title")
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)[:180]
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse("courses:detail", kwargs={"slug": self.slug})
+
+    @cached_property
+    def module_list(self):
+        return list(self.modules.all())
+
+    @property
+    def module_count(self):
+        return len(self.module_list)
+
+    @property
+    def free_module(self):
+        return next((m for m in self.module_list if m.is_free), None)
+
+    @property
+    def total_runtime(self):
+        """Sum of module video durations as a human string, e.g. "2 hr 20 min"."""
+        seconds = sum(m.video_duration_seconds for m in self.module_list)
+        if not seconds:
+            return ""
+        hours, minutes = divmod(round(seconds / 60), 60)
+        return f"{hours} hr {minutes} min" if hours else f"{minutes} min"
+
+    @property
+    def iso_duration(self):
+        """ISO 8601 duration for schema.org `timeRequired`."""
+        seconds = sum(m.video_duration_seconds for m in self.module_list)
+        if not seconds:
+            return ""
+        hours, minutes = divmod(round(seconds / 60), 60)
+        return f"PT{hours}H{minutes}M" if hours else f"PT{minutes}M"
+
+
+class Module(TimeStampedModel):
+    class Access(models.TextChoices):
+        PAID = "paid", _("Paid — enrolled students only")
+        FREE = "free", _("Free preview — any registered account")
+
+    class Status(models.TextChoices):
+        DRAFT = "draft", _("Draft")
+        PUBLISHED = "published", _("Published")
+
+    course = models.ForeignKey(
+        Course, verbose_name=_("course"), on_delete=models.CASCADE, related_name="modules"
+    )
+    number = models.CharField(
+        _("number"), max_length=4, help_text=_('Shown in the curriculum, e.g. "04".')
+    )
+    position = models.PositiveIntegerField(_("position"), default=0, db_index=True)
+    title = models.CharField(_("title"), max_length=160)
+    slug = models.SlugField(_("slug"), max_length=180)
+    title_bn = models.CharField(
+        _("title (Bangla)"),
+        max_length=160,
+        blank=True,
+        help_text=_("Optional. Shown alongside the English title."),
+    )
+    summary = models.TextField(_("summary"), blank=True)
+    notes_markdown = models.TextField(
+        _("lesson notes"),
+        blank=True,
+        help_text=_("Markdown. Headings, bold, lists, links, images and audio."),
+    )
+    access = models.CharField(
+        _("access"), max_length=8, choices=Access.choices, default=Access.PAID
+    )
+    status = models.CharField(
+        _("status"), max_length=12, choices=Status.choices, default=Status.DRAFT
+    )
+
+    video_provider = models.CharField(
+        _("video provider"),
+        max_length=20,
+        blank=True,
+        choices=[
+            ("cloudflare", _("Cloudflare Stream")),
+            ("protected_file", _("Protected file")),
+        ],
+    )
+    video_uid = models.CharField(
+        _("video id or path"),
+        max_length=255,
+        blank=True,
+        help_text=_("Cloudflare Stream UID, or a path under the protected media root."),
+    )
+    video_duration_seconds = models.PositiveIntegerField(
+        _("video duration (seconds)"), default=0
+    )
+    video_has_subtitles = models.BooleanField(_("English subtitles"), default=False)
+
+    class Meta:
+        verbose_name = _("module")
+        verbose_name_plural = _("modules")
+        ordering = ("position", "number")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("course", "slug"), name="module_slug_unique_per_course"
+            ),
+            models.UniqueConstraint(
+                fields=("course", "number"), name="module_number_unique_per_course"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.number} · {self.title}"
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)[:180]
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse(
+            "courses:lesson",
+            kwargs={"slug": self.course.slug, "module_slug": self.slug},
+        )
+
+    @property
+    def is_free(self):
+        return self.access == self.Access.FREE
+
+    @property
+    def number_plain(self):
+        """The module number without its padding zero, for use in a sentence.
+
+        "04" reads correctly in the curriculum column but not in
+        "Start Module 04 free".
+        """
+        return self.number.lstrip("0") or self.number
+
+    @property
+    def video_duration_display(self):
+        if not self.video_duration_seconds:
+            return ""
+        minutes, seconds = divmod(self.video_duration_seconds, 60)
+        return f"{minutes}:{seconds:02d}"
+
+    @cached_property
+    def quiz_question_count(self):
+        quiz = getattr(self, "quiz", None)
+        return quiz.questions.count() if quiz else 0
+
+    @cached_property
+    def audio_assets(self):
+        return [a for a in self.assets.all() if a.kind == MediaAsset.Kind.AUDIO]
+
+    @cached_property
+    def download_assets(self):
+        return [a for a in self.assets.all() if a.kind == MediaAsset.Kind.DOWNLOAD]
+
+    @cached_property
+    def notation_assets(self):
+        return [a for a in self.assets.all() if a.kind == MediaAsset.Kind.NOTATION]
+
+    @property
+    def meta_line(self):
+        bits = []
+        if self.video_duration_display:
+            bits.append(f"Video {self.video_duration_display}")
+        if self.notes_markdown:
+            bits.append("Reading")
+        if self.audio_assets:
+            bits.append("Audio")
+        if self.quiz_question_count:
+            bits.append(f"Quiz, {self.quiz_question_count} questions")
+        return " · ".join(bits)
+
+
+class Lesson(TimeStampedModel):
+    """A named step inside a module, listed under the curriculum entry."""
+
+    module = models.ForeignKey(
+        Module, verbose_name=_("module"), on_delete=models.CASCADE, related_name="lessons"
+    )
+    title = models.CharField(_("title"), max_length=160)
+    position = models.PositiveIntegerField(_("position"), default=0)
+
+    class Meta:
+        verbose_name = _("lesson")
+        verbose_name_plural = _("lessons")
+        ordering = ("position", "id")
+
+    def __str__(self):
+        return self.title
+
+
+def asset_upload_to(instance, filename):
+    return f"courses/{instance.module.course.slug}/{instance.module.slug}/{filename}"
+
+
+class MediaAsset(TimeStampedModel):
+    """Audio, notation graphics and downloadable resources for a module.
+
+    Files are written under `PROTECTED_MEDIA_ROOT` and streamed by
+    `courses.views.protected_asset`, which checks access first. Notation
+    graphics are the exception: they are part of the readable notes, so
+    they follow the same access rule as the module itself.
+    """
+
+    class Kind(models.TextChoices):
+        AUDIO = "audio", _("Audio (MP3)")
+        NOTATION = "notation", _("Notation or diagram (SVG)")
+        DOWNLOAD = "download", _("Download (PDF)")
+
+    module = models.ForeignKey(
+        Module, verbose_name=_("module"), on_delete=models.CASCADE, related_name="assets"
+    )
+    kind = models.CharField(_("kind"), max_length=10, choices=Kind.choices)
+    title = models.CharField(_("title"), max_length=200)
+    file = models.FileField(
+        _("file"),
+        upload_to=asset_upload_to,
+        max_length=255,
+        storage=protected_storage,
+    )
+    alt_text = models.CharField(
+        _("alt text"),
+        max_length=255,
+        blank=True,
+        help_text=_("Describes the image for screen readers. Required for notation."),
+    )
+    duration_seconds = models.PositiveIntegerField(_("duration (seconds)"), default=0)
+    position = models.PositiveIntegerField(_("position"), default=0)
+
+    class Meta:
+        verbose_name = _("media asset")
+        verbose_name_plural = _("media assets")
+        ordering = ("kind", "position", "id")
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse("courses:asset", kwargs={"pk": self.pk})
+
+    @property
+    def duration_display(self):
+        if not self.duration_seconds:
+            return ""
+        minutes, seconds = divmod(self.duration_seconds, 60)
+        return f"{minutes}:{seconds:02d}"
+
+    @property
+    def size_display(self):
+        try:
+            size = self.file.size
+        except (OSError, ValueError):
+            return ""
+        for unit in ("B", "KB", "MB", "GB"):
+            if size < 1024 or unit == "GB":
+                return f"{size:.0f} {unit}" if unit == "B" else f"{size:.1f} {unit}"
+            size /= 1024
+        return ""
+
+    @property
+    def detail_line(self):
+        bits = [b for b in (self.duration_display, self.size_display) if b]
+        return " · ".join(bits)
+
+
+class Quiz(TimeStampedModel):
+    module = models.OneToOneField(
+        Module, verbose_name=_("module"), on_delete=models.CASCADE, related_name="quiz"
+    )
+    title = models.CharField(_("title"), max_length=160, blank=True)
+    require_perfect_score = models.BooleanField(
+        _("require 100% to unlock the next module"), default=True
+    )
+    allow_unlimited_retries = models.BooleanField(
+        _("allow unlimited retries"), default=True
+    )
+
+    class Meta:
+        verbose_name = _("quiz")
+        verbose_name_plural = _("quizzes")
+
+    def __str__(self):
+        return self.title or f"{self.module.title} quiz"
+
+    @property
+    def display_title(self):
+        return self.title or f"Module {self.module.number.lstrip('0') or '0'} quiz"
+
+
+class Question(TimeStampedModel):
+    quiz = models.ForeignKey(
+        Quiz, verbose_name=_("quiz"), on_delete=models.CASCADE, related_name="questions"
+    )
+    text = models.TextField(_("question"))
+    position = models.PositiveIntegerField(_("position"), default=0)
+    explanation = models.TextField(
+        _("explanation"),
+        blank=True,
+        help_text=_("Shown once the correct answer is selected."),
+    )
+    notation = models.ForeignKey(
+        MediaAsset,
+        verbose_name=_("notation image"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="notation_questions",
+        limit_choices_to={"kind": MediaAsset.Kind.NOTATION},
+    )
+    audio = models.ForeignKey(
+        MediaAsset,
+        verbose_name=_("audio clip"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="audio_questions",
+        limit_choices_to={"kind": MediaAsset.Kind.AUDIO},
+    )
+
+    class Meta:
+        verbose_name = _("question")
+        verbose_name_plural = _("questions")
+        ordering = ("position", "id")
+
+    def __str__(self):
+        return self.text[:70]
+
+    @cached_property
+    def correct_choice(self):
+        return next((c for c in self.choices.all() if c.is_correct), None)
+
+
+class Choice(models.Model):
+    question = models.ForeignKey(
+        Question,
+        verbose_name=_("question"),
+        on_delete=models.CASCADE,
+        related_name="choices",
+    )
+    text = models.CharField(_("answer"), max_length=255)
+    is_correct = models.BooleanField(_("correct answer"), default=False)
+    position = models.PositiveIntegerField(_("position"), default=0)
+
+    class Meta:
+        verbose_name = _("answer option")
+        verbose_name_plural = _("answer options")
+        ordering = ("position", "id")
+
+    def __str__(self):
+        return self.text
+
+    @property
+    def letter(self):
+        return "ABCDEFGH"[self.position] if self.position < 8 else "?"
+
+
+class Enrollment(TimeStampedModel):
+    """A student's right to study a course.
+
+    Created automatically when an order is paid, or by an administrator
+    granting access. Registering gives no enrolment: the free module is
+    reachable to any signed-in account without one.
+    """
+
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("student"),
+        on_delete=models.CASCADE,
+        related_name="enrollments",
+    )
+    course = models.ForeignKey(
+        Course,
+        verbose_name=_("course"),
+        on_delete=models.CASCADE,
+        related_name="enrollments",
+    )
+    is_active = models.BooleanField(_("active"), default=True)
+    granted_manually = models.BooleanField(_("granted by an administrator"), default=False)
+
+    class Meta:
+        verbose_name = _("enrollment")
+        verbose_name_plural = _("enrollments")
+        ordering = ("-created_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("student", "course"), name="one_enrollment_per_student_course"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.student} → {self.course}"
+
+
+class ModuleProgress(TimeStampedModel):
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("student"),
+        on_delete=models.CASCADE,
+        related_name="module_progress",
+    )
+    module = models.ForeignKey(
+        Module, verbose_name=_("module"), on_delete=models.CASCADE, related_name="progress"
+    )
+    video_position_seconds = models.PositiveIntegerField(
+        _("video position (seconds)"), default=0, validators=[MinValueValidator(0)]
+    )
+    quiz_passed_at = models.DateTimeField(_("quiz passed at"), null=True, blank=True)
+    completed_at = models.DateTimeField(_("completed at"), null=True, blank=True)
+    last_seen_at = models.DateTimeField(_("last seen at"), default=timezone.now)
+
+    class Meta:
+        verbose_name = _("module progress")
+        verbose_name_plural = _("module progress")
+        ordering = ("module__position",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("student", "module"), name="one_progress_per_student_module"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.student} · {self.module}"
+
+    @property
+    def is_complete(self):
+        return self.completed_at is not None
+
+    def mark_complete(self):
+        now = timezone.now()
+        self.quiz_passed_at = self.quiz_passed_at or now
+        self.completed_at = self.completed_at or now
+        self.last_seen_at = now
+        self.save(
+            update_fields=[
+                "quiz_passed_at",
+                "completed_at",
+                "last_seen_at",
+                "updated_at",
+            ]
+        )
+
+
+class QuizAttempt(TimeStampedModel):
+    """One pass through a quiz.
+
+    Students may retry a question until they pick the right answer, so an
+    attempt records how many wrong picks happened on the way. `score` is the
+    share of questions answered correctly on the first try.
+    """
+
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("student"),
+        on_delete=models.CASCADE,
+        related_name="quiz_attempts",
+    )
+    quiz = models.ForeignKey(
+        Quiz, verbose_name=_("quiz"), on_delete=models.CASCADE, related_name="attempts"
+    )
+    answers = models.JSONField(_("answers"), default=dict, blank=True)
+    wrong_picks = models.PositiveIntegerField(_("wrong picks"), default=0)
+    score_percent = models.PositiveIntegerField(_("score (%)"), default=0)
+    completed_at = models.DateTimeField(_("completed at"), null=True, blank=True)
+
+    class Meta:
+        verbose_name = _("quiz attempt")
+        verbose_name_plural = _("quiz attempts")
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.student} · {self.quiz} · {self.score_percent}%"

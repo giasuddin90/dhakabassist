@@ -1,0 +1,103 @@
+{% extends "manage_panel/base.html" %}
+{% load static money %}
+
+{% block extra_js %}<script src="{% static 'js/manage.js' %}" defer></script>{% endblock %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <h1>Courses</h1>
+  <a class="btn btn--sm" href="{% url 'manage:course_new' %}">New course</a>
+</header>
+
+<div class="manage-cards">
+  {% for item in courses %}
+    <a class="course-card" href="?course={{ item.slug }}"
+       {% if selected and item.pk == selected.pk %}aria-current="true"{% endif %}>
+      <span class="split" style="align-items:center">
+        <span class="course-card__title">{{ item.title }}{% if item.subtitle %} · {{ item.subtitle }}{% endif %}</span>
+        <span class="badge badge--status {% if item.status == 'published' %}badge--complete{% else %}badge--current{% endif %}">
+          {{ item.get_status_display }}
+        </span>
+      </span>
+      <span class="course-card__meta">
+        {{ item.modules_count }} module{{ item.modules_count|pluralize }}
+        {% if item.free_module %} · Module {{ item.free_module.number }} free{% endif %}
+        · {{ item.price|taka }}
+      </span>
+    </a>
+  {% empty %}
+    <p class="muted">No courses yet. <a href="{% url 'manage:course_new' %}">Create the first one</a>.</p>
+  {% endfor %}
+</div>
+
+{% if selected %}
+  <section class="panel" aria-labelledby="modules-title">
+    <div class="panel__head">
+      <div class="stack u-gap-6">
+        <h2 class="panel__title" id="modules-title">Modules · {{ selected.title }}</h2>
+        <p class="u-fs-13 muted">Drag to reorder.
+          {% if selected.free_module %}Module {{ selected.free_module.number }} is free for registered
+          accounts; the paywall starts at the next module.{% endif %}</p>
+      </div>
+      <div class="cluster" style="--cluster-gap:10px">
+        <a class="btn btn--sm btn--outline" href="{% url 'manage:course_edit' selected.slug %}">Course settings</a>
+        <a class="btn btn--sm" href="{% url 'manage:module_new' selected.slug %}">Add module</a>
+      </div>
+    </div>
+
+    <form method="post" action="{% url 'manage:module_reorder' selected.slug %}" data-reorder>
+      {% csrf_token %}
+      <div class="table-wrap">
+        <table class="dtable">
+          <caption class="visually-hidden">Modules in {{ selected.title }}</caption>
+          <thead>
+            <tr>
+              <th scope="col"><span class="visually-hidden">Reorder</span></th>
+              <th scope="col">#</th>
+              <th scope="col">Module</th>
+              <th scope="col">Video</th>
+              <th scope="col">Audio</th>
+              <th scope="col">Quiz</th>
+              <th scope="col">Status</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody data-sortable>
+            {% for module in modules %}
+              <tr draggable="true" data-pk="{{ module.pk }}">
+                <td><span class="drag-handle" aria-hidden="true">⋮⋮</span>
+                  <input type="hidden" name="module" value="{{ module.pk }}"></td>
+                <td class="dtable__num">{{ module.number }}</td>
+                <th scope="row">
+                  <span class="dtable__name">{{ module.title }}</span>
+                  <span class="dtable__sub">{{ module.get_access_display }}</span>
+                </th>
+                <td class="u-nowrap">{{ module.video_duration_display|default:"—" }}</td>
+                <td class="u-nowrap">{{ module.audio_assets|length }} file{{ module.audio_assets|length|pluralize }}</td>
+                <td class="u-nowrap">{{ module.questions }} Q{{ module.questions|pluralize:"s" }}</td>
+                <td>
+                  <span class="badge badge--status {% if module.is_free %}badge--complete{% elif module.status == 'published' %}badge--ok{% else %}badge--locked{% endif %}">
+                    {% if module.is_free %}Free{% else %}{{ module.get_status_display }}{% endif %}
+                  </span>
+                </td>
+                <td class="u-nowrap">
+                  <a class="btn-link btn-link--sm" href="{% url 'manage:module_edit' selected.slug module.slug %}">Edit</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="8" class="muted">No modules yet.
+                <a href="{% url 'manage:module_new' selected.slug %}">Add the first one</a>.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if modules %}
+        <div class="panel__foot cluster" style="justify-content:space-between">
+          <span>Order is saved when you choose Save order.</span>
+          <button class="btn btn--sm btn--outline" type="submit">Save order</button>
+        </div>
+      {% endif %}
+    </form>
+  </section>
+{% endif %}
+{% endblock %}

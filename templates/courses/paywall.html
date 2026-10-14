@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load money %}
+
+{% block content %}
+<section class="shell duo duo--start duo--tight" style="max-width:1080px;padding-block:48px 88px">
+
+  <div class="stack u-gap-22">
+    {% if access.completed_count %}
+      <p class="cluster" style="--cluster-gap:12px">
+        <span style="width:28px;height:28px;border-radius:50%;background:var(--ink);display:grid;place-items:center;flex:none" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 16 16" focusable="false"><path d="M2 8.5l3.5 3.5L14 4" fill="none" stroke="#F1E9D2" stroke-width="2.4"/></svg>
+        </span>
+        <span class="u-fs-16">{{ access.completed_count }} module{{ access.completed_count|pluralize }} complete</span>
+      </p>
+      <h1 class="display-2">You have finished the free module</h1>
+      <p class="prose" style="font-size:18px;line-height:1.65">
+        Enroll to continue with Module {{ module.number_plain }} · {{ module.title }} and the rest of
+        the course. Your progress is saved.</p>
+    {% else %}
+      <h1 class="display-2">Module {{ module.number_plain }} is part of the full course</h1>
+      <p class="prose" style="font-size:18px;line-height:1.65">
+        {% if user.is_authenticated %}
+          Enroll once to unlock every module, with lifetime access. Module
+          {{ course.free_module.number_plain|default:'1' }} stays free either way.
+        {% else %}
+          Create a free account to study Module {{ course.free_module.number_plain|default:'1' }},
+          or enroll to unlock the whole course.
+        {% endif %}
+      </p>
+    {% endif %}
+
+    <ul class="ruled" style="list-style:none;padding:0;margin:0">
+      {% for state in locked_states %}
+        <li style="display:grid;grid-template-columns:40px 1fr auto;gap:14px;align-items:center;padding:13px 0">
+          <span class="u-serif muted" style="font-size:19px" aria-hidden="true">{{ state.module.number }}</span>
+          <span class="u-fs-16">{{ state.module.title }}</span>
+          {% include "includes/icon_lock.html" %}
+          <span class="visually-hidden">Locked</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="panel panel--framed u-sticky stack u-gap-20">
+    <h2 class="u-serif" style="font-size:22px;font-weight:600">Unlock the full course</h2>
+    <p class="cluster" style="--cluster-gap:10px;align-items:baseline">
+      <span class="price">{{ course.price|taka }}</span>
+      <span class="muted u-fs-15">one-time</span>
+    </p>
+    {% include "includes/includes_list.html" %}
+    <a class="btn btn--block" href="{% url 'orders:checkout' course.slug %}">Enroll and continue</a>
+    {% include "includes/payment_chips.html" %}
+    {% if course.free_module %}
+      <a class="btn-link btn-link--sm" href="{{ course.free_module.get_absolute_url }}" style="align-self:flex-start">
+        Review Module {{ course.free_module.number_plain }} again
+      </a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

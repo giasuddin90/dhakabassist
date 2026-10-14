@@ -1,0 +1,58 @@
+{% extends "manage_panel/base.html" %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <h1>Orders</h1>
+</header>
+
+<nav class="cluster" style="--cluster-gap:8px" aria-label="Filter orders">
+  {% for value, label in filters %}
+    <a class="pill{% if value == chosen %} is-active{% endif %}"
+       href="?status={{ value }}"
+       {% if value == chosen %}aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>
+
+<section class="panel" aria-label="Orders">
+  <div class="table-wrap">
+    <table class="dtable dtable--wide">
+      <caption class="visually-hidden">Orders, most recent first</caption>
+      <thead>
+        <tr>
+          <th scope="col">Order</th>
+          <th scope="col">Student</th>
+          <th scope="col">Amount</th>
+          <th scope="col">Method</th>
+          <th scope="col">Gateway ref</th>
+          <th scope="col">Status</th>
+          <th scope="col">Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+          <tr>
+            <th scope="row" class="dtable__name">{{ order.reference }}</th>
+            <td>
+              <span>{{ order.student.get_full_name }}</span>
+              <span class="dtable__sub">{{ order.course.title }}</span>
+            </td>
+            <td class="u-nowrap">{{ order.amount_display }}</td>
+            <td class="u-nowrap">{{ order.get_method_display }}</td>
+            <td class="u-mono u-fs-13 muted">{{ order.gateway_reference|default:"—" }}</td>
+            <td>
+              <span class="badge badge--status {% if order.status == 'paid' %}badge--ok{% elif order.status == 'failed' %}badge--err{% elif order.status == 'refunded' %}badge--neutral{% else %}badge--current{% endif %}">
+                {{ order.get_status_display }}
+              </span>
+            </td>
+            <td class="muted u-nowrap">{{ order.created_at|date:"j M Y" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="muted">No orders match this filter.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="panel__foot">Refunds are issued in the payment gateway, then recorded here from the
+    <a href="{% url 'admin:orders_order_changelist' %}">database admin</a>.</p>
+</section>
+{% endblock %}

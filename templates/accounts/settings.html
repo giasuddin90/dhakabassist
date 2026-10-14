@@ -1,0 +1,18 @@
+{% extends "accounts/_auth_shell.html" %}
+
+{% block auth_body %}
+  <form method="post" class="stack u-gap-16" novalidate>
+    {% csrf_token %}
+    {% include "includes/form_errors.html" %}
+    {% include "includes/field.html" with field=form.full_name %}
+    {% include "includes/field.html" with field=form.email %}
+    <label class="check">{{ form.marketing_opt_in }} {{ form.marketing_opt_in.label }}</label>
+    <button class="btn" type="submit" style="align-self:flex-start">Save changes</button>
+  </form>
+
+  <div class="stack u-gap-10" style="border-top:1px solid var(--line);padding-top:22px">
+    <p class="u-fs-16"><a href="{% url 'accounts:password_change' %}">Change your password</a></p>
+    <p class="u-fs-16"><a href="{% url 'accounts:orders' %}">Order history</a></p>
+    <p class="u-fs-16"><a href="{% url 'courses:dashboard' %}">Back to my courses</a></p>
+  </div>
+{% endblock %}

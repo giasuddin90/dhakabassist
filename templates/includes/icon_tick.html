@@ -1,0 +1,5 @@
+{% comment %}A tick. `size` and `color` are optional.{% endcomment %}
+<svg class="tick__mark" width="{{ size|default:16 }}" height="{{ size|default:16 }}" viewBox="0 0 16 16"
+     aria-hidden="true" focusable="false">
+  <path d="M2 8.5l3.5 3.5L14 4" fill="none" stroke="{{ color|default:'#211F1D' }}" stroke-width="2"/>
+</svg>

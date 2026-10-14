@@ -1,0 +1,54 @@
+from django.urls import path
+
+from . import views
+
+app_name = "manage"
+
+urlpatterns = [
+    path("", views.OverviewView.as_view(), name="overview"),
+    # Courses and modules
+    path("courses/", views.CoursesView.as_view(), name="courses"),
+    path("courses/new/", views.course_edit, name="course_new"),
+    path("courses/<slug:slug>/edit/", views.course_edit, name="course_edit"),
+    path("courses/<slug:slug>/reorder/", views.module_reorder, name="module_reorder"),
+    path("courses/<slug:slug>/modules/new/", views.module_edit, name="module_new"),
+    path(
+        "courses/<slug:slug>/modules/<slug:module_slug>/",
+        views.module_edit,
+        name="module_edit",
+    ),
+    path(
+        "courses/<slug:slug>/modules/<slug:module_slug>/assets/",
+        views.asset_upload,
+        name="asset_upload",
+    ),
+    path("assets/<int:pk>/delete/", views.asset_delete, name="asset_delete"),
+    # Quizzes
+    path("quizzes/", views.QuizIndexView.as_view(), name="quizzes"),
+    path(
+        "courses/<slug:slug>/modules/<slug:module_slug>/quiz/",
+        views.quiz_edit,
+        name="quiz_edit",
+    ),
+    path(
+        "courses/<slug:slug>/modules/<slug:module_slug>/quiz/settings/",
+        views.quiz_settings,
+        name="quiz_settings",
+    ),
+    path(
+        "courses/<slug:slug>/modules/<slug:module_slug>/quiz/questions/add/",
+        views.question_add,
+        name="question_add",
+    ),
+    path("questions/<int:pk>/delete/", views.question_delete, name="question_delete"),
+    # Students and orders
+    path("students/", views.StudentsView.as_view(), name="students"),
+    path("students/<int:pk>/access/", views.student_access, name="student_access"),
+    path("students/<int:pk>/grant/", views.student_grant, name="student_grant"),
+    path("orders/", views.OrdersView.as_view(), name="orders"),
+    # Site content
+    path("content/", views.ContentView.as_view(), name="content"),
+    path("content/faqs/new/", views.faq_create, name="faq_create"),
+    path("content/legal/<slug:slug>/", views.legal_edit, name="legal_edit"),
+    path("content/messages/<int:pk>/", views.message_handled, name="message_handled"),
+]

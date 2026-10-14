@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="shell shell--narrow section section--tight stack u-gap-28">
+  {% include "includes/breadcrumbs.html" %}
+  <h1 class="display-2">Questions</h1>
+  <p class="lede">Everything students ask before enrolling in Foundations of Music.</p>
+
+  <div class="ruled" data-accordion>
+    {% for faq in faqs %}
+      <details class="disclose disclose--faq"{% if forloop.first %} open{% endif %}>
+        <summary>
+          {{ faq.question }}
+          <span class="disclose__sign" aria-hidden="true"><span class="is-closed">+</span><span class="is-open">–</span></span>
+        </summary>
+        <div class="disclose__panel"><p>{{ faq.answer }}</p></div>
+      </details>
+    {% empty %}
+      <p style="padding:22px 0">No questions have been published yet.</p>
+    {% endfor %}
+  </div>
+
+  <p class="u-fs-16">Still unsure? <a href="{% url 'pages:about' %}#contact">Send a message</a> and we will reply within two working days.</p>
+</section>
+{% endblock %}
