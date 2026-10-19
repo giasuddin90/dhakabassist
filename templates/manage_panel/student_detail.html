@@ -1,0 +1,199 @@
+{% extends "manage_panel/base.html" %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <nav class="manage-head__crumbs" aria-label="Breadcrumb">
+      <a href="{% url 'manage:students' %}">Students</a> / {{ student.get_full_name }}
+    </nav>
+    <h1>{{ student.get_full_name }}</h1>
+  </div>
+  <div class="cluster">
+    <form method="post" action="{% url 'manage:student_access' student.pk %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button class="btn btn--sm btn--outline" type="submit">
+        {% if student.access_enabled %}Suspend access{% else %}Restore access{% endif %}
+      </button>
+    </form>
+    <a class="btn btn--sm" href="{% url 'manage:student_edit' student.pk %}">Edit student</a>
+  </div>
+</header>
+
+<div class="manage-grid">
+  <section class="panel" aria-labelledby="account-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="account-title">Account</h2>
+      {% if not student.is_active %}
+        <span class="badge badge--status badge--err">Sign-in blocked</span>
+      {% elif student.access_enabled %}
+        <span class="badge badge--status badge--ok">Access on</span>
+      {% else %}
+        <span class="badge badge--status badge--err">Access suspended</span>
+      {% endif %}
+    </div>
+    <div class="panel--padded">
+      <dl class="facts">
+        <dt>Full name</dt><dd>{{ student.full_name|default:"—" }}</dd>
+        <dt>Email</dt><dd><a href="mailto:{{ student.email }}">{{ student.email }}</a></dd>
+        <dt>Joined</dt><dd>{{ student.date_joined|date:"j M Y, H:i" }}</dd>
+        <dt>Last sign-in</dt><dd>{% if student.last_login %}{{ student.last_login|timesince }} ago{% else %}Never{% endif %}</dd>
+        <dt>Course news</dt><dd>{{ student.marketing_opt_in|yesno:"Subscribed,Not subscribed" }}</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="grant-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="grant-title">Grant a course</h2>
+    </div>
+    <div class="panel--padded stack u-gap-12">
+      {% if grantable %}
+        <form method="post" action="{% url 'manage:student_grant' student.pk %}" class="cluster grant-form">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <label class="visually-hidden" for="grant-course">Course</label>
+          <select name="course" id="grant-course">
+            {% for course in grantable %}<option value="{{ course.slug }}">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}</option>{% endfor %}
+          </select>
+          <button class="btn btn--sm" type="submit">Grant access</button>
+        </form>
+        <p class="form-note">For refunds, comps and support fixes. No payment is recorded.</p>
+      {% else %}
+        <p class="muted">Enrolled in every course.</p>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+{% for row in courses %}
+  <section class="panel" aria-labelledby="course-{{ row.course.pk }}-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="course-{{ row.course.pk }}-title">{{ row.course.title }}{% if row.course.subtitle %} · {{ row.course.subtitle }}{% endif %}</h2>
+      {% if row.enrollment and row.enrollment.is_active %}
+        {% if row.enrollment.granted_manually %}
+          <span class="badge badge--status badge--current">Granted {{ row.enrollment.created_at|date:"j M Y" }}</span>
+        {% else %}
+          <span class="badge badge--status badge--ok">Enrolled {{ row.enrollment.created_at|date:"j M Y" }}</span>
+        {% endif %}
+      {% elif row.enrollment %}
+        <span class="badge badge--status badge--neutral">Enrolment inactive</span>
+      {% else %}
+        <span class="badge badge--status badge--locked">Free modules only</span>
+      {% endif %}
+    </div>
+    <div class="table-wrap">
+      <table class="dtable">
+        <caption class="visually-hidden">Progress through {{ row.course.title }}: {{ row.completed }} of {{ row.total }} modules complete</caption>
+        <thead>
+          <tr>
+            <th scope="col">Module</th>
+            <th scope="col">Quiz passed</th>
+            <th scope="col">Completed</th>
+            <th scope="col">Last seen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in row.modules %}
+            <tr>
+              <th scope="row">
+                <span class="dtable__name">{{ item.module.number }} · {{ item.module.title }}</span>
+              </th>
+              <td class="u-nowrap">{{ item.progress.quiz_passed_at|date:"j M Y"|default:"—" }}</td>
+              <td class="u-nowrap">
+                {% if item.progress.is_complete %}
+                  <span class="badge badge--status badge--ok">{{ item.progress.completed_at|date:"j M Y" }}</span>
+                {% elif item.progress %}
+                  <span class="badge badge--status badge--current">Started</span>
+                {% else %}
+                  <span class="muted">Not started</span>
+                {% endif %}
+              </td>
+              <td class="muted u-nowrap">{% if item.progress %}{{ item.progress.last_seen_at|timesince }} ago{% else %}—{% endif %}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="muted">No published modules.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="panel__foot">{{ row.completed }} of {{ row.total }} modules complete ({{ row.width }}%).</p>
+  </section>
+{% empty %}
+  <section class="panel panel--padded">
+    <p class="muted">No enrolments or progress yet.</p>
+  </section>
+{% endfor %}
+
+<div class="manage-grid">
+  <section class="panel" aria-labelledby="orders-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="orders-title">Orders</h2>
+    </div>
+    <div class="table-wrap">
+      <table class="dtable">
+        <caption class="visually-hidden">Orders by this student, most recent first</caption>
+        <thead>
+          <tr>
+            <th scope="col">Order</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Status</th>
+            <th scope="col">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+            <tr>
+              <th scope="row">
+                <span class="dtable__name">{{ order.reference }}</span>
+                <span class="dtable__sub">{{ order.course.title }}{% if order.course.subtitle %} · {{ order.course.subtitle }}{% endif %} · {{ order.get_method_display }}</span>
+              </th>
+              <td class="u-nowrap">{{ order.amount_display }}</td>
+              <td>
+                <span class="badge badge--status {% if order.status == 'paid' %}badge--ok{% elif order.status == 'failed' %}badge--err{% elif order.status == 'refunded' %}badge--neutral{% else %}badge--current{% endif %}">
+                  {{ order.get_status_display }}
+                </span>
+              </td>
+              <td class="muted u-nowrap">{{ order.created_at|date:"j M Y" }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="muted">No orders.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="attempts-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="attempts-title">Recent quiz attempts</h2>
+    </div>
+    <div class="table-wrap">
+      <table class="dtable">
+        <caption class="visually-hidden">The student's last ten quiz attempts</caption>
+        <thead>
+          <tr>
+            <th scope="col">Quiz</th>
+            <th scope="col">Score</th>
+            <th scope="col">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for attempt in attempts %}
+            <tr>
+              <th scope="row">
+                <span class="dtable__name">{{ attempt.quiz.module.number }} · {{ attempt.quiz.module.title }}</span>
+                <span class="dtable__sub">{{ attempt.wrong_picks }} wrong pick{{ attempt.wrong_picks|pluralize }}{% if not attempt.completed_at %} · unfinished{% endif %}</span>
+              </th>
+              <td class="u-nowrap">{{ attempt.score_percent }}%</td>
+              <td class="muted u-nowrap">{{ attempt.created_at|date:"j M Y" }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3" class="muted">No quiz attempts.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

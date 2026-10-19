@@ -10,6 +10,7 @@ import secrets
 from pathlib import Path
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator, MinValueValidator
 from django.db import models
 from django.urls import reverse
@@ -20,7 +21,25 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from .markup import render_inline, render_notes, split_audio
-from .storage import protected_storage
+from .video import trailer_embed_url
+
+
+def validate_trailer_url(value):
+    """Accept only links `trailer_embed_url` can turn into an embed."""
+    if not trailer_embed_url(value):
+        raise ValidationError(
+            _("Paste a YouTube or Cloudflare Stream link to the video."),
+            code="invalid_trailer",
+        )
+
+
+# No SVG: the photo is served publicly, and an SVG can carry script.
+AUTHOR_PHOTO_EXTENSIONS = ("jpg", "jpeg", "png", "webp")
+
+
+def author_photo_upload_to(instance, filename):
+    """Keep each author's photo in their own folder."""
+    return f"authors/{instance.slug or slugify(instance.name)}/{filename}"
 
 
 class TimeStampedModel(models.Model):
@@ -29,6 +48,67 @@ class TimeStampedModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class Author(TimeStampedModel):
+    """The person who teaches a course. One author can teach many courses."""
+
+    name = models.CharField(_("name"), max_length=120)
+    slug = models.SlugField(
+        _("slug"),
+        max_length=140,
+        unique=True,
+        blank=True,
+        help_text=_("Left blank, it is made from the name."),
+    )
+    photo = models.ImageField(
+        _("photo"),
+        upload_to=author_photo_upload_to,
+        max_length=255,
+        blank=True,
+        validators=[FileExtensionValidator(AUTHOR_PHOTO_EXTENSIONS)],
+        help_text=_("A square JPG, PNG or WEBP, at least 320 × 320 px, up to 5 MB."),
+    )
+    bio = models.TextField(
+        _("bio"),
+        blank=True,
+        help_text=_("Markdown. Shown under “About the author” on the course page."),
+    )
+
+    class Meta:
+        verbose_name = _("author")
+        verbose_name_plural = _("authors")
+        ordering = ("name", "id")
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self._unique_slug()
+        super().save(*args, **kwargs)
+
+    def _unique_slug(self):
+        """The name as a slug, numbered when another author already has it."""
+        base = slugify(self.name)[:130] or "author"
+        slug, number = base, 2
+        while Author.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+            slug, number = f"{base}-{number}", number + 1
+        return slug
+
+    @property
+    def photo_url(self):
+        """The public URL of the photo, or "" when there is none."""
+        if not self.photo:
+            return ""
+        # The version busts the browser cache when the photo is replaced.
+        url = reverse("courses:author_photo", kwargs={"slug": self.slug})
+        return f"{url}?v={int(self.updated_at.timestamp())}"
+
+    @property
+    def bio_html(self):
+        """The Markdown bio as sanitised HTML."""
+        return render_notes(self.bio)
 
 
 class PublishedCourseManager(models.Manager):
@@ -58,6 +138,16 @@ class Course(TimeStampedModel):
     status = models.CharField(
         _("status"), max_length=12, choices=Status.choices, default=Status.DRAFT
     )
+    trailer_url = models.URLField(
+        _("trailer video link"),
+        max_length=300,
+        blank=True,
+        validators=[validate_trailer_url],
+        help_text=_(
+            "A YouTube or Cloudflare Stream link. The trailer is public, so for "
+            "Cloudflare turn off “require signed URLs” on this video."
+        ),
+    )
     trailer_label = models.CharField(
         _("trailer label"), max_length=60, blank=True, default="Watch the trailer"
     )
@@ -76,6 +166,24 @@ class Course(TimeStampedModel):
         help_text=_("Students must own this course first."),
     )
     position = models.PositiveIntegerField(_("position"), default=0)
+    # PROTECT: an author who still teaches a course cannot be deleted by
+    # accident; reassign or clear the courses first.
+    author = models.ForeignKey(
+        Author,
+        verbose_name=_("author"),
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="courses",
+    )
+    promote_on_home = models.BooleanField(
+        _("promote on home page"),
+        default=False,
+        help_text=_(
+            "Feature this course on the home page. Only one course can be "
+            "featured, so ticking this clears it on the others."
+        ),
+    )
 
     meta_title = models.CharField(_("meta title"), max_length=70, blank=True)
     meta_description = models.CharField(
@@ -84,6 +192,10 @@ class Course(TimeStampedModel):
 
     objects = models.Manager()
     published = PublishedCourseManager()
+
+    # The home page and the header's Enroll button show the promoted course,
+    # falling back to the first published one when none is promoted.
+    HOME_ORDERING = ("-promote_on_home", "position", "title")
 
     class Meta:
         verbose_name = _("course")
@@ -97,9 +209,22 @@ class Course(TimeStampedModel):
         if not self.slug:
             self.slug = slugify(self.title)[:180]
         super().save(*args, **kwargs)
+        if self.promote_on_home:
+            Course.objects.exclude(pk=self.pk).filter(promote_on_home=True).update(
+                promote_on_home=False
+            )
 
     def get_absolute_url(self):
         return reverse("courses:detail", kwargs={"slug": self.slug})
+
+    @cached_property
+    def trailer_embed_url(self):
+        return trailer_embed_url(self.trailer_url)
+
+    @property
+    def author_name(self):
+        """The author's name, or the site's instructor when none is linked."""
+        return self.author.name if self.author else settings.SITE["instructor"]
 
     @cached_property
     def module_list(self):
@@ -175,14 +300,14 @@ class Module(TimeStampedModel):
         blank=True,
         choices=[
             ("cloudflare", _("Cloudflare Stream")),
-            ("protected_file", _("Protected file")),
+            ("protected_file", _("Uploaded file")),
         ],
     )
     video_uid = models.CharField(
         _("video id or path"),
         max_length=255,
         blank=True,
-        help_text=_("Cloudflare Stream UID, or a path under the protected media root."),
+        help_text=_("Cloudflare Stream UID, or a path under the media folder."),
     )
     video_duration_seconds = models.PositiveIntegerField(
         _("video duration (seconds)"), default=0
@@ -320,7 +445,7 @@ def asset_upload_to(instance, filename):
 class MediaAsset(TimeStampedModel):
     """Audio, notation graphics and downloadable resources for a module.
 
-    Files are written under `PROTECTED_MEDIA_ROOT` and streamed by
+    Files are written under `MEDIA_ROOT` and streamed by
     `courses.views.protected_asset`, which checks access first. Notation
     graphics are the exception: they are part of the readable notes, so
     they follow the same access rule as the module itself.
@@ -340,7 +465,6 @@ class MediaAsset(TimeStampedModel):
         _("file"),
         upload_to=asset_upload_to,
         max_length=255,
-        storage=protected_storage,
     )
     alt_text = models.CharField(
         _("alt text"),
@@ -458,7 +582,6 @@ class LibraryFile(TimeStampedModel):
         _("file"),
         upload_to=library_upload_to,
         max_length=255,
-        storage=protected_storage,
         validators=[FileExtensionValidator(EXTENSIONS)],
     )
     # Random, so the URLs pasted into notes cannot be guessed by counting.

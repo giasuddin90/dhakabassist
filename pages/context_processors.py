@@ -10,7 +10,9 @@ def _primary_course():
     Lazy, so pages that never render the button pay no query.
     """
     return (
-        Course.published.only("slug", "title", "price").order_by("position", "title").first()
+        Course.published.only("slug", "title", "price")
+        .order_by(*Course.HOME_ORDERING)
+        .first()
     )
 
 

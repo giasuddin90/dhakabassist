@@ -1,0 +1,60 @@
+{% extends "manage_panel/base.html" %}
+{% load static %}
+
+{% block extra_js %}<script src="{% static 'js/manage.js' %}" defer></script>{% endblock %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <h1>Authors</h1>
+  <a class="btn btn--sm" href="{% url 'manage:author_new' %}">New author</a>
+</header>
+
+<section class="panel" aria-label="Authors">
+  {% if authors %}
+    <div class="table-wrap">
+      <table class="dtable">
+        <caption class="visually-hidden">Authors and the courses they teach</caption>
+        <thead>
+          <tr>
+            <th scope="col">Author</th>
+            <th scope="col">Courses</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for author in authors %}
+            <tr>
+              <th scope="row">
+                <span class="author-row">
+                  {% if author.photo %}
+                    <img class="author-row__photo" src="{{ author.photo_url }}" alt="" width="40" height="40">
+                  {% else %}
+                    <span class="avatar author-row__photo" aria-hidden="true">{{ author.name|first|upper }}</span>
+                  {% endif %}
+                  <a class="dtable__name" href="{% url 'manage:author_edit' author.slug %}">{{ author.name }}</a>
+                </span>
+              </th>
+              <td class="u-nowrap">{{ author.courses_count }}</td>
+              <td>
+                <span class="cluster">
+                  <a class="btn-link btn-link--sm" href="{% url 'manage:author_edit' author.slug %}">Edit</a>
+                  {% if not author.courses_count %}
+                    <form method="post" action="{% url 'manage:author_delete' author.slug %}"
+                          data-confirm="Delete {{ author.name }}? This cannot be undone.">
+                      {% csrf_token %}
+                      <button class="btn-link btn-link--sm" type="submit">Delete</button>
+                    </form>
+                  {% endif %}
+                </span>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="panel__body muted">No authors yet. <a href="{% url 'manage:author_new' %}">Add the first one</a>,
+      then choose them in a course's settings.</p>
+  {% endif %}
+</section>
+{% endblock %}

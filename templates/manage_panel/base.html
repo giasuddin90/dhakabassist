@@ -28,6 +28,9 @@
       <a href="{% url 'manage:courses' %}"{% if section == 'courses' %} aria-current="page"{% endif %}>
         Courses<span class="manage-nav__count">{{ counts.courses }}</span>
       </a>
+      <a href="{% url 'manage:authors' %}"{% if section == 'authors' %} aria-current="page"{% endif %}>
+        Authors<span class="manage-nav__count">{{ counts.authors }}</span>
+      </a>
       <a href="{% url 'manage:library' %}"{% if section == 'library' %} aria-current="page"{% endif %}>
         Media library<span class="manage-nav__count">{{ counts.library }}</span>
       </a>

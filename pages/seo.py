@@ -102,6 +102,14 @@ def person(name, description=""):
     }
 
 
+def course_author(course):
+    """The course's author as a `Person`, with their photo when there is one."""
+    data = person(course.author_name)
+    if course.author and course.author.photo:
+        data["image"] = absolute(course.author.photo_url)
+    return data
+
+
 def course_schema(course):
     """`Course` plus a `CourseInstance`, which search engines expect together."""
     site = settings.SITE
@@ -116,7 +124,7 @@ def course_schema(course):
         "numberOfCredits": course.module_count,
         "teaches": [m.title for m in course.module_list],
         "provider": {"@id": absolute("/") + "#organization"},
-        "instructor": person(site["instructor"]),
+        "instructor": course_author(course),
         "isAccessibleForFree": False,
         "offers": {
             "@type": "Offer",
@@ -130,7 +138,7 @@ def course_schema(course):
             "@type": "CourseInstance",
             "courseMode": "online",
             "courseWorkload": course.iso_duration or "PT2H20M",
-            "instructor": person(site["instructor"]),
+            "instructor": course_author(course),
         },
     }
     free = course.free_module

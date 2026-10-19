@@ -1,8 +1,8 @@
 # Deployment
 
 A single modest server runs this comfortably. The shape below is nginx +
-gunicorn + PostgreSQL behind Cloudflare; adapt freely, but keep the protected
-media arrangement intact.
+gunicorn + PostgreSQL behind Cloudflare; adapt freely, but keep the media
+arrangement intact: nothing under `/media/` is served directly.
 
 ## Recommended stack
 
@@ -12,7 +12,7 @@ media arrangement intact.
 | Django | 5.2 LTS | Security support into 2028 |
 | Database | PostgreSQL 16 | Real backups, concurrent writes |
 | App server | gunicorn, 3 workers | Simple and dependable |
-| Web server | nginx | TLS, static files, protected media |
+| Web server | nginx | TLS, static files, course media |
 | CDN / DNS | Cloudflare | TLS, caching, rate limiting, DDoS |
 | Video | Cloudflare Stream | Signed playback, no server bandwidth |
 | Payments | SSLCommerz | bKash, Nagad, local and international cards |
@@ -32,8 +32,8 @@ DJANGO_ALLOWED_HOSTS=dhakabassist.com,www.dhakabassist.com
 DJANGO_CSRF_TRUSTED_ORIGINS=https://dhakabassist.com,https://www.dhakabassist.com
 SITE_BASE_URL=https://dhakabassist.com
 DJANGO_DB_URL=postgres://user:password@localhost:5432/dhakabassist
-DJANGO_PROTECTED_MEDIA_ROOT=/srv/dhakabassist/protected
-DJANGO_PROTECTED_MEDIA_INTERNAL_URL=/_protected/
+DJANGO_MEDIA_ROOT=/srv/dhakabassist/media
+DJANGO_MEDIA_INTERNAL_URL=/_media/
 PAYMENT_GATEWAY=sslcommerz
 ```
 
@@ -53,7 +53,7 @@ Then restart gunicorn.
 
 ## nginx
 
-Static files are served directly. Protected media is handed back to nginx
+Static files are served directly. Uploaded media is handed back to nginx
 after Django has checked access — Django never streams the bytes itself, so a
 large video does not occupy a worker.
 
@@ -71,9 +71,11 @@ server {
     }
 
     # Reachable only via Django's X-Accel-Redirect, never from outside.
-    location /_protected/ {
+    # There is deliberately no `location /media/`: every upload is course
+    # material, so a direct /media/ request falls through to Django and 404s.
+    location /_media/ {
         internal;
-        alias /srv/dhakabassist/protected/;
+        alias /srv/dhakabassist/media/;
     }
 
     location / {
@@ -87,7 +89,8 @@ server {
 
 The `internal` directive is what makes this safe: nginx will only serve that
 location in response to Django's own header, never to a direct request. Test
-it — `curl https://your-domain/_protected/anything` must return 404.
+it — `curl https://your-domain/_media/anything` and
+`curl https://your-domain/media/anything` must both return 404.
 
 ## Rate limiting
 
@@ -99,7 +102,7 @@ Configure in Cloudflare rather than in the application: limit `/login/`,
 Three things must be backed up, and one of them is not the database:
 
 1. **PostgreSQL** — nightly `pg_dump`, kept off the server, retained 30 days.
-2. **`PROTECTED_MEDIA_ROOT`** — the course material. If videos are on
+2. **`MEDIA_ROOT`** — the course material. If videos are on
    Cloudflare Stream this is small; if not, it is the largest item.
 3. **`.env`** — kept in a password manager, not in the backup set.
 
@@ -129,7 +132,7 @@ to these accounts; they do not register them in their own name.
 3. Real SSLCommerz credentials in place; one live payment made and refunded.
 4. Video playback confirmed for an enrolled student, and confirmed to fail
    for a signed-out visitor and an unenrolled one.
-5. `curl https://your-domain/_protected/anything` returns 404.
+5. `curl https://your-domain/_media/anything` and `/media/anything` return 404.
 6. Password reset email received at a real address.
 7. Sitemap submitted; `robots.txt` and `llms.txt` resolve.
 8. A backup taken and restored once.

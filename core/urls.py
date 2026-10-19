@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
@@ -38,5 +37,5 @@ urlpatterns = [
 handler404 = "pages.views.not_found"
 handler500 = "pages.views.server_error"
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# MEDIA_ROOT is deliberately not served here, even in development: everything
+# in it is course material, reachable only through the access-checked views.

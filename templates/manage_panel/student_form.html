@@ -1,0 +1,39 @@
+{% extends "manage_panel/base.html" %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <nav class="manage-head__crumbs" aria-label="Breadcrumb">
+      <a href="{% url 'manage:students' %}">Students</a> /
+      <a href="{% url 'manage:student_detail' student.pk %}">{{ student.get_full_name }}</a> / Edit
+    </nav>
+    <h1>Edit student</h1>
+  </div>
+</header>
+
+<form method="post" class="stack u-gap-20 student-form" novalidate>
+  {% csrf_token %}
+  {% include "includes/form_errors.html" %}
+
+  <section class="panel panel--padded field-grid" aria-label="Details">
+    {% include "includes/field.html" with field=form.full_name %}
+    {% include "includes/field.html" with field=form.email %}
+  </section>
+
+  <section class="panel panel--padded stack u-gap-14" aria-label="Account">
+    {% for field in form %}
+      {% if field.field.widget.input_type == "checkbox" %}
+        <div class="stack u-gap-6">
+          <label class="check">{{ field }} {{ field.label }}</label>
+          {% if field.help_text %}<span class="form-note">{{ field.help_text }}</span>{% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </section>
+
+  <div class="cluster">
+    <button class="btn btn--sm" type="submit">Save changes</button>
+    <a class="btn-link btn-link--sm" href="{% url 'manage:student_detail' student.pk %}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -18,6 +18,11 @@ urlpatterns = [
         views.module_edit,
         name="module_edit",
     ),
+    # Authors
+    path("authors/", views.AuthorsView.as_view(), name="authors"),
+    path("authors/new/", views.author_edit, name="author_new"),
+    path("authors/<slug:slug>/edit/", views.author_edit, name="author_edit"),
+    path("authors/<slug:slug>/delete/", views.author_delete, name="author_delete"),
     # Media library
     path("library/", views.LibraryView.as_view(), name="library"),
     path("library/upload/", views.library_upload, name="library_upload"),
@@ -42,6 +47,8 @@ urlpatterns = [
     path("questions/<int:pk>/delete/", views.question_delete, name="question_delete"),
     # Students and orders
     path("students/", views.StudentsView.as_view(), name="students"),
+    path("students/<int:pk>/", views.StudentDetailView.as_view(), name="student_detail"),
+    path("students/<int:pk>/edit/", views.student_edit, name="student_edit"),
     path("students/<int:pk>/access/", views.student_access, name="student_access"),
     path("students/<int:pk>/grant/", views.student_grant, name="student_grant"),
     path("orders/", views.OrdersView.as_view(), name="orders"),

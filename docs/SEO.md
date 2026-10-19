@@ -85,7 +85,7 @@ stale when the course changes.
 
 Dashboards, lessons, quizzes, checkout, receipts and `/manage/` all send
 `noindex, nofollow`, are listed in `robots.txt`, and require a session.
-Protected files additionally send `X-Robots-Tag: noindex, nofollow`.
+Course media files additionally send `X-Robots-Tag: noindex, nofollow`.
 
 Tests assert that the sitemap excludes them and that lesson pages carry the
 noindex directive.

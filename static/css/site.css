@@ -1007,6 +1007,37 @@ select {
   background: var(--cream);
 }
 
+/* Course page: who wrote the course. Photo above the text on phones. */
+.author-card {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+  padding-top: 32px;
+  border-top: 1px solid var(--line-muted);
+}
+
+@media (min-width: 576px) {
+  .author-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 28px;
+  }
+}
+
+.author-card__photo {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+@media (min-width: 768px) {
+  .author-card__photo {
+    width: 160px;
+    height: 160px;
+  }
+}
+
 /* ------------------------------------------------------------------ meter */
 
 .meter {

@@ -12,7 +12,9 @@ from django.core.validators import FileExtensionValidator
 from django.db.models import Q
 from django.forms import inlineformset_factory
 
+from accounts.forms import AccountSettingsForm
 from courses.models import (
+    Author,
     Choice,
     Course,
     LibraryFile,
@@ -21,6 +23,7 @@ from courses.models import (
     Question,
     Quiz,
 )
+from orders.models import Order
 from pages.models import Faq, LegalPage
 
 
@@ -29,8 +32,9 @@ class CourseForm(forms.ModelForm):
         model = Course
         fields = (
             "title", "subtitle", "slug", "summary", "description", "level",
-            "price", "status", "requires", "trailer_label", "trailer_duration",
-            "meta_title", "meta_description",
+            "price", "status", "requires", "promote_on_home", "author",
+            "trailer_url", "trailer_label", "trailer_duration", "meta_title",
+            "meta_description",
         )
         widgets = {
             "summary": forms.Textarea(attrs={"rows": 3}),
@@ -45,19 +49,40 @@ class CourseForm(forms.ModelForm):
             queryset = queryset.exclude(pk=self.instance.pk)
         self.fields["requires"].queryset = queryset
         self.fields["requires"].empty_label = "No prerequisite"
+        self.fields["author"].empty_label = "No author"
+
+
+class AuthorForm(forms.ModelForm):
+    PHOTO_MAX_BYTES = 5 * 1024 * 1024
+
+    # A separate tick box rather than ClearableFileInput, whose "Currently"
+    # link points at MEDIA_URL, which is never served.
+    remove_photo = forms.BooleanField(required=False, label="Remove the current photo")
+
+    class Meta:
+        model = Author
+        fields = ("name", "slug", "photo", "bio")
+        widgets = {
+            "photo": forms.FileInput(attrs={"accept": "image/jpeg,image/png,image/webp"}),
+            "bio": forms.Textarea(attrs={"rows": 12, "class": "editor-area"}),
+        }
+
+    def clean_photo(self):
+        """Refuse photos over the size limit."""
+        photo = self.cleaned_data["photo"]
+        if photo and photo.size > self.PHOTO_MAX_BYTES:
+            raise forms.ValidationError("The photo is larger than 5 MB.")
+        return photo
+
+    def save(self, commit=True):
+        """Save the author, clearing the photo when asked to."""
+        # A new upload wins over the tick box, so replacing needs one step.
+        if self.cleaned_data.get("remove_photo") and "photo" not in self.files:
+            self.instance.photo = ""
+        return super().save(commit=commit)
 
 
 class ModuleForm(forms.ModelForm):
-    download_links = forms.CharField(
-        label="Download links",
-        required=False,
-        widget=forms.Textarea(
-            attrs={"rows": 4, "class": "u-mono", "placeholder": "/library/…/worksheet-1.pdf"}
-        ),
-        help_text="Paste a media library link on each line. "
-        "The Markdown from the library works too.",
-    )
-
     class Meta:
         model = Module
         fields = (
@@ -69,38 +94,6 @@ class ModuleForm(forms.ModelForm):
             "summary": forms.Textarea(attrs={"rows": 3}),
             "notes_markdown": forms.Textarea(attrs={"rows": 14, "class": "editor-area"}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance.pk:
-            self.initial.setdefault(
-                "download_links",
-                "\n".join(item.get_absolute_url() for item in self.instance.downloads.all()),
-            )
-
-    def clean_download_links(self):
-        """Each pasted line as a library file, refusing any that is not one."""
-        files, bad = [], []
-        for line in self.cleaned_data["download_links"].splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            item = LibraryFile.from_link(line)
-            if item is None:
-                bad.append(line)
-            elif item not in files:
-                files.append(item)
-        if bad:
-            raise forms.ValidationError(
-                [f"“{line}” is not a media library link." for line in bad]
-            )
-        return files
-
-    def _save_m2m(self):
-        # Runs on save(), or on save_m2m() after save(commit=False), once the
-        # module has a primary key to link the files to.
-        super()._save_m2m()
-        self.instance.downloads.set(self.cleaned_data["download_links"])
 
 
 class QuizForm(forms.ModelForm):
@@ -329,11 +322,97 @@ class LibraryFilterForm(forms.Form):
 
 
 class StudentFilterForm(forms.Form):
+    """Search students and narrow them to a course or an enrolment state.
+
+    Every field is optional. With a course chosen, "Enrolled", "Paid" and
+    "Not enrolled" are about that course; without one, about any course.
+    """
+
+    ENROLLED = "enrolled"
+    PAID = "paid"
+    FREE = "free"
+
     q = forms.CharField(
         required=False,
+        max_length=200,
         label="Search",
         widget=forms.TextInput(attrs={"placeholder": "Search name or email"}),
     )
+    course = forms.ModelChoiceField(
+        required=False,
+        queryset=Course.objects.order_by("position", "title"),
+        to_field_name="slug",
+        empty_label="All courses",
+    )
+    status = forms.ChoiceField(
+        required=False,
+        label="Enrolment",
+        choices=[
+            ("", "Any enrolment"),
+            (ENROLLED, "Enrolled"),
+            (PAID, "Paid"),
+            (FREE, "Not enrolled"),
+        ],
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Parts of one course share a title; the subtitle tells them apart.
+        self.fields["course"].label_from_instance = lambda course: " · ".join(
+            filter(None, (course.title, course.subtitle))
+        )
+
+    def clean_q(self):
+        """Collapse stray spaces, so "Rafiq  Ahmed" finds "Rafiq Ahmed"."""
+        return " ".join(self.cleaned_data["q"].split())
+
+    def filter(self, students):
+        """The students matching the search, course and enrolment state."""
+        data = self.cleaned_data if self.is_valid() else {}
+        if data.get("q"):
+            students = students.filter(
+                Q(full_name__icontains=data["q"]) | Q(email__icontains=data["q"])
+            )
+        course = data.get("course")
+        enrolled = Q(enrollments__is_active=True)
+        paid = Q(orders__status=Order.Status.PAID)
+        if course:
+            enrolled &= Q(enrollments__course=course)
+            paid &= Q(orders__course=course)
+        status = data.get("status")
+        if status == self.PAID:
+            students = students.filter(paid)
+        elif status == self.FREE:
+            students = students.exclude(enrolled)
+        elif status == self.ENROLLED or course:
+            # A course on its own means "the students of that course".
+            students = students.filter(enrolled)
+        return students.distinct()
+
+    @property
+    def is_narrowed(self):
+        """True when anything limits the list."""
+        data = self.cleaned_data if self.is_valid() else {}
+        return any(data.get(name) for name in ("q", "course", "status"))
+
+
+class StudentForm(AccountSettingsForm):
+    """An administrator's edit of a student's details and account switches.
+
+    Reuses the student's own settings form, so the email rules stay the same.
+    """
+
+    class Meta(AccountSettingsForm.Meta):
+        fields = ("full_name", "email", "marketing_opt_in", "access_enabled", "is_active")
+        labels = {
+            "marketing_opt_in": "Receives course news by email",
+            "access_enabled": "Course access enabled",
+            "is_active": "Can sign in",
+        }
+        help_texts = {
+            "access_enabled": "Turn off to suspend paid material. Orders are kept.",
+            "is_active": "Turn off to block sign-in without deleting the account.",
+        }
 
 
 class FaqForm(forms.ModelForm):

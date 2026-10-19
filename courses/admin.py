@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import (
+    Author,
     Choice,
     Course,
     Enrollment,
@@ -23,12 +24,23 @@ class ModuleInline(admin.TabularInline):
     show_change_link = True
 
 
+@admin.register(Author)
+class AuthorAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug", "updated_at")
+    search_fields = ("name", "bio")
+    prepopulated_fields = {"slug": ("name",)}
+
+
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("title", "status", "price", "position", "updated_at")
-    list_filter = ("status",)
+    list_display = (
+        "title", "author", "status", "promote_on_home", "price", "position", "updated_at",
+    )
+    list_filter = ("status", "promote_on_home", "author")
+    list_select_related = ("author",)
     search_fields = ("title", "summary")
     prepopulated_fields = {"slug": ("title",)}
+    autocomplete_fields = ("author",)
     inlines = [ModuleInline]
 
 

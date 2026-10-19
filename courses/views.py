@@ -17,6 +17,7 @@ from . import video
 from .access import CourseAccess, can_fetch_library_file, course_queryset
 from .markup import render_notes
 from .models import (
+    Author,
     Course,
     LibraryFile,
     MediaAsset,
@@ -449,25 +450,25 @@ def save_video_position(request, pk):
     return JsonResponse({"saved": True})
 
 
-# -- Protected media --------------------------------------------------------
+# -- Course media -----------------------------------------------------------
 
 
-def _serve_protected(path, download_name="", as_attachment=False):
-    """Stream a file from PROTECTED_MEDIA_ROOT, or hand it to nginx.
+def _serve_media(path, download_name="", as_attachment=False):
+    """Stream a file from MEDIA_ROOT, or hand it to nginx.
 
     `path` has already been produced by the database, never by the request,
     but it is still resolved and bounds-checked before opening.
     """
-    root = Path(settings.PROTECTED_MEDIA_ROOT).resolve()
+    root = Path(settings.MEDIA_ROOT).resolve()
     target = (root / path).resolve()
     if not str(target).startswith(str(root) + "/") or not target.is_file():
         raise Http404("File not found.")
 
-    if settings.PROTECTED_MEDIA_INTERNAL_URL:
+    if settings.MEDIA_INTERNAL_URL:
         # nginx streams the bytes from an `internal` location, so a large
         # video does not occupy a worker. The access check has already run.
         response = HttpResponse()
-        response["X-Accel-Redirect"] = settings.PROTECTED_MEDIA_INTERNAL_URL + path
+        response["X-Accel-Redirect"] = settings.MEDIA_INTERNAL_URL + path
         response["Content-Type"] = ""
         response["Cache-Control"] = "private, max-age=0, no-store"
         response["X-Robots-Tag"] = "noindex, nofollow"
@@ -510,7 +511,7 @@ def protected_video(request, pk):
         raise Http404("No such video.")
     if not module.video_uid:
         raise Http404("No video for this module.")
-    return _serve_protected(module.video_uid)
+    return _serve_media(module.video_uid)
 
 
 @login_required
@@ -518,11 +519,29 @@ def protected_asset(request, pk):
     asset = get_object_or_404(MediaAsset.objects.select_related("module__course"), pk=pk)
     if not CourseAccess(request.user, asset.module.course).can_view(asset.module):
         raise Http404("No such file.")
-    return _serve_protected(
+    return _serve_media(
         asset.file.name,
         download_name=Path(asset.file.name).name,
         as_attachment=asset.kind == MediaAsset.Kind.DOWNLOAD,
     )
+
+
+def author_photo(request, slug):
+    """An author's photo: public, unlike the course material.
+
+    Only authors of a published course are public; staff see every author,
+    so the panel can show a photo before the course goes live.
+    """
+    authors = Author.objects.all()
+    if not request.user.is_staff:
+        authors = authors.filter(courses__status=Course.Status.PUBLISHED).distinct()
+    author = get_object_or_404(authors, slug=slug)
+    if not author.photo:
+        raise Http404("No author photo.")
+    response = _serve_media(author.photo.name)
+    # `photo_url` changes when the photo does, so it may be cached.
+    response["Cache-Control"] = "public, max-age=86400"
+    return response
 
 
 def library_file(request, key, name):
@@ -534,7 +553,7 @@ def library_file(request, key, name):
     item = get_object_or_404(LibraryFile, key=key)
     if name != item.filename or not can_fetch_library_file(request.user, item):
         raise Http404("No such file.")
-    return _serve_protected(
+    return _serve_media(
         item.file.name,
         download_name=item.filename,
         as_attachment=item.is_download,

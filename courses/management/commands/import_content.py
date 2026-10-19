@@ -24,7 +24,8 @@ from pages.models import Faq, LegalPage
 
 COURSE_FIELDS = (
     "title", "subtitle", "summary", "description", "level", "price", "status",
-    "trailer_label", "trailer_duration", "position", "meta_title", "meta_description",
+    "trailer_url", "trailer_label", "trailer_duration", "promote_on_home", "position",
+    "meta_title", "meta_description",
 )
 MODULE_FIELDS = (
     "title", "slug", "title_bn", "summary", "notes_markdown", "access", "status",

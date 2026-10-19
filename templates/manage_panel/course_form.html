@@ -25,13 +25,43 @@
     {% include "includes/field.html" with field=form.price %}
     {% include "includes/field.html" with field=form.status %}
     {% include "includes/field.html" with field=form.requires %}
-    {% include "includes/field.html" with field=form.trailer_label %}
-    {% include "includes/field.html" with field=form.trailer_duration %}
+    <label class="check editor-check">
+      {{ form.promote_on_home }} {{ form.promote_on_home.label }}
+    </label>
+  </section>
+
+  <section class="panel" aria-labelledby="trailer-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="trailer-title">Trailer</h2>
+      {% if course.trailer_embed_url %}
+        <span class="badge badge--status badge--ok">Showing on the course page</span>
+      {% else %}
+        <span class="badge badge--status badge--locked">No trailer yet</span>
+      {% endif %}
+    </div>
+    <div class="panel__body field-grid">
+      {% include "includes/field.html" with field=form.trailer_url %}
+      {% include "includes/field.html" with field=form.trailer_label %}
+      {% include "includes/field.html" with field=form.trailer_duration %}
+    </div>
   </section>
 
   <section class="panel panel--padded stack u-gap-16" aria-label="Description">
     {% include "includes/field.html" with field=form.summary %}
     {% include "includes/field.html" with field=form.description %}
+  </section>
+
+  <section class="panel" aria-labelledby="author-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="author-title">Author</h2>
+      <a class="btn-link btn-link--sm" href="{% url 'manage:author_new' %}">Add an author</a>
+    </div>
+    <div class="panel__body stack u-gap-10">
+      {% include "includes/field.html" with field=form.author help="Shown under “About the author” on the course page. Edit name, photo and bio under Authors." %}
+      {% if course.author %}
+        <p><a class="btn-link btn-link--sm" href="{% url 'manage:author_edit' course.author.slug %}">Edit {{ course.author.name }}</a></p>
+      {% endif %}
+    </div>
   </section>
 
   <section class="panel panel--padded stack u-gap-16" aria-labelledby="seo-title">

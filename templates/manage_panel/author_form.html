@@ -1,0 +1,71 @@
+{% extends "manage_panel/base.html" %}
+{% load static %}
+
+{% block extra_js %}<script src="{% static 'js/manage.js' %}" defer></script>{% endblock %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <nav class="manage-head__crumbs" aria-label="Breadcrumb">
+      <a href="{% url 'manage:authors' %}">Authors</a> / {% if author %}{{ author.name }}{% else %}New author{% endif %}
+    </nav>
+    <h1>{% if author %}Edit author{% else %}New author{% endif %}</h1>
+  </div>
+  <button class="btn btn--sm" type="submit" form="author-form">
+    {% if author %}Save changes{% else %}Create author{% endif %}
+  </button>
+</header>
+
+<form method="post" enctype="multipart/form-data" id="author-form" class="stack u-gap-20 author-form" novalidate>
+  {% csrf_token %}
+  {% include "includes/form_errors.html" %}
+
+  <section class="panel panel--padded field-grid" aria-label="Details">
+    {% include "includes/field.html" with field=form.name %}
+    {% include "includes/field.html" with field=form.slug %}
+  </section>
+
+  <section class="panel" aria-labelledby="photo-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="photo-title">Photo</h2>
+    </div>
+    <div class="panel__body author-upload">
+      {% if author.photo %}
+        <img class="author-upload__current" src="{{ author.photo_url }}"
+             alt="Current photo of {{ author.name }}" width="96" height="96">
+      {% endif %}
+      <div class="stack u-gap-10">
+        {% include "includes/field.html" with field=form.photo %}
+        {% if author.photo %}
+          <label class="check author-upload__remove">
+            {{ form.remove_photo }} {{ form.remove_photo.label }}
+          </label>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="bio-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="bio-title">
+        <label for="{{ form.bio.id_for_label }}">Bio</label>
+      </h2>
+      {% include "includes/md_tools.html" with target=form.bio.id_for_label %}
+    </div>
+    {{ form.bio }}
+    {% for error in form.bio.errors %}<p class="field__error panel__body">{{ error }}</p>{% endfor %}
+    <p class="panel__foot">Markdown. Shown under “About the author” on the course page.</p>
+  </section>
+
+  {% if courses %}
+    <section class="panel panel--padded stack u-gap-10" aria-labelledby="teaches-title">
+      <h2 class="panel__title" id="teaches-title">Teaches</h2>
+      <ul class="stack u-gap-6">
+        {% for course in courses %}
+          <li><a href="{% url 'manage:course_edit' course.slug %}">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+</form>
+{% endblock %}

@@ -56,6 +56,36 @@ class PublicPageTests(TestCase):
         self.assertContains(response, "Sound")
         self.assertContains(response, "Do I need to read music?")
 
+    def test_home_features_the_promoted_course(self):
+        Course.objects.create(
+            title="Harmony in Practice", slug="harmony", summary="Chords.",
+            description="D.", status=Course.Status.PUBLISHED, position=5,
+            promote_on_home=True,
+        )
+        response = self.client.get(reverse("pages:home"))
+        self.assertEqual(response.context["course"].slug, "harmony")
+
+    def test_home_falls_back_to_the_first_course_when_none_is_promoted(self):
+        response = self.client.get(reverse("pages:home"))
+        self.assertEqual(response.context["course"], self.course)
+
+    def test_a_promoted_draft_is_not_featured(self):
+        Course.objects.create(
+            title="Draft", slug="draft", summary="S.", description="D.",
+            status=Course.Status.DRAFT, promote_on_home=True,
+        )
+        response = self.client.get(reverse("pages:home"))
+        self.assertEqual(response.context["course"], self.course)
+
+    def test_the_trailer_button_shows_only_with_a_trailer(self):
+        response = self.client.get(reverse("pages:home"))
+        self.assertNotContains(response, "trailer-cta")
+        Course.objects.filter(pk=self.course.pk).update(
+            trailer_url="https://youtu.be/dQw4w9WgXcQ"
+        )
+        response = self.client.get(reverse("pages:home"))
+        self.assertContains(response, f'href="{self.course.get_absolute_url()}#trailer"')
+
     def test_home_renders_without_a_published_course(self):
         Course.objects.update(status=Course.Status.DRAFT)
         response = self.client.get(reverse("pages:home"))

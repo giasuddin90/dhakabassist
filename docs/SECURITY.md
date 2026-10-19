@@ -27,7 +27,7 @@ the form cannot be used to enumerate customers.
 ## Authorisation
 
 One module decides who may study what: `courses/access.py`. Every view, the
-protected media stream and the quiz all ask it, so they cannot disagree.
+course media stream and the quiz all ask it, so they cannot disagree.
 
 | Who | Gets |
 | --- | --- |
@@ -88,10 +88,10 @@ enrolment or send a second receipt.
 
 Course videos are the paid product. They are never exposed as a public file.
 
-Material is written under `PROTECTED_MEDIA_ROOT`, outside `MEDIA_ROOT`, so the
-web server has no route to it. `courses/storage.py` refuses to produce a
-public URL at all — asking raises `SuspiciousOperation` — which means a
-template cannot leak one by accident.
+Every upload is written under `MEDIA_ROOT`, and nothing serves that folder
+directly: Django does not route `MEDIA_URL` (not even with `DEBUG` on), and
+nginx has no `/media/` location. Templates link to the access-checked views
+(`get_absolute_url`), never to `file.url`.
 
 The only route to the bytes is `courses.views.protected_asset`, which checks
 enrolment first and then streams the file with `Cache-Control: no-store` and
@@ -109,7 +109,7 @@ Content-Security-Policy, so an SVG opened on its own cannot run script.
 
 With Cloudflare Stream configured, playback uses a token signed per request
 that expires (two hours by default), so a copied URL stops working. If signing
-is not configured the code deliberately falls back to the protected stream
+is not configured the code deliberately falls back to the access-checked stream
 rather than serving an unsigned public URL.
 
 The goal, as the brief states, is to prevent unauthorised access and casual

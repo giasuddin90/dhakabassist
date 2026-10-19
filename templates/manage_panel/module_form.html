@@ -88,33 +88,7 @@
           </label>
         </div>
         <p class="panel__foot">Students never receive a direct file link: Cloudflare playback is
-          signed per request, and a protected file is streamed only after the enrolment check.</p>
-      </section>
-
-      <section class="panel" aria-labelledby="downloads-title">
-        <div class="panel__head">
-          <h2 class="panel__title" id="downloads-title">Downloads</h2>
-          <a class="btn-link btn-link--sm" href="{{ download_library_url }}" target="_blank" rel="noopener">Open library ↗</a>
-        </div>
-        <div class="panel__body">
-          {% include "includes/field.html" with field=form.download_links %}
-        </div>
-        {% if saved_downloads %}
-          <ul class="pick-list">
-            {% for item in saved_downloads %}
-              <li class="pick-row">
-                {% include "includes/file_tag.html" %}
-                <span class="pick-row__name">
-                  <span class="pick-row__title">{{ item.title }}</span>
-                  <span class="pick-row__meta">{{ item.folder }} · {{ item.filename }}</span>
-                </span>
-              </li>
-            {% endfor %}
-          </ul>
-        {% endif %}
-        <p class="panel__foot">In the library, copy a file's <strong>Link only</strong> and paste it here.
-          Saved files appear under the module's <strong>Downloads</strong> tab, free to every student
-          who can open this module.</p>
+          signed per request, and an uploaded file is streamed only after the enrolment check.</p>
       </section>
 
       <div class="editor-actions">

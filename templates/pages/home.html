@@ -29,10 +29,12 @@
              alt="{{ site.instructor }} playing bass on stage"
              fetchpriority="high" decoding="async">
       </div>
-      <a class="trailer-cta" href="{{ course.get_absolute_url }}">
-        <span class="play play--xs" aria-hidden="true">{% include "includes/icon_play.html" with size=11 height=12 color="#F1E9D2" %}</span>
-        {{ course.trailer_label|default:"Watch the trailer" }}{% if course.trailer_duration %} · {{ course.trailer_duration }}{% endif %}
-      </a>
+      {% if course.trailer_embed_url %}
+        <a class="trailer-cta" href="{{ course.get_absolute_url }}#trailer">
+          <span class="play play--xs" aria-hidden="true">{% include "includes/icon_play.html" with size=11 height=12 color="#F1E9D2" %}</span>
+          {{ course.trailer_label|default:"Watch the trailer" }}{% if course.trailer_duration %} · {{ course.trailer_duration }}{% endif %}
+        </a>
+      {% endif %}
     </div>
   </section>
 

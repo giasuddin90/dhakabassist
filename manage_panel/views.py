@@ -14,7 +14,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.management import call_command
 from django.core.paginator import Paginator
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Max, Prefetch, Q, Sum
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.defaultfilters import pluralize
@@ -24,11 +24,11 @@ from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 
 from courses.models import (
+    Author,
     Course,
     Enrollment,
     LibraryFile,
     Module,
-    ModuleProgress,
     Question,
     Quiz,
 )
@@ -37,6 +37,7 @@ from pages.models import ContactMessage, Faq, LegalPage
 from pages.seo import noindex
 
 from .forms import (
+    AuthorForm,
     ChoiceFormSet,
     CourseForm,
     FaqForm,
@@ -47,6 +48,7 @@ from .forms import (
     QuestionForm,
     QuizForm,
     StudentFilterForm,
+    StudentForm,
 )
 
 User = get_user_model()
@@ -80,6 +82,7 @@ def nav_counts():
     """Badge numbers beside the sidebar links."""
     return {
         "courses": Course.objects.count(),
+        "authors": Author.objects.count(),
         "library": LibraryFile.objects.count(),
         "students": User.objects.filter(is_staff=False).count(),
         "orders": Order.objects.filter(status=Order.Status.PENDING).count(),
@@ -282,7 +285,7 @@ def course_edit(request, slug=None):
 
 @staff_required
 def module_edit(request, slug, module_slug=None):
-    """The module editor: details, notes, video, downloads and files from the library."""
+    """The module editor: details, notes, video and files from the library."""
     course = get_object_or_404(Course, slug=slug)
     module = (
         get_object_or_404(
@@ -316,10 +319,6 @@ def module_edit(request, slug, module_slug=None):
             "library": library,
             "library_purposes": library_purposes(library),
             "linked_files": linked_library_files(module, library),
-            "saved_downloads": list(module.downloads.all()) if module.pk else [],
-            "download_library_url": (
-                f"{reverse('manage:library')}?purpose={LibraryFile.Purpose.DOWNLOAD}"
-            ),
             "quiz": getattr(module, "quiz", None) if module.pk else None,
             "section": "courses",
             "counts": nav_counts(),
@@ -366,6 +365,65 @@ def module_reorder(request, slug):
     if request.headers.get("X-Requested-With") == "fetch":
         return JsonResponse({"saved": len(changed)})
     return redirect(f"{reverse('manage:courses')}?course={course.slug}")
+
+
+# -- Authors ----------------------------------------------------------------
+
+
+class AuthorsView(ManageBase):
+    template_name = "manage_panel/authors.html"
+    section = "authors"
+    heading = "Authors"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["authors"] = Author.objects.annotate(courses_count=Count("courses"))
+        return context
+
+
+@staff_required
+def author_edit(request, slug=None):
+    """Create or edit an author: name, photo and Markdown bio."""
+    author = get_object_or_404(Author, slug=slug) if slug else None
+    form = AuthorForm(request.POST or None, request.FILES or None, instance=author)
+    if request.method == "POST" and form.is_valid():
+        author = form.save()
+        messages.success(request, f"{author.name} has been saved.")
+        return redirect("manage:authors")
+    return render(
+        request,
+        "manage_panel/author_form.html",
+        {
+            "form": form,
+            "author": author,
+            "courses": author.courses.all() if author else [],
+            "section": "authors",
+            "counts": nav_counts(),
+            "seo": noindex(author.name if author else "New author"),
+        },
+    )
+
+
+@staff_required
+@require_POST
+def author_delete(request, slug):
+    """Delete an author who no longer teaches any course.
+
+    `Course.author` protects the row, so this says which courses to change
+    first instead of failing.
+    """
+    author = get_object_or_404(Author, slug=slug)
+    titles = list(author.courses.values_list("title", flat=True))
+    if titles:
+        messages.error(
+            request,
+            f"{author.name} still teaches {', '.join(titles)}. "
+            "Choose another author for those courses first.",
+        )
+    else:
+        author.delete()
+        messages.success(request, f"{author.name} has been deleted.")
+    return redirect("manage:authors")
 
 
 # -- Media library ----------------------------------------------------------
@@ -646,62 +704,159 @@ class QuizIndexView(ManageBase):
 
 
 class StudentsView(ManageBase):
+    """Every student, searchable and narrowed by course or enrolment state."""
+
     template_name = "manage_panel/students.html"
     section = "students"
     heading = "Students"
 
+    paginate_by = 50
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        form = StudentFilterForm(self.request.GET or None)
-        query = form.data.get("q", "").strip() if form.is_valid() else ""
-
-        students = User.objects.filter(is_staff=False)
-        if query:
-            students = students.filter(
-                Q(full_name__icontains=query) | Q(email__icontains=query)
-            )
-
-        course = Course.objects.order_by("position", "title").first()
+        form = StudentFilterForm(self.request.GET)
+        chosen = form.cleaned_data.get("course") if form.is_valid() else None
+        # Progress is measured against one course: the chosen one, else the first.
+        course = chosen or Course.objects.order_by("position", "title").first()
         total_modules = (
             course.modules.filter(status=Module.Status.PUBLISHED).count() if course else 0
         )
-        students = students.annotate(
-            completed=Count(
-                "module_progress",
-                filter=Q(module_progress__completed_at__isnull=False),
-                distinct=True,
-            ),
-            enrolled=Count("enrollments", filter=Q(enrollments__is_active=True)),
-        ).order_by("-date_joined")[:100]
 
-        rows = []
-        for student in students:
-            last = (
-                ModuleProgress.objects.filter(student=student)
-                .order_by("-last_seen_at")
-                .values_list("last_seen_at", flat=True)
-                .first()
-            )
-            rows.append(
-                {
-                    "student": student,
-                    "completed": student.completed,
-                    "total": total_modules,
-                    "width": round(student.completed / total_modules * 100)
-                    if total_modules
-                    else 0,
-                    "last_active": last,
-                    "is_enrolled": bool(student.enrolled),
-                }
-            )
+        # Filter in a subquery, so its joins cannot inflate the counts below.
+        matching = form.filter(User.objects.filter(is_staff=False)).values("pk")
+        students = annotate_students(User.objects.filter(pk__in=matching), course, chosen)
+        page = Paginator(students.order_by("-date_joined"), self.paginate_by).get_page(
+            self.request.GET.get("page")
+        )
 
         context.update(
             form=form,
-            rows=rows,
+            course=course,
+            chosen=chosen,
+            rows=[student_row(student, total_modules) for student in page],
+            page=page,
+            page_range=page.paginator.get_elided_page_range(page.number, on_each_side=1),
             total=User.objects.filter(is_staff=False).count(),
-            query=query,
+            query=form.cleaned_data.get("q", "") if form.is_valid() else "",
         )
         return context
+
+
+def annotate_students(students, course, chosen=None):
+    """Add progress, enrolment, payment and last-active figures.
+
+    Progress is for `course`. Enrolment and payment are for the `chosen`
+    course, or any course when none is chosen.
+    """
+    in_course = Q(module_progress__module__course=course) if course else Q()
+    enrolled = Q(enrollments__is_active=True)
+    paid = Q(orders__status=Order.Status.PAID)
+    if chosen:
+        enrolled &= Q(enrollments__course=chosen)
+        paid &= Q(orders__course=chosen)
+    return students.annotate(
+        completed=Count(
+            "module_progress",
+            filter=in_course & Q(module_progress__completed_at__isnull=False),
+            distinct=True,
+        ),
+        enrolled=Count("enrollments", filter=enrolled, distinct=True),
+        paid=Count("orders", filter=paid, distinct=True),
+        last_active=Max("module_progress__last_seen_at"),
+    )
+
+
+def student_row(student, total_modules):
+    """One row of the student table."""
+    return {
+        "student": student,
+        "completed": student.completed,
+        "total": total_modules,
+        "width": round(student.completed / total_modules * 100) if total_modules else 0,
+        "last_active": student.last_active,
+        "is_enrolled": bool(student.enrolled),
+        "is_paid": bool(student.paid),
+    }
+
+
+class StudentDetailView(ManageBase):
+    """Everything about one student: account, courses, progress, orders, quizzes."""
+
+    template_name = "manage_panel/student_detail.html"
+    section = "students"
+    heading = "Student"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        student = get_object_or_404(User, pk=self.kwargs["pk"], is_staff=False)
+        enrollments = {e.course_id: e for e in student.enrollments.select_related("course")}
+        progress = {p.module_id: p for p in student.module_progress.all()}
+        courses = (
+            Course.objects.filter(
+                Q(enrollments__student=student) | Q(modules__progress__student=student)
+            )
+            .distinct()
+            .order_by("position", "title")
+            .prefetch_related(
+                Prefetch(
+                    "modules",
+                    queryset=Module.objects.filter(status=Module.Status.PUBLISHED).order_by(
+                        "position"
+                    ),
+                    to_attr="published_modules",
+                )
+            )
+        )
+        context.update(
+            student=student,
+            seo=noindex(student.get_full_name()),
+            courses=[course_progress(c, enrollments.get(c.pk), progress) for c in courses],
+            grantable=Course.objects.exclude(
+                pk__in=student.enrollments.filter(is_active=True).values("course")
+            ).order_by("position", "title"),
+            orders=student.orders.select_related("course")[:20],
+            attempts=student.quiz_attempts.select_related("quiz__module")[:10],
+        )
+        return context
+
+
+def course_progress(course, enrollment, progress):
+    """One course on the student page, with a row per published module."""
+    modules = [
+        {"module": module, "progress": progress.get(module.pk)}
+        for module in course.published_modules
+    ]
+    completed = sum(1 for row in modules if row["progress"] and row["progress"].is_complete)
+    return {
+        "course": course,
+        "enrollment": enrollment,
+        "modules": modules,
+        "completed": completed,
+        "total": len(modules),
+        "width": round(completed / len(modules) * 100) if modules else 0,
+    }
+
+
+@staff_required
+def student_edit(request, pk):
+    """Correct a student's name or email, or switch their access and sign-in."""
+    student = get_object_or_404(User, pk=pk, is_staff=False)
+    form = StudentForm(request.POST or None, instance=student)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, f"{student.get_full_name()} has been saved.")
+        return redirect("manage:student_detail", pk=student.pk)
+    return render(
+        request,
+        "manage_panel/student_form.html",
+        {
+            "form": form,
+            "student": student,
+            "section": "students",
+            "counts": nav_counts(),
+            "seo": noindex(f"Edit {student.get_full_name()}"),
+        },
+    )
 
 
 @staff_required

@@ -32,9 +32,17 @@ core/              # settings.py, env.py, urls.py, wsgi.py, asgi.py (the Django 
 <app>/             # accounts, courses, orders, pages, manage_panel: models, views, forms, urls, tests
 templates/         # base.html, includes/ (shared partials), <app>/
 static/            # css/ (modular), js/ (modules), img/, vendor/
-media/             # uploads
+media/             # every uploaded file (MEDIA_ROOT)
 .env  .env.example
 ```
+
+## Uploads (media folder)
+
+Every uploaded file goes in the media folder (`MEDIA_ROOT`, default `./media`, set by `DJANGO_MEDIA_ROOT`). That covers videos, audio, worksheets, library files, author photos and anything added later.
+
+- Store uploads with a `FileField`/`ImageField` and an `upload_to` function that puts them in a subfolder of `media/` (e.g. `courses/<course>/<module>/`, `library/<folder>/`, `authors/<course>/`). Use the default storage; don't add another storage backend or write files anywhere else (`static/`, `Brand Assets/`, `/tmp`, the project root).
+- Never serve `media/` directly or link to `MEDIA_URL` in templates. Every file goes out through a view: course material through `courses.views.protected_asset` after an access check (see `docs/SECURITY.md`), and public files like author photos through their own view (`courses.views.author_photo`).
+- `media/` is not committed. Don't put files there that the code depends on; those belong in `static/`.
 
 ## .env
 
@@ -55,6 +63,20 @@ media/             # uploads
 - Every model change gets a migration. Use `LoginRequiredMixin` for protected views.
 - Never put secrets in code. Never use `|safe` on user input.
 
+## Database design
+
+Follow relational database best practice. The code must work on both SQLite and PostgreSQL.
+
+- **Normalise (3NF).** Each fact lives in one place. Don't copy a value that can be looked up through a relation or worked out from other columns. Store a copy only when it is a snapshot that must not change later, like the price on an order, and say why in a comment.
+- **Relations are foreign keys.** Link rows with `ForeignKey`, `OneToOneField` or `ManyToManyField`, never an ID or name kept in a plain field. Use an explicit `through` model when the link carries its own data.
+- **Pick `on_delete` on purpose.** `CASCADE` for child rows that mean nothing without their parent (a module's lessons). `PROTECT` for records that must outlive changes (orders, payments). `SET_NULL` (with `null=True`) for optional links. Give every relation a `related_name`.
+- **Enforce rules in the database too**, not only in forms: `unique=True`, `UniqueConstraint` (with a `condition` when needed) and `CheckConstraint` in `Meta.constraints`, with clear `name`s.
+- **Right types.** `DecimalField` for money, `DateTimeField` (timezone-aware) for times, `BooleanField` for flags, `TextChoices`/`IntegerChoices` for fixed sets of values, `PositiveIntegerField` for counts and positions. No comma-separated lists or JSON for data you need to filter or join on.
+- **Nulls.** Text fields use `blank=True` with `""`, not `null=True`, so "empty" has one meaning. Use `null=True` only where "unknown" is a real state.
+- **Index what you query.** Add `db_index=True` or `Meta.indexes` for columns used in filters, ordering and lookups. Foreign keys are indexed already. Don't add indexes nobody uses.
+- **Keep writes consistent.** Wrap multi-step writes in `transaction.atomic()`. Use `select_for_update()` or `F()` expressions where two requests could change the same row (payments, counters).
+- **Migrations are part of the design.** Keep schema and data migrations separate, make data migrations reversible where possible, and never edit a migration that has already run in production.
+
 ## Templates, CSS and JS
 
 - Every page extends `base.html`. Use `{% static %}` for assets and `{% url %}` for links.
@@ -64,6 +86,22 @@ media/             # uploads
 - CSS is split by purpose under `static/css/`, one small file each, all linked from `base.html`: `tokens.css` (`:root` variables), `base.css` (reset, typography), `components.css` (buttons, cards, forms), `layout.css` (navbar, footer, grid helpers), then one file per page or app only when needed (`pages/orders.css`).
 - JS is split into native ES modules under `static/js/`: `main.js` (entry, loaded with `<script type="module">`), `modules/` (one feature per file, e.g. `modal.js`, `form-validate.js`) and `utils/` (shared helpers like `api.js`, `dom.js`). Each module exports functions and imports what it needs. No copy-pasted snippets between files.
 - JavaScript is for enhancement only. Forms must work without it. No jQuery, no inline `<script>` or `onclick`.
+
+## SEO and AEO
+
+Every public page must work for search engines (SEO) and answer engines like ChatGPT, Claude, Perplexity and Google AI Overviews (AEO). `docs/SEO.md` describes what exists. Keep it current when you change anything here.
+
+- **Server-rendered content.** Text, headings and links are in the HTML before any JavaScript runs. Never load public content with JS.
+- **Metadata through `pages/seo.py`.** Every view passes an `SEO` object, and `base.html` renders the title, meta description, canonical URL (from `SITE_BASE_URL`, never the request host), Open Graph and Twitter tags. Each page gets a unique title (about 60 characters) and description (about 155). Don't hand-write meta tags in templates.
+- **Structured data (JSON-LD).** One `@graph` per page, built with the helpers in `pages/seo.py` (`organization`, `course_schema`, `faq_schema`, `article_schema`, `breadcrumb_list`). Add a new type there as a helper, not inline in a template. It must match the visible page, including price, currency and FAQs.
+- **Answer-first content.** Put a short, direct answer at the top of each section (1–2 sentences), then the detail. Write headings as the questions people ask ("How much does the course cost?"). Use real lists, tables and `<details>` FAQs, and state facts plainly: price in BDT, number of modules, what's free and the refund terms.
+- **Semantic HTML.** Exactly one `<h1>` per page, headings in order, landmarks (`<header>`, `<nav>`, `<main>`, `<article>`, `<footer>`), and descriptive link text (no "click here"). Images have real `alt` text, a `width` and `height`, and `loading="lazy"` below the fold.
+- **Clean URLs.** Lowercase slugs, readable and stable (`/courses/<slug>/`). If a public URL has to change, add a 301 redirect.
+- **Internal links.** Every public page is linked from somewhere and no more than two clicks from home. Breadcrumbs come from the same data as the `BreadcrumbList`.
+- **Discovery files stay generated.** `sitemap.xml` (`pages/sitemaps.py`), `robots.txt` and `llms.txt` (`pages/views.py`) are built from the database. Add new public pages to the sitemap and to `llms.txt` if they matter to answer engines. Never hard-code their contents.
+- **Private stays private.** Dashboards, lessons, quizzes, checkout, receipts and `/manage/` use `seo.noindex(...)`, are blocked in `robots.txt` and are left out of the sitemap. Media responses send `X-Robots-Tag: noindex`. `llms.txt` must never describe lesson content.
+- **Fast pages.** No render-blocking scripts, preloaded self-hosted fonts, sized images and `fetchpriority="high"` on the hero image. Use `select_related` / `prefetch_related` so public pages run only a handful of queries.
+- **Test it.** When you add or change a public page, add a test for its title, canonical URL, JSON-LD types and robots directive, and check that private pages stay out of the sitemap.
 
 ## Brand
 

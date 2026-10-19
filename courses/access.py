@@ -1,7 +1,7 @@
 """Who may study what.
 
 Every view asks this module rather than re-deriving the rule, so the paywall,
-the lesson page, the quiz and the protected media stream can never disagree.
+the lesson page, the quiz and the course media stream can never disagree.
 """
 
 from dataclasses import dataclass
@@ -145,7 +145,7 @@ def course_queryset():
 
     One query per relation instead of one per module.
     """
-    return Course.objects.prefetch_related(
+    return Course.objects.select_related("author").prefetch_related(
         Prefetch(
             "modules",
             queryset=Module.objects.prefetch_related(

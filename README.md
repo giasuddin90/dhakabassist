@@ -35,7 +35,7 @@ and legal pages; the file is all-or-nothing, so one invalid entry changes nothin
 | App | What lives there |
 | --- | --- |
 | `pages` | Home, about, contact, FAQ, legal pages, SEO helpers, sitemap, `robots.txt`, `llms.txt` |
-| `courses` | Course, module, media, quiz, enrolment, progress — plus the access rules and protected media |
+| `courses` | Course, module, media, quiz, enrolment, progress — plus the access rules and course media |
 | `accounts` | Email-keyed user, registration, login, password reset, account settings |
 | `orders` | Checkout, payment gateways, orders, receipts |
 | `manage_panel` | The staff administration panel at `/manage/` |
@@ -63,10 +63,11 @@ Three files carry most of the logic worth reading first:
 
 ## Course material is not public
 
-Videos, audio and worksheets are written under `PROTECTED_MEDIA_ROOT`, outside
-`MEDIA_ROOT`. The storage has no public URL at all — asking for one raises —
-so a file can only be reached through `courses.views.protected_asset`, which
-checks enrolment first. With Cloudflare Stream configured, video playback URLs
+Videos, audio, worksheets and library files are all written under
+`MEDIA_ROOT` (`media/`), which is never served directly — not by Django, even
+in development, and not by nginx. A file can only be reached through
+`courses.views.protected_asset` (or the video and library views), which check
+enrolment first. With Cloudflare Stream configured, video playback URLs
 are signed per request and expire.
 
 See [docs/SECURITY.md](docs/SECURITY.md).

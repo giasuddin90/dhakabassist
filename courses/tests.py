@@ -1,4 +1,4 @@
-"""Access rules, progression, the quiz and protected media.
+"""Access rules, progression, the quiz and course media.
 
 These are the behaviours that keep paid material paid, so they are tested
 directly rather than through the UI.
@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -28,6 +29,7 @@ from courses.models import (
     Quiz,
     QuizAttempt,
 )
+from courses.video import trailer_embed_url
 
 User = get_user_model()
 PASSWORD = "quite-a-long-test-password"
@@ -314,8 +316,8 @@ class QuizTests(TestCase):
         self.assertEqual(QuizAttempt.objects.count(), 2)
 
 
-@override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))
-class ProtectedMediaTests(TestCase):
+@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
+class CourseMediaTests(TestCase):
     def setUp(self):
         self.course, self.modules = make_course()
         self.student = User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
@@ -324,7 +326,7 @@ class ProtectedMediaTests(TestCase):
     def tearDown(self):
         from django.conf import settings
 
-        shutil.rmtree(settings.PROTECTED_MEDIA_ROOT, ignore_errors=True)
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def asset(self, module):
         return MediaAsset.objects.create(
@@ -352,10 +354,13 @@ class ProtectedMediaTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse("accounts:login"), response["Location"])
 
-    def test_protected_files_have_no_public_url(self):
+    def test_files_are_stored_in_media_but_not_served_from_it(self):
+        from django.conf import settings
+
         asset = self.asset(self.modules[0])
-        with self.assertRaises(Exception):
-            asset.file.url
+        self.assertTrue((Path(settings.MEDIA_ROOT) / asset.file.name).is_file())
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.get(asset.file.url).status_code, 404)
 
     def test_a_locked_module_video_is_not_served(self):
         self.modules[1].video_uid = "foundations/module-02.mp4"
@@ -439,10 +444,91 @@ class CoursePageTests(TestCase):
         response = self.client.get(reverse("courses:dashboard"))
         self.assertContains(response, "You have not enrolled yet")
 
+    def test_the_trailer_is_embedded_when_a_link_is_set(self):
+        self.course.trailer_url = "https://youtu.be/dQw4w9WgXcQ"
+        self.course.save(update_fields=["trailer_url"])
+        response = self.client.get(self.course.get_absolute_url())
+        self.assertContains(response, "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ")
+
+    def test_no_trailer_means_no_iframe(self):
+        response = self.client.get(self.course.get_absolute_url())
+        self.assertNotContains(response, "<iframe")
+
+
+CF_UID = "31c9291ab41fac05471db4e73aa11717"
+
+
+class TrailerLinkTests(TestCase):
+    def test_youtube_links_become_privacy_enhanced_embeds(self):
+        embed = "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0"
+        for url in (
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "https://youtube.com/watch?feature=share&v=dQw4w9WgXcQ",
+            "https://m.youtube.com/watch?v=dQw4w9WgXcQ&t=42s",
+            "https://youtu.be/dQw4w9WgXcQ?si=abc",
+            "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+            "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(trailer_embed_url(url), embed)
+
+    def test_cloudflare_links_become_iframe_embeds(self):
+        cases = {
+            f"https://customer-abc123.cloudflarestream.com/{CF_UID}/watch":
+                f"https://customer-abc123.cloudflarestream.com/{CF_UID}/iframe",
+            f"https://customer-abc123.cloudflarestream.com/{CF_UID}/iframe":
+                f"https://customer-abc123.cloudflarestream.com/{CF_UID}/iframe",
+            f"https://iframe.videodelivery.net/{CF_UID}":
+                f"https://iframe.videodelivery.net/{CF_UID}",
+            f"https://watch.cloudflarestream.com/{CF_UID}":
+                f"https://iframe.videodelivery.net/{CF_UID}",
+        }
+        for url, embed in cases.items():
+            with self.subTest(url=url):
+                self.assertEqual(trailer_embed_url(url), embed)
+
+    def test_other_links_are_rejected(self):
+        for url in (
+            "",
+            "https://vimeo.com/76979871",
+            "https://www.youtube.com/channel/UC123",
+            "https://youtu.be/short",
+            "javascript:alert(1)//youtu.be/dQw4w9WgXcQ",
+            f"https://evil.example/{CF_UID}",
+            f"https://customer-abc.cloudflarestream.com.evil.example/{CF_UID}",
+            "https://iframe.videodelivery.net/not-a-uid",
+        ):
+            with self.subTest(url=url):
+                self.assertIsNone(trailer_embed_url(url))
+
+    def test_the_model_refuses_an_unsupported_trailer_link(self):
+        course, _ = make_course()
+        course.trailer_url = "https://vimeo.com/76979871"
+        with self.assertRaises(ValidationError) as caught:
+            course.full_clean()
+        self.assertIn("trailer_url", caught.exception.message_dict)
+
+
+class PromoteOnHomeTests(TestCase):
+    def test_promoting_a_course_clears_the_flag_on_the_others(self):
+        first, _ = make_course()
+        second = Course.objects.create(
+            title="Part 2", slug="part-2", summary="S.", description="D.",
+            status=Course.Status.PUBLISHED, promote_on_home=True,
+        )
+        first.promote_on_home = True
+        first.save()
+        second.refresh_from_db()
+        self.assertFalse(second.promote_on_home)
+        self.assertEqual(
+            list(Course.objects.filter(promote_on_home=True)), [first]
+        )
+
 
 @override_settings(
-    PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()),
-    PROTECTED_MEDIA_INTERNAL_URL="/_protected/",
+    MEDIA_ROOT=Path(tempfile.mkdtemp()),
+    MEDIA_INTERNAL_URL="/_media/",
 )
 class XAccelRedirectTests(TestCase):
     """With nginx configured, Django hands off the stream but still gates it."""
@@ -460,13 +546,13 @@ class XAccelRedirectTests(TestCase):
     def tearDown(self):
         from django.conf import settings
 
-        shutil.rmtree(settings.PROTECTED_MEDIA_ROOT, ignore_errors=True)
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def test_an_allowed_request_hands_the_path_to_nginx(self):
         self.client.force_login(self.student)
         response = self.client.get(self.asset.get_absolute_url())
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(response["X-Accel-Redirect"].startswith("/_protected/"))
+        self.assertTrue(response["X-Accel-Redirect"].startswith("/_media/"))
         self.assertIn(self.asset.file.name, response["X-Accel-Redirect"])
         self.assertEqual(response["X-Robots-Tag"], "noindex, nofollow")
         self.assertEqual(response.content, b"", "Django must not stream the bytes")
@@ -571,7 +657,7 @@ class NoJavaScriptTests(TestCase):
         self.assertIn("<summary", body)
 
 
-@override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))
+@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
 class LibraryFileTests(TestCase):
     """Shared library files follow the paywall of whatever links to them."""
 
@@ -591,7 +677,7 @@ class LibraryFileTests(TestCase):
     def tearDown(self):
         from django.conf import settings
 
-        shutil.rmtree(settings.PROTECTED_MEDIA_ROOT, ignore_errors=True)
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def link(self, module, item):
         module.notes_markdown += f"\n\n{item.markdown}\n"
@@ -709,7 +795,7 @@ class LibraryFileTests(TestCase):
         )
 
 
-@override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))
+@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
 class ModuleDownloadTests(TestCase):
     """Library files picked as a module's downloads, free with the module."""
 
@@ -726,7 +812,7 @@ class ModuleDownloadTests(TestCase):
     def tearDown(self):
         from django.conf import settings
 
-        shutil.rmtree(settings.PROTECTED_MEDIA_ROOT, ignore_errors=True)
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def test_the_lesson_lists_the_module_downloads(self):
         self.modules[0].downloads.add(self.sheet)
@@ -759,7 +845,7 @@ class ModuleDownloadTests(TestCase):
         self.assertEqual(self.client.get(self.sheet.get_absolute_url()).status_code, 200)
 
 
-@override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))
+@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
 class QuizLibraryMediaTests(TestCase):
     """Library audio and diagrams pasted anywhere into a quiz."""
 
@@ -785,7 +871,7 @@ class QuizLibraryMediaTests(TestCase):
     def tearDown(self):
         from django.conf import settings
 
-        shutil.rmtree(settings.PROTECTED_MEDIA_ROOT, ignore_errors=True)
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def test_question_markdown_renders_audio_and_diagrams(self):
         self.question.text = (

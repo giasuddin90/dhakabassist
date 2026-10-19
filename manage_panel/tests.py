@@ -1,5 +1,6 @@
 """The administration panel: who may reach it, and what it can change."""
 
+import io
 import shutil
 import tempfile
 from pathlib import Path
@@ -8,16 +9,21 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
+from PIL import Image
 
 from courses.models import (
+    Author,
     Choice,
     Course,
     Enrollment,
     LibraryFile,
     Module,
+    ModuleProgress,
     Question,
     Quiz,
 )
+from orders.models import Order, PaymentMethod
 from pages.models import ContactMessage, Faq, LegalPage
 
 User = get_user_model()
@@ -171,6 +177,36 @@ class StaffPanelTests(TestCase):
         self.course.refresh_from_db()
         self.assertEqual(self.course.summary, "A new summary.")
         self.assertEqual(int(self.course.price), 4000)
+
+    def _course_post(self, **changes):
+        data = {
+            "title": self.course.title, "slug": self.course.slug,
+            "summary": "Summary.", "description": "Description.",
+            "level": "Beginner", "price": "3500", "status": Course.Status.PUBLISHED,
+            "trailer_label": "Watch the trailer",
+        }
+        data.update(changes)
+        return self.client.post(
+            reverse("manage:course_edit", kwargs={"slug": self.course.slug}), data
+        )
+
+    def test_a_trailer_link_and_home_promotion_can_be_set(self):
+        response = self._course_post(
+            trailer_url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            promote_on_home="on",
+        )
+        self.assertEqual(response.status_code, 302)
+        self.course.refresh_from_db()
+        self.assertTrue(self.course.promote_on_home)
+        self.assertEqual(
+            self.course.trailer_embed_url,
+            "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0",
+        )
+
+    def test_an_unsupported_trailer_link_is_refused(self):
+        response = self._course_post(trailer_url="https://vimeo.com/76979871")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Paste a YouTube or Cloudflare Stream link")
 
     def test_a_module_s_notes_and_access_can_be_changed(self):
         module = self.modules[1]
@@ -371,7 +407,249 @@ class StaffPanelTests(TestCase):
         self.assertTrue(message.is_handled)
 
 
-@override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))
+def png_upload(name="author.png"):
+    """A real (tiny) PNG, since an ImageField checks the bytes are an image."""
+    buffer = io.BytesIO()
+    Image.new("RGB", (8, 8), "black").save(buffer, format="PNG")
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type="image/png")
+
+
+@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
+class StudentManagementTests(TestCase):
+    """The student list's filters, the student page and the edit form."""
+
+    def setUp(self):
+        self.course, self.modules = make_course()
+        self.other = Course.objects.create(
+            title="Harmony", slug="harmony", summary="S.", description="D.", position=1
+        )
+        self.staff = User.objects.create_user(
+            email="tanveer@example.com", password=PASSWORD, is_staff=True
+        )
+        self.paid = User.objects.create_user(
+            email="paid@example.com", password=PASSWORD, full_name="Paid Student"
+        )
+        self.granted = User.objects.create_user(
+            email="granted@example.com", password=PASSWORD, full_name="Granted Student"
+        )
+        self.free = User.objects.create_user(
+            email="free@example.com", password=PASSWORD, full_name="Free Student"
+        )
+        Enrollment.objects.create(student=self.paid, course=self.course)
+        Order.objects.create(
+            student=self.paid,
+            course=self.course,
+            amount=3500,
+            method=PaymentMethod.BKASH,
+            status=Order.Status.PAID,
+        )
+        Enrollment.objects.create(
+            student=self.granted, course=self.other, granted_manually=True
+        )
+        self.client.force_login(self.staff)
+
+    def listed(self, **params):
+        response = self.client.get(reverse("manage:students"), params)
+        self.assertEqual(response.status_code, 200)
+        return {row["student"].email for row in response.context["rows"]}
+
+    def test_the_list_can_be_narrowed_to_one_course(self):
+        self.assertEqual(self.listed(course=self.course.slug), {"paid@example.com"})
+        self.assertEqual(self.listed(course=self.other.slug), {"granted@example.com"})
+
+    def test_the_list_can_be_narrowed_to_enrolled_paid_or_free_students(self):
+        self.assertEqual(
+            self.listed(status="enrolled"), {"paid@example.com", "granted@example.com"}
+        )
+        self.assertEqual(self.listed(status="paid"), {"paid@example.com"})
+        self.assertEqual(self.listed(status="free"), {"free@example.com"})
+
+    def test_enrolment_filters_combine_with_the_course(self):
+        self.assertEqual(self.listed(course=self.other.slug, status="paid"), set())
+        self.assertEqual(
+            self.listed(course=self.other.slug, status="free"),
+            {"paid@example.com", "free@example.com"},
+        )
+
+    def test_without_a_course_enrolment_counts_any_course(self):
+        response = self.client.get(reverse("manage:students"))
+        rows = {row["student"].email: row for row in response.context["rows"]}
+        self.assertTrue(rows["granted@example.com"]["is_enrolled"])
+        self.assertFalse(rows["granted@example.com"]["is_paid"])
+        self.assertFalse(rows["free@example.com"]["is_enrolled"])
+
+    def test_an_unknown_course_is_ignored_rather_than_an_error(self):
+        self.assertEqual(len(self.listed(course="no-such-course")), 3)
+
+    def test_progress_counts_only_the_shown_course(self):
+        ModuleProgress.objects.create(
+            student=self.paid, module=self.modules[0], completed_at=timezone.now()
+        )
+        response = self.client.get(reverse("manage:students"), {"course": self.course.slug})
+        row = response.context["rows"][0]
+        self.assertEqual((row["completed"], row["total"]), (1, 3))
+        self.assertTrue(row["is_paid"])
+
+    def test_the_student_page_shows_courses_progress_and_orders(self):
+        ModuleProgress.objects.create(
+            student=self.paid, module=self.modules[0], completed_at=timezone.now()
+        )
+        response = self.client.get(
+            reverse("manage:student_detail", kwargs={"pk": self.paid.pk})
+        )
+        self.assertContains(response, "paid@example.com")
+        self.assertContains(response, "Foundations of Music")
+        self.assertContains(response, "1 of 3 modules complete")
+        self.assertContains(response, Order.objects.get(student=self.paid).reference)
+        # Already enrolled in the first course, so only the other can be granted.
+        self.assertEqual(list(response.context["grantable"]), [self.other])
+
+    def test_staff_have_no_student_page(self):
+        response = self.client.get(
+            reverse("manage:student_detail", kwargs={"pk": self.staff.pk})
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_a_student_can_be_edited(self):
+        url = reverse("manage:student_edit", kwargs={"pk": self.free.pk})
+        response = self.client.post(
+            url, {"full_name": "Renamed Student", "email": "renamed@example.com"}
+        )
+        self.assertRedirects(
+            response, reverse("manage:student_detail", kwargs={"pk": self.free.pk})
+        )
+        self.free.refresh_from_db()
+        self.assertEqual(self.free.full_name, "Renamed Student")
+        self.assertEqual(self.free.email, "renamed@example.com")
+        # Unticked boxes are not posted, so both switches turn off.
+        self.assertFalse(self.free.access_enabled)
+        self.assertFalse(self.free.is_active)
+
+    def test_an_edit_cannot_take_another_account_s_email(self):
+        url = reverse("manage:student_edit", kwargs={"pk": self.free.pk})
+        response = self.client.post(
+            url, {"full_name": "Free Student", "email": "PAID@example.com", "is_active": "on"}
+        )
+        self.assertContains(response, "Another account already uses this email.")
+        self.free.refresh_from_db()
+        self.assertEqual(self.free.email, "free@example.com")
+
+    def test_a_student_cannot_open_the_student_pages(self):
+        self.client.force_login(self.free)
+        for name in ("manage:student_detail", "manage:student_edit"):
+            response = self.client.get(reverse(name, kwargs={"pk": self.paid.pk}))
+            self.assertIn(response.status_code, (403, 404))
+
+
+@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
+class AuthorEditorTests(TestCase):
+    """Authors are kept on their own and linked to courses."""
+
+    def setUp(self):
+        self.course, _ = make_course()
+        self.staff = User.objects.create_user(
+            email="tanveer@example.com", password=PASSWORD, is_staff=True
+        )
+        self.client.force_login(self.staff)
+
+    def tearDown(self):
+        from django.conf import settings
+
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+
+    def post_author(self, author=None, **extra):
+        url = (
+            reverse("manage:author_edit", kwargs={"slug": author.slug})
+            if author
+            else reverse("manage:author_new")
+        )
+        data = {"name": "Tanveer Haque", "bio": "Bassist and **teacher**."}
+        data.update(extra)
+        return self.client.post(url, data)
+
+    def test_the_author_pages_are_staff_only(self):
+        author = Author.objects.create(name="Tanveer Haque")
+        self.client.logout()
+        for url in (
+            reverse("manage:authors"),
+            reverse("manage:author_new"),
+            reverse("manage:author_edit", kwargs={"slug": author.slug}),
+        ):
+            with self.subTest(url=url):
+                self.assertIn(self.client.get(url).status_code, (302, 403, 404))
+
+    def test_the_form_accepts_file_uploads(self):
+        response = self.client.get(reverse("manage:author_new"))
+        self.assertContains(response, 'enctype="multipart/form-data"')
+        self.assertContains(response, 'name="photo"')
+        self.assertContains(response, 'name="bio"')
+
+    def test_name_photo_and_bio_are_saved(self):
+        response = self.post_author(photo=png_upload())
+        self.assertEqual(response.status_code, 302)
+        author = Author.objects.get()
+        self.assertEqual(author.slug, "tanveer-haque")
+        self.assertEqual(author.bio, "Bassist and **teacher**.")
+        self.assertTrue(author.photo.name.startswith("authors/tanveer-haque/"))
+
+    def test_saving_without_a_new_photo_keeps_the_old_one(self):
+        self.post_author(photo=png_upload())
+        author = Author.objects.get()
+        self.post_author(author, slug=author.slug)
+        author.refresh_from_db()
+        self.assertTrue(author.photo)
+
+    def test_the_photo_can_be_removed(self):
+        self.post_author(photo=png_upload())
+        author = Author.objects.get()
+        self.post_author(author, slug=author.slug, remove_photo="on")
+        author.refresh_from_db()
+        self.assertFalse(author.photo)
+
+    def test_a_file_that_is_not_an_image_is_refused(self):
+        fake = SimpleUploadedFile("author.png", b"not an image", content_type="image/png")
+        response = self.post_author(photo=fake)
+        self.assertTrue(response.context["form"].errors["photo"])
+
+    def test_svg_is_refused(self):
+        svg = SimpleUploadedFile("author.svg", b"<svg/>", content_type="image/svg+xml")
+        response = self.post_author(photo=svg)
+        self.assertTrue(response.context["form"].errors["photo"])
+
+    def test_a_course_is_linked_to_an_author(self):
+        author = Author.objects.create(name="Tanveer Haque")
+        response = self.client.post(
+            reverse("manage:course_edit", kwargs={"slug": self.course.slug}),
+            {
+                "title": self.course.title,
+                "slug": self.course.slug,
+                "summary": "Summary.",
+                "description": "Description.",
+                "level": "Beginner",
+                "price": "3500",
+                "status": Course.Status.PUBLISHED,
+                "trailer_label": "Watch the trailer",
+                "author": author.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.course.refresh_from_db()
+        self.assertEqual(self.course.author, author)
+
+    def test_an_author_with_courses_is_not_deleted(self):
+        author = Author.objects.create(name="Tanveer Haque")
+        self.course.author = author
+        self.course.save(update_fields=["author"])
+        self.client.post(reverse("manage:author_delete", kwargs={"slug": author.slug}))
+        self.assertTrue(Author.objects.filter(pk=author.pk).exists())
+
+    def test_an_unused_author_can_be_deleted(self):
+        author = Author.objects.create(name="Guest Teacher")
+        self.client.post(reverse("manage:author_delete", kwargs={"slug": author.slug}))
+        self.assertFalse(Author.objects.filter(pk=author.pk).exists())
+
+
+@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
 class ModuleEditorLibraryTests(TestCase):
     """The module editor takes its files from the media library, not uploads."""
 
@@ -390,7 +668,7 @@ class ModuleEditorLibraryTests(TestCase):
     def tearDown(self):
         from django.conf import settings
 
-        shutil.rmtree(settings.PROTECTED_MEDIA_ROOT, ignore_errors=True)
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def test_the_editor_has_no_file_uploads(self):
         response = self.client.get(self.url)
@@ -424,58 +702,6 @@ class ModuleEditorLibraryTests(TestCase):
         linked = [item.title for item in response.context["linked_files"]]
         self.assertEqual(sorted(linked), ["Clip", "Scale"])
 
-    def post_download_links(self, links):
-        return self.client.post(
-            self.url,
-            {
-                "number": self.module.number,
-                "title": self.module.title,
-                "slug": self.module.slug,
-                "access": self.module.access,
-                "status": self.module.status,
-                "video_duration_seconds": 0,
-                "download_links": links,
-            },
-        )
-
-    def make_sheet(self, name="worksheet-1.pdf"):
-        return LibraryFile.objects.create(
-            title="Worksheet 1",
-            purpose=LibraryFile.Purpose.DOWNLOAD,
-            file=SimpleUploadedFile(name, b"%PDF"),
-        )
-
-    def test_pasted_library_links_become_module_downloads(self):
-        sheet, chart = self.make_sheet(), self.make_sheet("chart.pdf")
-        links = f"https://dhakabassist.com{sheet.get_absolute_url()}\n\n{chart.markdown}\n"
-        response = self.post_download_links(links)
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(set(self.module.downloads.all()), {sheet, chart})
-
-    def test_saved_downloads_show_as_links_and_clear_when_removed(self):
-        sheet = self.make_sheet()
-        self.module.downloads.add(sheet)
-        response = self.client.get(self.url)
-        self.assertEqual(
-            response.context["form"]["download_links"].value(), sheet.get_absolute_url()
-        )
-        self.post_download_links("")
-        self.assertFalse(self.module.downloads.exists())
-
-    def test_a_link_outside_the_library_is_refused(self):
-        sheet = self.make_sheet()
-        response = self.post_download_links(
-            f"{sheet.get_absolute_url()}\nhttps://drive.google.com/file/abc"
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "is not a media library link")
-        self.assertFalse(self.module.downloads.exists())
-
-    def test_a_library_link_with_the_wrong_file_name_is_refused(self):
-        sheet = self.make_sheet()
-        response = self.post_download_links(f"/library/{sheet.key}/other.pdf")
-        self.assertContains(response, "is not a media library link")
-
     def test_a_new_module_lists_no_linked_files(self):
         LibraryFile.objects.create(title="Scale", file=SimpleUploadedFile("s.mp3", b"ID3"))
         response = self.client.get(reverse("manage:module_new", kwargs={"slug": self.course.slug}))
@@ -483,7 +709,7 @@ class ModuleEditorLibraryTests(TestCase):
         self.assertContains(response, "Scale")
 
 
-@override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))
+@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
 class LibraryTests(TestCase):
     def setUp(self):
         self.course, self.modules = make_course()
@@ -496,7 +722,7 @@ class LibraryTests(TestCase):
     def tearDown(self):
         from django.conf import settings
 
-        shutil.rmtree(settings.PROTECTED_MEDIA_ROOT, ignore_errors=True)
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def test_several_files_upload_into_one_folder(self):
         response = self.client.post(

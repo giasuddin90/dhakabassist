@@ -25,6 +25,23 @@
       <div class="prose">{{ description }}</div>
     {% endif %}
 
+    {% with author=course.author %}
+      {% if author %}
+        <section class="author-card" aria-labelledby="author-title">
+          {% if author.photo %}
+            {# The name sits right beside the photo, so the image is decorative. #}
+            <img class="author-card__photo" src="{{ author.photo_url }}"
+                 width="160" height="160" alt="" loading="lazy" decoding="async">
+          {% endif %}
+          <div class="stack u-gap-10">
+            <p class="eyebrow">About the author</p>
+            <h2 class="display-4" id="author-title">{{ author.name }}</h2>
+            {% if author.bio %}<div class="prose">{{ author.bio_html }}</div>{% endif %}
+          </div>
+        </section>
+      {% endif %}
+    {% endwith %}
+
     <div class="stack u-gap-18" id="curriculum">
       <div class="split" style="align-items:baseline">
         <h2 class="display-4">Curriculum</h2>
@@ -71,11 +88,23 @@
   {# --------------------------------------------------------------- sidebar #}
   <aside class="panel panel--framed u-sticky stack u-gap-18"
          style="flex:1 1 300px;max-width:400px" id="pricing" aria-label="Enrolment">
-    <div class="media media--wide" style="border-radius:var(--radius-sm)">
-      <span class="media__overlay">
-        <span class="play" style="width:52px;height:52px" aria-hidden="true">{% include "includes/icon_play.html" with size=16 height=18 %}</span>
-      </span>
-    </div>
+    {% if course.trailer_embed_url %}
+      <div class="media media--wide" style="border-radius:var(--radius-sm)" id="trailer">
+        {# The page sends only its origin as referrer, which YouTube needs to play embeds. #}
+        <iframe src="{{ course.trailer_embed_url }}"
+                title="{{ course.trailer_label|default:'Watch the trailer' }} — {{ course.title }}"
+                loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+                allow="accelerometer; gyroscope; encrypted-media; picture-in-picture; fullscreen"
+                allowfullscreen></iframe>
+      </div>
+      {% if course.trailer_duration %}<p class="u-fs-14 muted">{{ course.trailer_label|default:"Trailer" }} · {{ course.trailer_duration }}</p>{% endif %}
+    {% else %}
+      <div class="media media--wide" style="border-radius:var(--radius-sm)">
+        <span class="media__overlay">
+          <span class="play" style="width:52px;height:52px" aria-hidden="true">{% include "includes/icon_play.html" with size=16 height=18 %}</span>
+        </span>
+      </div>
+    {% endif %}
 
     <p class="cluster" style="--cluster-gap:10px;align-items:baseline">
       <span class="price price--sm">{{ course.price|taka }}</span>

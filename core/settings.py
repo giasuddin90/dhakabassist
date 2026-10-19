@@ -128,17 +128,13 @@ STORAGES = {
 }
 WHITENOISE_MAX_AGE = 31536000
 
+# Every upload is course material, so nothing under MEDIA_ROOT is served
+# directly: `courses.views.protected_asset` streams it after an enrolment
+# check. See docs/SECURITY.md.
 MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"
-
-# Course material lives outside MEDIA_ROOT so it is never served directly by
-# the web server; `courses.views.protected_asset` streams it after an
-# enrolment check. See docs/SECURITY.md.
-PROTECTED_MEDIA_ROOT = Path(
-    env_str("DJANGO_PROTECTED_MEDIA_ROOT", str(BASE_DIR / "protected_media"))
-)
-# Set to "/_protected/" to hand streaming to nginx via X-Accel-Redirect.
-PROTECTED_MEDIA_INTERNAL_URL = env_str("DJANGO_PROTECTED_MEDIA_INTERNAL_URL", "")
+MEDIA_ROOT = Path(env_str("DJANGO_MEDIA_ROOT", str(BASE_DIR / "media")))
+# Set to "/_media/" to hand streaming to nginx via X-Accel-Redirect.
+MEDIA_INTERNAL_URL = env_str("DJANGO_MEDIA_INTERNAL_URL", "")
 
 # -- Email ------------------------------------------------------------------
 
@@ -202,7 +198,7 @@ SSLCOMMERZ = {
 
 # -- Video ------------------------------------------------------------------
 
-# Cloudflare Stream signed playback. Empty key falls back to the protected
+# Cloudflare Stream signed playback. Empty key falls back to the access-checked
 # file stream, so local development needs no third-party account.
 CLOUDFLARE_STREAM = {
     "account_id": env_str("CLOUDFLARE_ACCOUNT_ID", ""),

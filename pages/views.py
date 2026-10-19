@@ -40,7 +40,12 @@ PAYMENT_CHIPS = ("bKash", "Nagad", "Visa", "Mastercard", "International cards")
 
 def primary_course():
     """The course the marketing pages are about."""
-    return course_queryset().filter(status=Course.Status.PUBLISHED).first()
+    return (
+        course_queryset()
+        .filter(status=Course.Status.PUBLISHED)
+        .order_by(*Course.HOME_ORDERING)
+        .first()
+    )
 
 
 class HomeView(TemplateView):

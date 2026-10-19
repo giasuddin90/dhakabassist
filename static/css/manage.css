@@ -217,6 +217,8 @@ body.manage {
 
 .table-wrap {
   overflow-x: auto;
+  /* Keeps visually hidden headings inside the scroll box, not the page. */
+  position: relative;
 }
 
 .dtable {
@@ -1338,7 +1340,8 @@ a.pager__step:hover {
 }
 
 /* The native file picker reads as a drop zone. */
-.library-upload input[type="file"] {
+.library-upload input[type="file"],
+.author-upload input[type="file"] {
   width: 100%;
   padding: 18px 14px;
   font-size: 14px;
@@ -1351,11 +1354,13 @@ a.pager__step:hover {
   transition: border-color var(--fast) var(--ease);
 }
 
-.library-upload input[type="file"]:hover {
+.library-upload input[type="file"]:hover,
+.author-upload input[type="file"]:hover {
   border-color: var(--ink);
 }
 
-.library-upload input[type="file"]::file-selector-button {
+.library-upload input[type="file"]::file-selector-button,
+.author-upload input[type="file"]::file-selector-button {
   margin-right: 12px;
   padding: 8px 14px;
   font: inherit;
@@ -1365,6 +1370,47 @@ a.pager__step:hover {
   border: 1.5px solid var(--ink);
   border-radius: var(--radius-sm);
   cursor: pointer;
+}
+
+/* Course editor: the current author photo beside the picker. */
+.author-upload {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 576px) {
+  .author-upload {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+/* Authors list: a small round photo, or the initial, beside the name. */
+.author-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.author-row__photo {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.author-upload__remove {
+  min-height: 44px;
+  align-self: flex-start;
+}
+
+.author-upload__current {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid var(--line-muted);
 }
 
 .library-empty {
@@ -1420,6 +1466,88 @@ a.pager__step:hover {
   .library-upload-layout {
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   }
+}
+
+/* -------------------------------------------------------------- students */
+
+/* Course and enrolment share a row from a phone up; Apply only shows when
+   script is off, as a full-width row on a phone. */
+.student-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.student-filters .btn {
+  grid-column: 1 / -1;
+  min-height: 44px;
+}
+
+.student-filters .btn[hidden] {
+  display: none;
+}
+
+@media (min-width: 576px) {
+  .student-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  }
+
+  .student-filters .btn {
+    grid-column: auto;
+  }
+}
+
+.meter--grow {
+  flex: 1;
+}
+
+.student-form,
+.author-form {
+  max-width: 860px;
+}
+
+/* Label and value stacked on a phone, side by side from 576px. */
+.facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px 16px;
+  margin: 0;
+  font-size: 15px;
+}
+
+.facts dt {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.facts dd {
+  margin: 0 0 10px;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 576px) {
+  .facts {
+    grid-template-columns: minmax(0, 160px) minmax(0, 1fr);
+  }
+
+  .facts dd {
+    margin-bottom: 6px;
+  }
+}
+
+.grant-form {
+  --cluster-gap: 10px;
+}
+
+.grant-form select {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--cream);
+  border: 1px solid var(--line-field);
+  border-radius: var(--radius-sm);
 }
 
 /* --------------------------------------------------------- small screens */

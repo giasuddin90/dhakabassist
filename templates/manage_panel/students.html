@@ -1,14 +1,35 @@
 {% extends "manage_panel/base.html" %}
+{% load static %}
+
+{% block extra_js %}<script src="{% static 'js/manage.js' %}" defer></script>{% endblock %}
 
 {% block manage_content %}
 <header class="manage-head">
-  <h1>Students</h1>
-  <form method="get" class="cluster" style="--cluster-gap:10px">
-    {{ form.q }}
-    <button class="btn btn--sm btn--outline" type="submit">Search</button>
-    {% if query %}<a class="btn-link btn-link--sm" href="{% url 'manage:students' %}">Clear</a>{% endif %}
-  </form>
+  <div class="stack u-gap-6">
+    <h1>Students</h1>
+    {% if course %}<p class="manage-head__date">Progress shown for “{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}”{% if not chosen %}; enrolment for any course{% endif %}.</p>{% endif %}
+  </div>
 </header>
+
+<form method="get" class="panel panel--padded stack u-gap-12" data-autosubmit>
+  <div class="library-search" role="search">
+    <label class="visually-hidden" for="{{ form.q.id_for_label }}">Search students</label>
+    {{ form.q }}
+    <button class="btn btn--sm" type="submit">Search</button>
+  </div>
+  <div class="student-filters">
+    <label class="library-filter">
+      <span>Course</span>
+      {{ form.course }}
+    </label>
+    <label class="library-filter">
+      <span>{{ form.status.label }}</span>
+      {{ form.status }}
+    </label>
+    <button class="btn btn--sm btn--outline" type="submit" data-autosubmit-hide>Apply</button>
+  </div>
+  {% if form.is_narrowed %}<a class="btn-link btn-link--sm" href="{% url 'manage:students' %}">Clear filters</a>{% endif %}
+</form>
 
 <section class="panel" aria-label="Students">
   <div class="table-wrap">
@@ -20,7 +41,7 @@
           <th scope="col">Joined</th>
           <th scope="col">Progress</th>
           <th scope="col">Last active</th>
-          <th scope="col">Enrolled</th>
+          <th scope="col">Enrolment</th>
           <th scope="col">Access</th>
           <th scope="col"><span class="visually-hidden">Actions</span></th>
         </tr>
@@ -29,13 +50,13 @@
         {% for row in rows %}
           <tr>
             <th scope="row">
-              <span class="dtable__name">{{ row.student.get_full_name }}</span>
+              <a class="dtable__name" href="{% url 'manage:student_detail' row.student.pk %}">{{ row.student.get_full_name }}</a>
               <span class="dtable__sub">{{ row.student.email }}</span>
             </th>
             <td class="u-nowrap">{{ row.student.date_joined|date:"j M Y" }}</td>
             <td>
-              <span class="cluster" style="--cluster-gap:10px">
-                <span class="meter meter--sm" style="flex:1">
+              <span class="cluster">
+                <span class="meter meter--sm meter--grow">
                   <span class="meter__fill" style="width:{{ row.width }}%"></span>
                 </span>
                 <span class="u-fs-13 u-nowrap">{{ row.completed }}/{{ row.total }}</span>
@@ -43,10 +64,12 @@
             </td>
             <td class="muted u-nowrap">{% if row.last_active %}{{ row.last_active|timesince }} ago{% else %}—{% endif %}</td>
             <td>
-              {% if row.is_enrolled %}
+              {% if row.is_paid %}
                 <span class="badge badge--status badge--ok">Paid</span>
+              {% elif row.is_enrolled %}
+                <span class="badge badge--status badge--current">Enrolled</span>
               {% else %}
-                <span class="badge badge--status badge--locked">Free</span>
+                <span class="badge badge--status badge--locked">Not enrolled</span>
               {% endif %}
             </td>
             <td>
@@ -59,24 +82,33 @@
               </form>
             </td>
             <td>
-              {% if not row.is_enrolled and primary_course %}
-                <form method="post" action="{% url 'manage:student_grant' row.student.pk %}">
-                  {% csrf_token %}
-                  <input type="hidden" name="course" value="{{ primary_course.slug }}">
-                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                  <button class="btn-link btn-link--sm" type="submit">Grant access</button>
-                </form>
-              {% endif %}
+              <span class="cluster">
+                <a class="btn-link btn-link--sm" href="{% url 'manage:student_detail' row.student.pk %}">View</a>
+                <a class="btn-link btn-link--sm" href="{% url 'manage:student_edit' row.student.pk %}">Edit</a>
+                {% if not row.is_enrolled and course %}
+                  <form method="post" action="{% url 'manage:student_grant' row.student.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="course" value="{{ course.slug }}">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button class="btn-link btn-link--sm" type="submit">Grant access</button>
+                  </form>
+                {% endif %}
+              </span>
             </td>
           </tr>
         {% empty %}
           <tr><td colspan="7" class="muted">
-            {% if query %}No students match “{{ query }}”.{% else %}No students yet.{% endif %}
+            {% if form.is_narrowed %}No students match these filters.{% else %}No students yet.{% endif %}
           </td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-  <p class="panel__foot">Showing {{ rows|length }} of {{ total }} student{{ total|pluralize }}.</p>
+  <p class="panel__foot">
+    {% if page.paginator.count %}Showing {{ page.start_index }}–{{ page.end_index }} of {{ page.paginator.count }} matching{% else %}No matches{% endif %},
+    {{ total }} student{{ total|pluralize }} in all.
+  </p>
 </section>
+
+{% include "includes/pagination.html" %}
 {% endblock %}
