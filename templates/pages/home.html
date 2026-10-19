@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static money %}
+{% load money %}
 
 {% block content %}
 {% if course %}
@@ -22,12 +22,7 @@
 
     <div style="position:relative;max-width:520px;justify-self:end;width:100%">
       <div class="media media--square">
-        <img src="{% static 'img/instructor-640.jpg' %}"
-             srcset="{% static 'img/instructor-320.jpg' %} 320w, {% static 'img/instructor-480.jpg' %} 480w, {% static 'img/instructor-640.jpg' %} 640w"
-             sizes="(max-width: 768px) 92vw, 520px"
-             width="640" height="640"
-             alt="{{ site.instructor }} playing bass on stage"
-             fetchpriority="high" decoding="async">
+        {% include "includes/instructor_photo.html" with author=course.author name=course.author_name sizes="(max-width: 768px) 92vw, 520px" priority=True %}
       </div>
       {% if course.trailer_embed_url %}
         <a class="trailer-cta" href="{{ course.get_absolute_url }}#trailer">
@@ -89,20 +84,20 @@
 
   {# ------------------------------------------------------------ instructor #}
   <section class="shell duo section--loose reveal" aria-labelledby="instructor-title">
-    <div class="media media--portrait" style="max-width:440px">
-      <img src="{% static 'img/instructor-480.jpg' %}"
-           srcset="{% static 'img/instructor-320.jpg' %} 320w, {% static 'img/instructor-480.jpg' %} 480w"
-           sizes="(max-width: 768px) 92vw, 440px"
-           width="480" height="480" style="object-position:50% 30%"
-           alt="{{ site.instructor }} playing bass" loading="lazy" decoding="async">
+    <div class="media media--portrait media--face" style="max-width:440px">
+      {% include "includes/instructor_photo.html" with author=course.author name=course.author_name sizes="(max-width: 768px) 92vw, 440px" lazy=True %}
     </div>
     <div class="stack u-gap-18">
       <p class="eyebrow">Your instructor</p>
-      <h2 class="display-3" id="instructor-title">{{ site.instructor }}</h2>
-      <p class="prose">An independent musician and music educator based in Dhaka.
-        {{ course.title }} is the course he wished existed when he started: a clear,
-        step-by-step path through the theory every musician uses.</p>
-      <a class="btn-link" href="{% url 'pages:about' %}" style="align-self:flex-start">More about {{ site.instructor|cut:" Haque" }}</a>
+      <h2 class="display-3" id="instructor-title">{{ course.author_name }}</h2>
+      {% if course.author.bio %}
+        <div class="prose">{{ course.author.bio_html }}</div>
+      {% else %}
+        <p class="prose">An independent musician and music educator based in Dhaka.
+          {{ course.title }} is the course he wished existed when he started: a clear,
+          step-by-step path through the theory every musician uses.</p>
+      {% endif %}
+      <a class="btn-link" href="{% url 'pages:about' %}" style="align-self:flex-start">More about {{ course.author_name }}</a>
     </div>
   </section>
 

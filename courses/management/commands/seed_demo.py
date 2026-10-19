@@ -1,19 +1,37 @@
-"""Load the Foundations of Music course, FAQs and legal pages.
+"""Load the Foundations of Music course, its author, FAQs and legal pages.
 
 Idempotent: run it again after a schema change and it updates in place rather
 than duplicating. Content comes from the supplied design, so the site looks
 like the reference immediately.
 """
 
+from pathlib import Path
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils.text import slugify
 
-from courses.models import Choice, Course, Lesson, Module, Question, Quiz
+from courses.models import Author, Choice, Course, Lesson, Module, Question, Quiz
 from pages.models import Faq, LegalPage
 
 User = get_user_model()
+
+AUTHOR_NAME = "Tanveer Haque"
+
+AUTHOR_BIO = """\
+Tanveer Haque is an independent musician and music educator based in Dhaka,
+Bangladesh. He teaches bass and music theory to students of all ages.
+
+Foundations of Music brings his classroom approach online: short lessons, clear
+notation, real audio examples and quizzes that make sure each idea is
+understood before moving on.
+"""
+
+# Copied into media, so the seeded photo is served like one an editor uploads.
+AUTHOR_PHOTO = Path(settings.BASE_DIR) / "static" / "img" / "instructor-640.jpg"
 
 MODULES = [
     (
@@ -333,7 +351,7 @@ duplicated. Nothing here limits any statutory right you have.
 
 
 class Command(BaseCommand):
-    help = "Load the Foundations of Music course, FAQs and legal pages."
+    help = "Load the Foundations of Music course, its author, FAQs and legal pages."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -344,23 +362,38 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
-        course = self._course()
+        author = self._author()
+        course = self._course(author)
         self._modules(course)
-        self._part_two(course)
+        self._part_two(course, author)
         self._faqs()
         self._legal()
         if options["with_admin"]:
             self._admin()
         self.stdout.write(
             self.style.SUCCESS(
-                f"Seeded “{course.title}” with {course.modules.count()} modules, "
-                f"{Faq.objects.count()} FAQs and {LegalPage.objects.count()} legal pages."
+                f"Seeded “{course.title}” by {author.name} with "
+                f"{course.modules.count()} modules, {Faq.objects.count()} FAQs and "
+                f"{LegalPage.objects.count()} legal pages."
             )
         )
 
     # -- course ------------------------------------------------------------
 
-    def _course(self):
+    def _author(self):
+        author, _ = Author.objects.update_or_create(
+            slug=slugify(AUTHOR_NAME),
+            defaults={"name": AUTHOR_NAME, "bio": AUTHOR_BIO},
+        )
+        # Keep a photo an editor uploaded; only fill in a missing one (also
+        # when the database survived but the media folder did not).
+        has_photo = author.photo and author.photo.storage.exists(author.photo.name)
+        if not has_photo and AUTHOR_PHOTO.exists():
+            with AUTHOR_PHOTO.open("rb") as source:
+                author.photo.save(f"{author.slug}.jpg", File(source), save=True)
+        return author
+
+    def _course(self, author):
         course, _ = Course.objects.update_or_create(
             slug="foundations-of-music",
             defaults={
@@ -382,6 +415,7 @@ class Command(BaseCommand):
                 "trailer_label": "Watch the trailer",
                 "trailer_duration": "2:10",
                 "position": 0,
+                "author": author,
                 "meta_title": "Foundations of Music — online music theory course",
                 "meta_description": (
                     "Nine-module online music theory course by Tanveer Haque. Module 1 free, "
@@ -447,7 +481,7 @@ class Command(BaseCommand):
                 for index, option in enumerate(options)
             )
 
-    def _part_two(self, part_one):
+    def _part_two(self, part_one, author):
         """A draft Part 2, so the prerequisite model is visible in the admin."""
         Course.objects.update_or_create(
             slug="foundations-of-music-part-2",
@@ -464,6 +498,7 @@ class Command(BaseCommand):
                 "status": Course.Status.DRAFT,
                 "requires": part_one,
                 "position": 1,
+                "author": author,
             },
         )
 

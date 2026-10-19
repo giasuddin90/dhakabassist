@@ -22,8 +22,10 @@ cp .env.example .env && .venv/bin/python manage.py migrate && .venv/bin/python m
 .venv/bin/python manage.py createsuperuser && .venv/bin/python manage.py runserver
 ```
 
-`seed_demo` loads the nine modules, the FAQs and the three legal pages. It is
-idempotent, so re-running it updates rather than duplicates.
+`seed_demo` loads the nine modules, the course author (bio and photo, which the
+home and About pages show), the FAQs and the three legal pages. It is
+idempotent, so re-running it updates rather than duplicates; it never replaces
+an author photo uploaded in the panel.
 
 To load your own content from a file, copy [docs/seed.example.json](docs/seed.example.json),
 edit it, and run `manage.py import_content my-content.json` (add `--dry-run` to

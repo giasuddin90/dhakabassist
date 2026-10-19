@@ -926,6 +926,11 @@ select {
   border: 0;
 }
 
+/* Portraits cropped wider than tall keep the face in frame. */
+.media--face img {
+  object-position: 50% 25%;
+}
+
 .media__overlay {
   position: absolute;
   inset: 0;

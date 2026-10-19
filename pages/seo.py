@@ -102,12 +102,19 @@ def person(name, description=""):
     }
 
 
-def course_author(course):
-    """The course's author as a `Person`, with their photo when there is one."""
-    data = person(course.author_name)
-    if course.author and course.author.photo:
-        data["image"] = absolute(course.author.photo_url)
+def author_person(author, description=""):
+    """An `Author` as a `Person`, with their photo when there is one."""
+    data = person(author.name, description)
+    if author.photo:
+        data["image"] = absolute(author.photo_url)
     return data
+
+
+def course_author(course):
+    """The course's author as a `Person`, or the site's instructor when none is linked."""
+    if course.author:
+        return author_person(course.author)
+    return person(course.author_name)
 
 
 def course_schema(course):

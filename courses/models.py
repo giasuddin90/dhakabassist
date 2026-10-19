@@ -5,6 +5,7 @@ A module is reachable when it is the free preview, or when the student is
 enrolled and has passed every earlier module's quiz.
 """
 
+import html
 import re
 import secrets
 from pathlib import Path
@@ -109,6 +110,11 @@ class Author(TimeStampedModel):
     def bio_html(self):
         """The Markdown bio as sanitised HTML."""
         return render_notes(self.bio)
+
+    @property
+    def bio_text(self):
+        """The bio as one line of plain text, for meta descriptions."""
+        return " ".join(html.unescape(strip_tags(self.bio_html)).split())
 
 
 class PublishedCourseManager(models.Manager):

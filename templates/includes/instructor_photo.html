@@ -1,0 +1,15 @@
+{% load static %}
+{% comment %}
+The instructor's photo: the author's uploaded photo when there is one, the
+bundled photo otherwise. Pass `author`, `name` and `sizes`; add `priority=True`
+for the hero image or `lazy=True` below the fold.
+{% endcomment %}
+{% if author.photo %}
+  <img src="{{ author.photo_url }}" width="640" height="640" alt="{{ name }}"
+       {% if priority %}fetchpriority="high"{% elif lazy %}loading="lazy"{% endif %} decoding="async">
+{% else %}
+  <img src="{% static 'img/instructor-640.jpg' %}"
+       srcset="{% static 'img/instructor-320.jpg' %} 320w, {% static 'img/instructor-480.jpg' %} 480w, {% static 'img/instructor-640.jpg' %} 640w"
+       sizes="{{ sizes }}" width="640" height="640" alt="{{ name }} playing bass"
+       {% if priority %}fetchpriority="high"{% elif lazy %}loading="lazy"{% endif %} decoding="async">
+{% endif %}

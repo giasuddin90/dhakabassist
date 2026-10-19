@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block content %}
 <section class="shell" style="padding-block:40px 80px">
@@ -9,19 +8,19 @@
 
     <div class="stack u-gap-22">
       <p class="eyebrow">About</p>
-      <h1 class="display-2">{{ site.instructor }}</h1>
-      <div class="media media--three-two">
-        <img src="{% static 'img/instructor-640.jpg' %}"
-             srcset="{% static 'img/instructor-480.jpg' %} 480w, {% static 'img/instructor-640.jpg' %} 640w"
-             sizes="(max-width: 768px) 92vw, 540px"
-             width="640" height="640" style="object-position:50% 25%"
-             alt="{{ site.instructor }} playing bass" decoding="async">
+      <h1 class="display-2">{{ author_name }}</h1>
+      <div class="media media--three-two media--face">
+        {% include "includes/instructor_photo.html" with author=author name=author_name sizes="(max-width: 768px) 92vw, 540px" %}
       </div>
-      <p class="prose">{{ site.instructor }} is an independent musician and music educator
-        based in Dhaka, Bangladesh. He teaches bass and music theory to students of all ages.</p>
-      <p class="prose">Foundations of Music brings his classroom approach online: short lessons,
-        clear notation, real audio examples and quizzes that make sure each idea is understood
-        before moving on.</p>
+      {% if author.bio %}
+        <div class="prose">{{ author.bio_html }}</div>
+      {% else %}
+        <p class="prose">{{ author_name }} is an independent musician and music educator
+          based in Dhaka, Bangladesh. He teaches bass and music theory to students of all ages.</p>
+        <p class="prose">Foundations of Music brings his classroom approach online: short lessons,
+          clear notation, real audio examples and quizzes that make sure each idea is understood
+          before moving on.</p>
+      {% endif %}
     </div>
 
     <div class="stack u-gap-22" id="contact">

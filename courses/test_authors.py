@@ -1,4 +1,4 @@
-"""Authors: kept on their own, linked to courses, shown on the course page."""
+"""Authors: kept on their own, linked to courses, shown on the public pages."""
 
 import io
 import shutil
@@ -7,12 +7,26 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.db.models import ProtectedError
+from django.templatetags.static import static
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
 
 from courses.models import Author, Course
+
+
+def published_course(**extra):
+    """The published course every test here links an author to."""
+    return Course.objects.create(
+        title="Foundations of Music",
+        slug="foundations-of-music",
+        summary="Summary.",
+        description="Description.",
+        status=Course.Status.PUBLISHED,
+        **extra,
+    )
 
 
 def png_upload(name="author.png"):
@@ -27,13 +41,7 @@ class AuthorProfileTests(TestCase):
     """The course page's author card and the public author photo."""
 
     def setUp(self):
-        self.course = Course.objects.create(
-            title="Foundations of Music",
-            slug="foundations-of-music",
-            summary="Summary.",
-            description="Description.",
-            status=Course.Status.PUBLISHED,
-        )
+        self.course = published_course()
         self.author = Author.objects.create(
             name="Tanveer Haque",
             bio="Plays **bass** in Dhaka.<script>alert(1)</script>",
@@ -99,3 +107,77 @@ class AuthorProfileTests(TestCase):
         self.author.save()
         url = reverse("courses:author_photo", kwargs={"slug": self.author.slug})
         self.assertEqual(self.client.get(url).status_code, 404)
+
+
+@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
+class AuthorOnPublicPagesTests(TestCase):
+    """The home and About pages show the promoted course's author."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.author = Author.objects.create(
+            name="Rumana Akter",
+            bio="Teaches **harmony** in Chattogram, Bangladesh.",
+            photo=png_upload(),
+        )
+        cls.course = published_course(author=cls.author)
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+
+    def test_home_shows_the_author_name_photo_and_bio(self):
+        """The hero and "Your instructor" use the author, not the bundled photo."""
+        response = self.client.get(reverse("pages:home"))
+        self.assertContains(response, "Rumana Akter")
+        self.assertContains(response, self.author.photo_url)
+        self.assertContains(response, "<strong>harmony</strong>")
+        self.assertNotContains(response, f'src="{static("img/instructor-640.jpg")}"')
+
+    def test_about_introduces_the_author(self):
+        """Heading, photo, title, meta description and Person schema all follow the author."""
+        response = self.client.get(reverse("pages:about"))
+        self.assertContains(response, "<h1 class=\"display-2\">Rumana Akter</h1>", html=True)
+        self.assertContains(response, self.author.photo_url)
+        self.assertContains(response, "<title>About Rumana Akter")
+        self.assertContains(
+            response, '<meta name="description" content="Teaches harmony in Chattogram'
+        )
+        self.assertContains(response, '"name": "Rumana Akter"')
+
+    def test_without_an_author_the_pages_fall_back_to_the_site_instructor(self):
+        """A course with no author still shows a name and a photo."""
+        Course.objects.filter(pk=self.course.pk).update(author=None)
+        for name in ("pages:home", "pages:about"):
+            response = self.client.get(reverse(name))
+            self.assertContains(response, settings.SITE["instructor"])
+            self.assertContains(response, f'src="{static("img/instructor-640.jpg")}"')
+
+
+@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
+class SeedDemoAuthorTests(TestCase):
+    """`seed_demo` loads the instructor as an `Author` with a photo in media."""
+
+    def tearDown(self):
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+
+    def test_the_seed_creates_the_author_with_a_photo_and_links_both_courses(self):
+        """Both demo courses point at the seeded author, whose photo is in storage."""
+        call_command("seed_demo", stdout=io.StringIO())
+        author = Author.objects.get()
+        self.assertEqual(author.name, "Tanveer Haque")
+        self.assertTrue(author.bio)
+        self.assertTrue(author.photo.storage.exists(author.photo.name))
+        self.assertEqual(author.courses.count(), 2)
+
+    def test_running_it_again_keeps_one_author_and_an_uploaded_photo(self):
+        """Re-seeding updates in place and never replaces a photo an editor uploaded."""
+        call_command("seed_demo", stdout=io.StringIO())
+        author = Author.objects.get()
+        author.photo = png_upload("new.png")
+        author.save()
+        call_command("seed_demo", stdout=io.StringIO())
+        author.refresh_from_db()
+        self.assertEqual(Author.objects.count(), 1)
+        self.assertTrue(author.photo.name.endswith("new.png"))
