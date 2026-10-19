@@ -2,8 +2,8 @@
 
 Granting, revoking, recording a payment taken outside the gateway, adding
 or editing an order and refunding all end in the same place: an
-`Enrollment` row, the only thing `courses.access` reads. The gateway path enrols through `Order.mark_paid`
-too, so both kinds of payment behave alike.
+`Enrollment` row, the only thing `courses.access` reads. The gateway path
+enrols through `Order.mark_paid` too, so both kinds of payment behave alike.
 """
 
 from django.contrib import messages
