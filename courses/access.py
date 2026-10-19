@@ -107,6 +107,14 @@ class CourseAccess:
         state = self.state_for(module)
         return bool(state and state.is_unlocked)
 
+    def next_state(self, module):
+        """The state of the module after `module`, or None after the last one."""
+        states = self.module_states()
+        for index, state in enumerate(states):
+            if state.module.id == module.id:
+                return states[index + 1] if index + 1 < len(states) else None
+        return None
+
     # -- summary -----------------------------------------------------------
 
     @property

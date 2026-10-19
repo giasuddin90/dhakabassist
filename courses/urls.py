@@ -15,6 +15,11 @@ urlpatterns = [
         name="lesson",
     ),
     path(
+        "learn/<slug:slug>/<slug:module_slug>/complete/",
+        views.mark_module_complete,
+        name="module_complete",
+    ),
+    path(
         "learn/<slug:slug>/<slug:module_slug>/quiz/",
         views.QuizView.as_view(),
         name="quiz",

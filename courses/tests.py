@@ -333,6 +333,85 @@ class QuizTests(TestCase):
         self.assertEqual(QuizAttempt.objects.count(), 2)
 
 
+class MarkCompleteTests(TestCase):
+    """Modules without a quiz are finished by the student, not by a quiz."""
+
+    def setUp(self):
+        self.course, self.modules = make_course()
+        self.student = User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
+        Enrollment.objects.create(student=self.student, course=self.course)
+        self.client.force_login(self.student)
+
+    def complete_url(self, module):
+        return reverse(
+            "courses:module_complete",
+            kwargs={"slug": self.course.slug, "module_slug": module.slug},
+        )
+
+    def is_complete(self, module):
+        return ModuleProgress.objects.filter(
+            student=self.student, module=module, completed_at__isnull=False
+        ).exists()
+
+    def test_marking_a_module_without_a_quiz_opens_the_next_one(self):
+        response = self.client.post(self.complete_url(self.modules[0]))
+        self.assertRedirects(response, self.modules[1].get_absolute_url())
+        progress = ModuleProgress.objects.get(student=self.student, module=self.modules[0])
+        self.assertIsNotNone(progress.completed_at)
+        self.assertIsNone(progress.quiz_passed_at, "no quiz was passed")
+        states = CourseAccess(self.student, self.course).module_states()
+        self.assertTrue(states[1].is_unlocked)
+        self.assertFalse(states[2].is_unlocked)
+
+    def test_the_last_module_returns_to_its_lesson(self):
+        for module in self.modules[:2]:
+            ModuleProgress.objects.create(student=self.student, module=module).mark_complete()
+        response = self.client.post(self.complete_url(self.modules[2]))
+        self.assertRedirects(response, self.modules[2].get_absolute_url())
+
+    def test_a_module_with_a_quiz_cannot_be_marked_complete(self):
+        make_quiz(self.modules[0])
+        response = self.client.post(self.complete_url(self.modules[0]))
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(self.is_complete(self.modules[0]))
+
+    def test_a_quiz_without_questions_does_not_block_the_module(self):
+        Quiz.objects.create(module=self.modules[0])
+        self.client.post(self.complete_url(self.modules[0]))
+        self.assertTrue(self.is_complete(self.modules[0]))
+
+    def test_a_locked_module_cannot_be_marked_complete(self):
+        response = self.client.post(self.complete_url(self.modules[1]))
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(self.is_complete(self.modules[1]))
+
+    def test_only_a_post_completes_a_module(self):
+        response = self.client.get(self.complete_url(self.modules[0]))
+        self.assertEqual(response.status_code, 405)
+        self.assertFalse(self.is_complete(self.modules[0]))
+
+    def test_an_anonymous_visitor_is_sent_to_the_login_page(self):
+        self.client.logout()
+        url = self.complete_url(self.modules[0])
+        response = self.client.post(url)
+        self.assertRedirects(response, f"{reverse('accounts:login')}?next={url}")
+
+    def test_the_lesson_offers_the_button_only_without_a_quiz(self):
+        response = self.client.get(self.modules[0].get_absolute_url())
+        self.assertContains(response, self.complete_url(self.modules[0]))
+        self.assertContains(response, "Mark as complete")
+        make_quiz(self.modules[0])
+        response = self.client.get(self.modules[0].get_absolute_url())
+        self.assertNotContains(response, "Mark as complete")
+        self.assertContains(response, "Start quiz")
+
+    def test_a_completed_module_shows_no_button(self):
+        self.client.post(self.complete_url(self.modules[0]))
+        response = self.client.get(self.modules[0].get_absolute_url())
+        self.assertNotContains(response, "Mark as complete")
+        self.assertContains(response, "Module 1 complete")
+
+
 @override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
 class CourseMediaTests(TestCase):
     def setUp(self):

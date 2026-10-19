@@ -663,6 +663,19 @@ select {
   padding: 0;
 }
 
+/* The call to action closing a lesson: start the quiz, or mark it complete. */
+.panel--cta {
+  margin-top: 12px;
+  background: transparent;
+  align-items: center;
+  padding: 24px 26px;
+}
+
+.panel__cta-title {
+  font-size: 22px;
+  font-weight: 600;
+}
+
 .panel__head {
   display: flex;
   justify-content: space-between;

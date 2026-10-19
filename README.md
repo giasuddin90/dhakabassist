@@ -3,7 +3,8 @@
 A learning platform for *Foundations of Music*, a nine-module music theory
 course by Tanveer Haque. Students discover the course, study Module 1 free,
 pay once in BDT, and work through the remaining modules; each one unlocks when
-its quiz has been answered correctly.
+the previous module's quiz has been answered correctly, or, for a module
+without a quiz, when the student marks it complete.
 
 Built with Django, server-rendered templates, Bootstrap's grid and a small
 amount of plain JavaScript. Every page works without JavaScript.

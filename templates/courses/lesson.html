@@ -129,10 +129,10 @@
     {% endif %}
 
     {# -------------------------------------------------------------- quiz #}
-    {% if quiz and module.quiz_question_count %}
-      <div class="panel panel--framed split" style="margin-top:12px;background:transparent;align-items:center;padding:24px 26px">
+    {% if module.completes_by_quiz %}
+      <div class="panel panel--framed panel--cta split">
         <div class="stack u-gap-6">
-          <p class="u-serif" style="font-size:22px;font-weight:600">{{ quiz.display_title }}</p>
+          <p class="u-serif panel__cta-title">{{ quiz.display_title }}</p>
           <p class="u-fs-15 muted">
             {{ module.quiz_question_count }} question{{ module.quiz_question_count|pluralize }}
             {% if quiz.require_perfect_score %}· answer all correctly to unlock the next module{% endif %}
@@ -141,6 +141,25 @@
         <a class="btn" href="{% url 'courses:quiz' course.slug module.slug %}">
           {% if state.is_complete %}Retake quiz{% else %}Start quiz{% endif %}
         </a>
+      </div>
+    {% else %}
+      {# No quiz to pass, so the student finishes the module themselves. #}
+      <div class="panel panel--framed panel--cta split">
+        <div class="stack u-gap-6">
+          <p class="u-serif panel__cta-title">
+            {% if state.is_complete %}Module {{ module.number_plain }} complete{% else %}Finished this module?{% endif %}
+          </p>
+          <p class="u-fs-15 muted">
+            {% if state.is_complete %}You marked this module complete on {{ progress.completed_at|date:"j M Y" }}.
+            {% else %}Once you have watched the video and read the notes, mark it complete to unlock the next module.{% endif %}
+          </p>
+        </div>
+        {% if not state.is_complete %}
+          <form method="post" action="{% url 'courses:module_complete' course.slug module.slug %}">
+            {% csrf_token %}
+            <button class="btn" type="submit">Mark as complete</button>
+          </form>
+        {% endif %}
       </div>
     {% endif %}
   </article>

@@ -2,7 +2,8 @@
 
 Shape: Course -> Module -> (video, markdown notes, MediaAsset*, Quiz).
 A module is reachable when it is the free preview, or when the student is
-enrolled and has passed every earlier module's quiz.
+enrolled and has completed every earlier module: by passing its quiz, or, for
+a module without one, by marking it complete.
 """
 
 import html
@@ -435,6 +436,16 @@ class Module(TimeStampedModel):
     def quiz_question_count(self):
         quiz = getattr(self, "quiz", None)
         return quiz.questions.count() if quiz else 0
+
+    @property
+    def completes_by_quiz(self):
+        """True when passing the quiz is the only way to complete the module.
+
+        A module without quiz questions has nothing to pass, so the student
+        marks it complete instead; otherwise every module after it would stay
+        locked for good.
+        """
+        return bool(self.quiz_question_count)
 
     @cached_property
     def audio_assets(self):
@@ -964,9 +975,12 @@ class ModuleProgress(TimeStampedModel):
                 updated_at=now,
             )
 
-    def mark_complete(self):
+    def mark_complete(self, quiz_passed=True):
+        """Finish the module. `quiz_passed` is False when the student marked a
+        module without a quiz complete, so staff can tell the two apart."""
         now = timezone.now()
-        self.quiz_passed_at = self.quiz_passed_at or now
+        if quiz_passed:
+            self.quiz_passed_at = self.quiz_passed_at or now
         self.completed_at = self.completed_at or now
         self.last_seen_at = now
         self.save(

@@ -228,8 +228,8 @@ def open_attempt(student, quiz):
     return attempt
 
 
-def load_quiz(user, slug, module_slug):
-    """Resolve a quiz the user is allowed to take, or raise 404."""
+def load_module(user, slug, module_slug):
+    """Resolve a module the user is allowed to open, or raise 404."""
     course = get_object_or_404(
         course_queryset().filter(status=Course.Status.PUBLISHED), slug=slug
     )
@@ -237,8 +237,16 @@ def load_quiz(user, slug, module_slug):
         course.modules, slug=module_slug, status=Module.Status.PUBLISHED
     )
     access = CourseAccess(user, course)
+    if not access.can_view(module):
+        raise Http404("No such module.")
+    return course, module, access
+
+
+def load_quiz(user, slug, module_slug):
+    """Resolve a quiz the user is allowed to take, or raise 404."""
+    course, module, access = load_module(user, slug, module_slug)
     quiz = getattr(module, "quiz", None)
-    if quiz is None or not access.can_view(module):
+    if quiz is None:
         raise Http404("No quiz here.")
     return course, module, access, quiz
 
@@ -293,7 +301,7 @@ class QuizView(LoginRequiredMixin, TemplateView):
             "solved": solved,
             "is_last": index >= len(questions) - 1,
             "finished": attempt.completed_at is not None,
-            "next_state": self._next_unlocked(access, module),
+            "next_state": access.next_state(module),
             "dots": [
                 {
                     "state": (
@@ -315,14 +323,6 @@ class QuizView(LoginRequiredMixin, TemplateView):
                 ),
             ),
         }
-
-    @staticmethod
-    def _next_unlocked(access, module):
-        states = access.module_states()
-        for index, state in enumerate(states):
-            if state.module.id == module.id:
-                return states[index + 1] if index + 1 < len(states) else None
-        return None
 
 
 @login_required
@@ -429,6 +429,22 @@ def quiz_restart(request, slug, module_slug):
     return redirect(
         reverse("courses:quiz", kwargs={"slug": slug, "module_slug": module_slug})
     )
+
+
+@login_required
+@require_POST
+def mark_module_complete(request, slug, module_slug):
+    """Let the student finish a module that has no quiz, opening the next one."""
+    _, module, access = load_module(request.user, slug, module_slug)
+    if module.completes_by_quiz:
+        # Posting here must not skip a quiz the button is never shown for.
+        raise Http404("This module is completed by its quiz.")
+    progress, _ = ModuleProgress.objects.get_or_create(student=request.user, module=module)
+    progress.mark_complete(quiz_passed=False)
+    # A next module the student has not paid for shows the paywall, as the
+    # quiz result page's "Enroll to continue" does.
+    next_state = access.next_state(module)
+    return redirect((next_state.module if next_state else module).get_absolute_url())
 
 
 @login_required

@@ -33,7 +33,7 @@ course media stream and the quiz all ask it, so they cannot disagree.
 | --- | --- |
 | Anonymous | Marketing pages and the curriculum |
 | Registered | The free module |
-| Enrolled | Every module, each unlocking after the previous quiz is passed |
+| Enrolled | Every module, each unlocking once the previous one is complete: its quiz passed, or marked complete when it has no quiz |
 | Suspended | Free module only, regardless of orders |
 | Staff | Everything, plus `/manage/` |
 

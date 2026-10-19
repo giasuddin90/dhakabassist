@@ -99,6 +99,11 @@ course description is public, because that page is public.
 
 ## Editing a quiz
 
+A module with a quiz is complete once the student passes it. A module
+without a quiz (or whose quiz has no questions yet) shows a **Mark as
+complete** button at the end of the lesson instead, so the next module still
+opens. Add questions and the button gives way to the quiz.
+
 **Quizzes**, or **Edit quiz** from the module editor.
 
 Questions are edited one at a time; pick one from the list on the left. Each
