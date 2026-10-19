@@ -8,6 +8,7 @@ urlpatterns = [
     path("", views.OverviewView.as_view(), name="overview"),
     # Courses and modules
     path("courses/", views.CoursesView.as_view(), name="courses"),
+    path("courses/demo/", views.load_demo_data, name="load_demo_data"),
     path("courses/new/", views.course_edit, name="course_new"),
     path("courses/<slug:slug>/edit/", views.course_edit, name="course_edit"),
     path("courses/<slug:slug>/reorder/", views.module_reorder, name="module_reorder"),

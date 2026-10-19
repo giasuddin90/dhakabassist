@@ -132,6 +132,25 @@ class StaffPanelTests(TestCase):
         self.assertContains(response, "Module 01")
         self.assertContains(response, "Module 03")
 
+    def test_demo_data_loads_into_an_empty_site(self):
+        Course.objects.all().delete()
+        response = self.client.get(reverse("manage:courses"))
+        self.assertContains(response, "Load demo data")
+        self.client.post(reverse("manage:load_demo_data"))
+        self.assertTrue(Course.objects.filter(slug="foundations-of-music").exists())
+        self.assertTrue(Faq.objects.exists())
+
+    def test_demo_data_never_overwrites_an_existing_site(self):
+        self.client.post(reverse("manage:load_demo_data"))
+        self.assertEqual(Module.objects.filter(course=self.course).count(), 3)
+        self.assertNotContains(self.client.get(reverse("manage:courses")), "Load demo data")
+
+    def test_a_student_cannot_load_demo_data(self):
+        Course.objects.all().delete()
+        self.client.force_login(self.student)
+        self.client.post(reverse("manage:load_demo_data"))
+        self.assertFalse(Course.objects.exists())
+
     def test_a_course_can_be_edited(self):
         response = self.client.post(
             reverse("manage:course_edit", kwargs={"slug": self.course.slug}),

@@ -6,9 +6,12 @@ layout of the supplied admin design. Structural changes nobody needs weekly
 stay in the Django admin.
 """
 
+from io import StringIO
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.core.management import call_command
 from django.db.models import Count, Q, Sum
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -232,6 +235,22 @@ class CoursesView(ManageBase):
             ),
         )
         return context
+
+
+@staff_required
+@require_POST
+def load_demo_data(request):
+    """Load the starter course, FAQs and legal pages into an empty site.
+
+    Refused once any course exists: `seed_demo` updates in place, so running it
+    on a site with edited content would overwrite those edits.
+    """
+    if Course.objects.exists():
+        messages.error(request, "Demo data only loads into a site with no courses.")
+    else:
+        call_command("seed_demo", stdout=StringIO())
+        messages.success(request, "Demo course, FAQs and legal pages loaded.")
+    return redirect("manage:courses")
 
 
 @staff_required

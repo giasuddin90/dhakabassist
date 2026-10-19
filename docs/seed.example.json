@@ -1,0 +1,58 @@
+{
+  "courses": [
+    {
+      "slug": "sample-course",
+      "title": "Sample Course",
+      "subtitle": "Part 1",
+      "summary": "One or two sentences used on cards and in search results.",
+      "description": "Markdown shown on the course page.",
+      "level": "Beginner",
+      "price": 3500,
+      "status": "published",
+      "modules": [
+        {
+          "number": "01",
+          "title": "Getting Started",
+          "title_bn": "",
+          "summary": "What this module covers.",
+          "notes_markdown": "## Welcome\n\nLesson notes in Markdown.",
+          "access": "free",
+          "status": "published",
+          "video_provider": "protected_file",
+          "video_uid": "sample-course/module-01.mp4",
+          "video_duration_seconds": 600,
+          "lessons": ["Introduction", "First steps"],
+          "quiz": {
+            "require_perfect_score": true,
+            "allow_unlimited_retries": true,
+            "questions": [
+              {
+                "text": "Which answer is correct?",
+                "explanation": "Shown once the right answer is picked.",
+                "choices": [
+                  {"text": "This one", "correct": true},
+                  {"text": "Not this"},
+                  {"text": "Nor this"},
+                  {"text": "Or this"}
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "number": "02",
+          "title": "Going Further",
+          "summary": "Paid module.",
+          "access": "paid",
+          "status": "draft"
+        }
+      ]
+    }
+  ],
+  "faqs": [
+    {"question": "Is the first module free?", "answer": "Yes, with a registered account."}
+  ],
+  "legal_pages": [
+    {"slug": "terms", "title": "Terms & Conditions", "body_markdown": "Terms in Markdown."}
+  ]
+}

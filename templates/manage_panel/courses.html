@@ -26,7 +26,16 @@
       </span>
     </a>
   {% empty %}
-    <p class="muted">No courses yet. <a href="{% url 'manage:course_new' %}">Create the first one</a>.</p>
+    <div class="stack u-gap-6">
+      <p class="muted">No courses yet. <a href="{% url 'manage:course_new' %}">Create the first one</a>,
+        or start from the sample course.</p>
+      <form method="post" action="{% url 'manage:load_demo_data' %}">
+        {% csrf_token %}
+        <button class="btn btn--sm btn--outline" type="submit">Load demo data</button>
+      </form>
+      <p class="u-fs-13 muted">Adds Foundations of Music with its nine modules and quizzes, the FAQs
+        and the three legal pages.</p>
+    </div>
   {% endfor %}
 </div>
 

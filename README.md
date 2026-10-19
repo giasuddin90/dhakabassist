@@ -25,6 +25,11 @@ cp .env.example .env && .venv/bin/python manage.py migrate && .venv/bin/python m
 `seed_demo` loads the nine modules, the FAQs and the three legal pages. It is
 idempotent, so re-running it updates rather than duplicates.
 
+To load your own content from a file, copy [docs/seed.example.json](docs/seed.example.json),
+edit it, and run `manage.py import_content my-content.json` (add `--dry-run` to
+validate without saving). It covers courses, modules, lessons, quizzes, FAQs
+and legal pages; the file is all-or-nothing, so one invalid entry changes nothing.
+
 ## Layout
 
 | App | What lives there |

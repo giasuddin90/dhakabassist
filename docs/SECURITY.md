@@ -134,7 +134,7 @@ enforced in the form.
 
 ## Secrets
 
-Secrets come from the environment and are read in `config/settings.py` only.
+Secrets come from the environment and are read in `core/settings.py` only.
 `.env` is gitignored and `.env.example` documents every variable without
 holding a value. Nothing in the repository contains a credential.
 
