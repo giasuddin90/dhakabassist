@@ -5,11 +5,13 @@ from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 
+from core.testing import EnglishPagesMixin
+
 User = get_user_model()
 PASSWORD = "quite-a-long-test-password"
 
 
-class RegistrationTests(TestCase):
+class RegistrationTests(EnglishPagesMixin, TestCase):
     def test_registering_creates_an_account_and_signs_in(self):
         response = self.client.post(
             reverse("accounts:register"),
@@ -66,7 +68,7 @@ class RegistrationTests(TestCase):
         self.assertEqual(user.enrollments.count(), 0)
 
 
-class LoginTests(TestCase):
+class LoginTests(EnglishPagesMixin, TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             email="rafiq@example.com", password=PASSWORD, full_name="Rafiq Ahmed"
@@ -113,7 +115,7 @@ class LoginTests(TestCase):
         self.assertContains(response, "noindex")
 
 
-class PasswordResetTests(TestCase):
+class PasswordResetTests(EnglishPagesMixin, TestCase):
     def setUp(self):
         self.user = User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
 
@@ -131,7 +133,7 @@ class PasswordResetTests(TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
 
-class AccountSettingsTests(TestCase):
+class AccountSettingsTests(EnglishPagesMixin, TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             email="rafiq@example.com", password=PASSWORD, full_name="Rafiq Ahmed"
@@ -141,7 +143,12 @@ class AccountSettingsTests(TestCase):
     def test_details_can_be_changed(self):
         response = self.client.post(
             reverse("accounts:settings"),
-            {"full_name": "Rafiq A. Ahmed", "email": "rafiq@example.com", "marketing_opt_in": "on"},
+            {
+                "full_name": "Rafiq A. Ahmed",
+                "email": "rafiq@example.com",
+                "language": "en",
+                "marketing_opt_in": "on",
+            },
             follow=True,
         )
         self.user.refresh_from_db()
@@ -157,6 +164,7 @@ class AccountSettingsTests(TestCase):
             "profession": "Software engineer",
             "education": "BSc, University of Dhaka",
             "location": "Dhaka, Bangladesh",
+            "language": "bn",
         }
         self.client.post(url, details)
         self.user.refresh_from_db()

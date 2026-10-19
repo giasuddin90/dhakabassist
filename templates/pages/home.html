@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load money %}
+{% load i18n money %}
 
 {% block content %}
 {% if course %}
@@ -7,16 +7,16 @@
   <section class="shell duo" style="padding-block:72px 64px" aria-labelledby="hero-title">
     <div class="stack u-gap-22">
       <p class="eyebrow">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}</p>
-      <h1 class="display-1" id="hero-title">Learn to read, hear and understand music.</h1>
+      <h1 class="display-1" id="hero-title">{% translate "Learn to read, hear and understand music." %}</h1>
       <p class="lede">{{ course.summary }}</p>
       <div class="cluster" style="margin-top:6px">
-        <a class="btn" href="{% url 'accounts:register' %}">Start Module {{ course.free_module.number_plain|default:'1' }} free</a>
-        <a class="btn btn--outline" href="{% url 'orders:checkout' course.slug %}">Enroll now</a>
+        <a class="btn" href="{% url 'accounts:register' %}">{% blocktranslate with number=course.free_module.number_plain|default:'1' %}Start Module {{ number }} free{% endblocktranslate %}</a>
+        <a class="btn btn--outline" href="{% url 'orders:checkout' course.slug %}">{% translate "Enroll now" %}</a>
       </div>
       <p class="meta-row" style="margin-top:8px">
-        <span>{{ course.module_count }} module{{ course.module_count|pluralize }}</span>
-        {% if course.free_module %}<span>Module {{ course.free_module.number_plain }} free</span>{% endif %}
-        <span>Video, audio and notation</span>
+        <span>{% blocktranslate count count=course.module_count %}{{ count }} module{% plural %}{{ count }} modules{% endblocktranslate %}</span>
+        {% if course.free_module %}<span>{% blocktranslate with number=course.free_module.number_plain %}Module {{ number }} free{% endblocktranslate %}</span>{% endif %}
+        <span>{% translate "Video, audio and notation" %}</span>
       </p>
     </div>
 
@@ -27,7 +27,7 @@
       {% if course.trailer_embed_url %}
         <a class="trailer-cta" href="{{ course.get_absolute_url }}#trailer">
           <span class="play play--xs" aria-hidden="true">{% include "includes/icon_play.html" with size=11 height=12 color="#F1E9D2" %}</span>
-          {{ course.trailer_label|default:"Watch the trailer" }}{% if course.trailer_duration %} · {{ course.trailer_duration }}{% endif %}
+          {% if course.trailer_label %}{{ course.trailer_label }}{% else %}{% translate "Watch the trailer" %}{% endif %}{% if course.trailer_duration %} · {{ course.trailer_duration }}{% endif %}
         </a>
       {% endif %}
     </div>
@@ -40,10 +40,10 @@
     <div class="shell">
       <div class="split" style="margin-bottom:36px">
         <div class="stack u-gap-10">
-          <p class="eyebrow">What you will learn</p>
-          <h2 class="display-3" id="modules-title">{{ course.module_count }} modules, in order</h2>
+          <p class="eyebrow">{% translate "What you will learn" %}</p>
+          <h2 class="display-3" id="modules-title">{% blocktranslate count count=course.module_count %}{{ count }} module, in order{% plural %}{{ count }} modules, in order{% endblocktranslate %}</h2>
         </div>
-        <a class="btn-link" href="{{ course.get_absolute_url }}">Full curriculum</a>
+        <a class="btn-link" href="{{ course.get_absolute_url }}">{% translate "Full curriculum" %}</a>
       </div>
 
       <ul class="ruled ruled--columns" style="list-style:none;padding:0;margin:0">
@@ -53,7 +53,7 @@
             <div class="stack u-gap-6">
               <div class="cluster" style="--cluster-gap:10px">
                 <h3 class="module-row__title">{{ module.title }}</h3>
-                {% if module.is_free %}<span class="badge">FREE</span>{% endif %}
+                {% if module.is_free %}<span class="badge">{% translate "FREE" %}</span>{% endif %}
               </div>
               <p class="module-row__body">{{ module.summary }}</p>
             </div>
@@ -67,8 +67,8 @@
   <section class="section section--ink on-dark reveal" aria-labelledby="steps-title">
     <div class="shell stack u-gap-36">
       <div class="stack u-gap-10" style="max-width:640px">
-        <p class="eyebrow">How each module works</p>
-        <h2 class="display-3" id="steps-title">Watch, read, listen, then prove it</h2>
+        <p class="eyebrow">{% translate "How each module works" %}</p>
+        <h2 class="display-3" id="steps-title">{% translate "Watch, read, listen, then prove it" %}</h2>
       </div>
       <div class="grid-rule grid-rule--ink grid-rule--steps">
         {% for key, title, body in steps %}
@@ -88,16 +88,18 @@
       {% include "includes/instructor_photo.html" with author=course.author name=course.author_name sizes="(max-width: 768px) 92vw, 440px" lazy=True %}
     </div>
     <div class="stack u-gap-18">
-      <p class="eyebrow">Your instructor</p>
+      <p class="eyebrow">{% translate "Your instructor" %}</p>
       <h2 class="display-3" id="instructor-title">{{ course.author_name }}</h2>
       {% if course.author.bio %}
         <div class="prose">{{ course.author.bio_html }}</div>
       {% else %}
-        <p class="prose">An independent musician and music educator based in Dhaka.
-          {{ course.title }} is the course he wished existed when he started: a clear,
-          step-by-step path through the theory every musician uses.</p>
+        <p class="prose">{% blocktranslate trimmed with title=course.title %}
+          An independent musician and music educator based in Dhaka.
+          {{ title }} is the course he wished existed when he started: a clear,
+          step-by-step path through the theory every musician uses.
+        {% endblocktranslate %}</p>
       {% endif %}
-      <a class="btn-link" href="{% url 'pages:about' %}" style="align-self:flex-start">More about {{ course.author_name }}</a>
+      <a class="btn-link" href="{% url 'pages:about' %}" style="align-self:flex-start">{% blocktranslate with name=course.author_name %}More about {{ name }}{% endblocktranslate %}</a>
     </div>
   </section>
 
@@ -105,22 +107,23 @@
   <section class="section section--loose section--ruled reveal" id="pricing" aria-labelledby="pricing-title">
     <div class="shell duo duo--start">
       <div class="stack u-gap-14">
-        <p class="eyebrow">Pricing</p>
-        <h2 class="display-3" id="pricing-title">One payment. Lifetime access.</h2>
-        <p class="prose" style="font-size:18px;line-height:1.6">
-          Create a free account and study Module {{ course.free_module.number_plain|default:'1' }} at no cost.
+        <p class="eyebrow">{% translate "Pricing" %}</p>
+        <h2 class="display-3" id="pricing-title">{% translate "One payment. Lifetime access." %}</h2>
+        <p class="prose" style="font-size:18px;line-height:1.6">{% blocktranslate trimmed with number=course.free_module.number_plain|default:'1' %}
+          Create a free account and study Module {{ number }} at no cost.
           When you are ready, pay once in BDT with bKash, Nagad or card to unlock the rest of the course.
-          International cards are accepted.</p>
+          International cards are accepted.
+        {% endblocktranslate %}</p>
       </div>
 
       <div class="panel panel--framed stack u-gap-20">
         <h3 class="u-serif u-fs-19" style="font-weight:600;font-size:22px">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}</h3>
         <p class="cluster" style="--cluster-gap:10px;align-items:baseline">
           <span class="price">{{ course.price|taka }}</span>
-          <span class="muted u-fs-15">one-time</span>
+          <span class="muted u-fs-15">{% translate "one-time" %}</span>
         </p>
         {% include "includes/includes_list.html" %}
-        <a class="btn btn--block" href="{% url 'orders:checkout' course.slug %}">Enroll now</a>
+        <a class="btn btn--block" href="{% url 'orders:checkout' course.slug %}">{% translate "Enroll now" %}</a>
         {% include "includes/payment_chips.html" %}
       </div>
     </div>
@@ -130,7 +133,7 @@
   {% if faqs %}
     <section class="section section--loose section--ruled" aria-labelledby="faq-title">
       <div class="shell shell--narrow stack u-gap-28">
-        <h2 class="display-3" id="faq-title">Questions</h2>
+        <h2 class="display-3" id="faq-title">{% translate "Questions" %}</h2>
         <div class="ruled" data-accordion>
           {% for faq in faqs %}
             <details class="disclose disclose--faq"{% if forloop.first %} open{% endif %}>
@@ -149,8 +152,8 @@
 {% else %}
   <section class="shell section section--loose stack u-gap-18">
     <h1 class="display-2">{{ site.name }}</h1>
-    <p class="lede">{{ site.tagline }} The first course is being prepared and will be published shortly.</p>
-    <a class="btn" href="{% url 'pages:about' %}" style="align-self:flex-start">Get in touch</a>
+    <p class="lede">{{ site.tagline }} {% translate "The first course is being prepared and will be published shortly." %}</p>
+    <a class="btn" href="{% url 'pages:about' %}" style="align-self:flex-start">{% translate "Get in touch" %}</a>
   </section>
 {% endif %}
 {% endblock %}

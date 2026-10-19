@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
 {% block content %}
 <section style="padding:64px 24px 96px;display:flex;justify-content:center">
@@ -10,14 +10,14 @@
     </p>
 
     <h1 class="display-3 u-center" style="font-size:38px">
-      {% if mode == 'register' %}Create your account{% else %}Welcome back{% endif %}
+      {% if mode == 'register' %}{% translate "Create your account" %}{% else %}{% translate "Welcome back" %}{% endif %}
     </h1>
 
     <div class="segmented">
       <a href="{% url 'accounts:login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}"
-         {% if mode == 'login' %}aria-current="page"{% endif %}>Log in</a>
+         {% if mode == 'login' %}aria-current="page"{% endif %}>{% translate "Log in" %}</a>
       <a href="{% url 'accounts:register' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}"
-         {% if mode == 'register' %}aria-current="page"{% endif %}>Create account</a>
+         {% if mode == 'register' %}aria-current="page"{% endif %}>{% translate "Create account" %}</a>
     </div>
 
     <form method="post" class="stack u-gap-16" novalidate>
@@ -34,21 +34,21 @@
         {% include "includes/field.html" with field=form.username %}
         {% include "includes/field.html" with field=form.password %}
         <div class="split" style="align-items:center;font-size:15px">
-          <label class="check">{{ form.remember_me }} Keep me logged in</label>
-          <a href="{% url 'accounts:password_reset' %}">Forgot password?</a>
+          <label class="check">{{ form.remember_me }} {% translate "Keep me logged in" %}</label>
+          <a href="{% url 'accounts:password_reset' %}">{% translate "Forgot password?" %}</a>
         </div>
       {% endif %}
 
       <button class="btn btn--block" type="submit" style="margin-top:6px">
-        {% if mode == 'register' %}Create account{% else %}Log in{% endif %}
+        {% if mode == 'register' %}{% translate "Create account" %}{% else %}{% translate "Log in" %}{% endif %}
       </button>
 
       {% if mode == 'register' %}
-        <p class="form-note u-center">
+        {% url 'pages:legal' 'terms' as terms_url %}{% url 'pages:legal' 'privacy' as privacy_url %}
+        <p class="form-note u-center">{% blocktranslate trimmed %}
           Your free account includes Module 1. By creating an account you agree to the
-          <a href="{% url 'pages:legal' 'terms' %}">Terms</a> and
-          <a href="{% url 'pages:legal' 'privacy' %}">Privacy Policy</a>.
-        </p>
+          <a href="{{ terms_url }}">Terms</a> and <a href="{{ privacy_url }}">Privacy Policy</a>.
+        {% endblocktranslate %}</p>
       {% endif %}
     </form>
   </div>

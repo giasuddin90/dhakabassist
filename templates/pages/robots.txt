@@ -1,54 +1,91 @@
 User-agent: *
 Allow: /
 # Signed-in and payment paths hold student and order data, so they stay out
-# of every index. The views also send `noindex` headers.
+# of every index, in both languages (English pages sit under /en/). The
+# views also send `noindex` headers.
 Disallow: /my-courses/
+Disallow: /en/my-courses/
 Disallow: /learn/
+Disallow: /en/learn/
 Disallow: /account/
+Disallow: /en/account/
 Disallow: /enroll/
+Disallow: /en/enroll/
 Disallow: /payment/
+Disallow: /en/payment/
 Disallow: /receipt/
+Disallow: /en/receipt/
 Disallow: /login/
+Disallow: /en/login/
 Disallow: /register/
+Disallow: /en/register/
 Disallow: /logout/
+Disallow: /en/logout/
 Disallow: /password/
+Disallow: /en/password/
 Disallow: /manage/
 Disallow: /django-admin/
 Disallow: /module/
+Disallow: /en/module/
 Disallow: /asset/
+Disallow: /en/asset/
 
 # AI answer engines: the public pages and llms.txt are the intended source.
 User-agent: GPTBot
 Allow: /$
+Allow: /en/$
 Allow: /courses
+Allow: /en/courses
 Allow: /about
+Allow: /en/about
 Allow: /faq
+Allow: /en/faq
 Allow: /legal
+Allow: /en/legal
 Allow: /llms.txt
 Disallow: /learn/
+Disallow: /en/learn/
 Disallow: /my-courses/
+Disallow: /en/my-courses/
 Disallow: /account/
+Disallow: /en/account/
 
 User-agent: ClaudeBot
 Allow: /$
+Allow: /en/$
 Allow: /courses
+Allow: /en/courses
 Allow: /about
+Allow: /en/about
 Allow: /faq
+Allow: /en/faq
 Allow: /legal
+Allow: /en/legal
 Allow: /llms.txt
 Disallow: /learn/
+Disallow: /en/learn/
 Disallow: /my-courses/
+Disallow: /en/my-courses/
 Disallow: /account/
+Disallow: /en/account/
 
 User-agent: PerplexityBot
 Allow: /$
+Allow: /en/$
 Allow: /courses
+Allow: /en/courses
 Allow: /about
+Allow: /en/about
 Allow: /faq
+Allow: /en/faq
 Allow: /legal
+Allow: /en/legal
 Allow: /llms.txt
 Disallow: /learn/
+Disallow: /en/learn/
 Disallow: /my-courses/
+Disallow: /en/my-courses/
 Disallow: /account/
+Disallow: /en/account/
 
 Sitemap: {{ base_url }}/sitemap.xml

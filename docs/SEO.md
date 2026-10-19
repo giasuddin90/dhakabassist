@@ -13,6 +13,23 @@ rendered panels, and the quiz is a set of forms.
 Verify with `curl https://your-domain/ | grep "Nine modules"` — the curriculum
 is in the response body.
 
+## Two languages
+
+Every public page exists in Bangla, the primary language, at the plain
+address (`/courses/foundations-of-music/`), and in English under `/en/`
+(`/en/courses/foundations-of-music/`). The URL alone decides the language, so
+crawlers see and index both.
+
+- `<html lang>` and `og:locale` (`bn_BD` / `en_BD`, with the other as
+  `og:locale:alternate`) follow the page's language.
+- The canonical URL points at the page in its own language. Indexable pages
+  also list `<link rel="alternate" hreflang="bn|en|x-default">`; x-default is
+  the Bangla page. `noindex` pages carry none.
+- Text the site has not been given in Bangla falls back to English, so a
+  Bangla page is never empty, only partly English until it is translated.
+- The masthead's language switch is a plain link to the same page in the
+  other language.
+
 ## Per-page metadata
 
 Views build a small `SEO` object (`pages/seo.py`) and `base.html` renders it.
@@ -40,7 +57,8 @@ than sitting in unconnected blocks:
 | Legal | `EducationalOrganization`, `Article`, `BreadcrumbList` |
 
 The `Course` entity carries the price, the currency, what the course teaches
-(every module title), the level, the languages and the fact that a free part
+(every module title), the level, the page's language (`inLanguage`, with
+names and descriptions in that language) and the fact that a free part
 exists — which is what both search engines and answer engines need to describe
 the course accurately without guessing.
 
@@ -68,15 +86,19 @@ Images carry real alt text. Notation images uploaded by the administrator are
 ## Discovery files
 
 - `/sitemap.xml` — public pages only, generated from the database, with
-  `lastmod` from each record. Draft courses and unpublished legal pages are
-  absent automatically.
+  `lastmod` from each record. Every page is listed in both languages, each
+  entry naming the other as an `hreflang` alternate (plus x-default). Draft
+  courses and unpublished legal pages are absent automatically.
 - `/robots.txt` — allows the public site, blocks every signed-in and payment
-  path, and names the sitemap. It also gives `GPTBot`, `ClaudeBot` and
+  path in both languages (`/learn/` and `/en/learn/`), and names the sitemap. It also gives `GPTBot`, `ClaudeBot` and
   `PerplexityBot` explicit allow-lists covering the public pages and
   `llms.txt`.
 - `/llms.txt` — a plain-text brief for answer engines: what the course is, its
   price in BDT, module list, payment methods, refund terms, the FAQs, and an
   explicit note that lesson content is private and must not be represented.
+  Always written in English (it ignores `Accept-Language`); it links the
+  English pages and explains that the Bangla page is the same address
+  without `/en/`.
 
 All three are generated from the same database as the site, so they cannot go
 stale when the course changes.

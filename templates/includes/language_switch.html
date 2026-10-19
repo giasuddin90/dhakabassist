@@ -1,0 +1,7 @@
+{% load i18n %}
+{% comment %}A plain link to this page in the other language: works without JS, and crawlers follow it.{% endcomment %}
+{% for link in language_links %}
+  {% if not link.is_current %}
+    <a class="lang-switch" href="{{ link.url }}" hreflang="{{ link.code }}" lang="{{ link.code }}">{{ link.name }}</a>
+  {% endif %}
+{% endfor %}

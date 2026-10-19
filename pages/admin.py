@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from courses.i18n import columns
+
 from .models import ContactMessage, Faq, LegalPage
 
 
@@ -7,7 +9,7 @@ from .models import ContactMessage, Faq, LegalPage
 class FaqAdmin(admin.ModelAdmin):
     list_display = ("question", "position", "is_published")
     list_editable = ("position", "is_published")
-    search_fields = ("question", "answer")
+    search_fields = (*columns("question"), *columns("answer"))
 
 
 @admin.register(LegalPage)

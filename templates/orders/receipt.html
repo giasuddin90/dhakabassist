@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load money %}
+{% load i18n money %}
 
 {% block content %}
 <section class="shell" style="max-width:1080px;padding-block:48px 88px">
@@ -9,32 +9,33 @@
     </span>
 
     <h1 class="display-2" style="font-size:44px">
-      {% if order.status == 'paid' %}You are enrolled{% else %}Order {{ order.get_status_display|lower }}{% endif %}
+      {% if order.status == 'paid' %}{% translate "You are enrolled" %}{% else %}{% blocktranslate with status=order.get_status_display|lower %}Order {{ status }}{% endblocktranslate %}{% endif %}
     </h1>
 
     {% if order.status == 'paid' %}
-      <p class="u-fs-18" style="line-height:1.6">Payment of {{ order.amount|taka }}
-        received. A receipt has been sent to {{ order.student.email }}.</p>
+      <p class="u-fs-18" style="line-height:1.6">{% blocktranslate trimmed with amount=order.amount|taka email=order.student.email %}
+        Payment of {{ amount }} received. A receipt has been sent to {{ email }}.
+      {% endblocktranslate %}</p>
     {% else %}
-      <p class="u-fs-18" style="line-height:1.6">{{ order.failure_reason|default:"This order has not been paid." }}</p>
+      <p class="u-fs-18" style="line-height:1.6">{% if order.failure_reason %}{{ order.failure_reason }}{% else %}{% translate "This order has not been paid." %}{% endif %}</p>
     {% endif %}
 
     <div class="panel stack u-gap-8" style="width:100%;text-align:left;font-size:15px">
-      <div class="split" style="align-items:baseline"><span class="muted">Order</span><span>{{ order.reference }}</span></div>
-      <div class="split" style="align-items:baseline"><span class="muted">Method</span><span>{{ order.get_method_display }}</span></div>
-      <div class="split" style="align-items:baseline"><span class="muted">Date</span><span>{{ order.paid_at|default:order.created_at|date:"j M Y" }}</span></div>
+      <div class="split" style="align-items:baseline"><span class="muted">{% translate "Order" %}</span><span>{{ order.reference }}</span></div>
+      <div class="split" style="align-items:baseline"><span class="muted">{% translate "Method" %}</span><span>{{ order.get_method_display }}</span></div>
+      <div class="split" style="align-items:baseline"><span class="muted">{% translate "Date" %}</span><span>{{ order.paid_at|default:order.created_at|date:"j M Y" }}</span></div>
       {% if order.gateway_reference %}
-        <div class="split" style="align-items:baseline"><span class="muted">Gateway reference</span><span class="u-mono u-fs-13">{{ order.gateway_reference }}</span></div>
+        <div class="split" style="align-items:baseline"><span class="muted">{% translate "Gateway reference" %}</span><span class="u-mono u-fs-13">{{ order.gateway_reference }}</span></div>
       {% endif %}
     </div>
 
     {% if order.status == 'paid' and first_module %}
-      <a class="btn" href="{{ first_module.get_absolute_url }}" style="align-self:center">Start Module {{ first_module.number_plain }}</a>
+      <a class="btn" href="{{ first_module.get_absolute_url }}" style="align-self:center">{% blocktranslate with number=first_module.number_plain %}Start Module {{ number }}{% endblocktranslate %}</a>
     {% else %}
-      <a class="btn" href="{% url 'orders:checkout' order.course.slug %}" style="align-self:center">Try again</a>
+      <a class="btn" href="{% url 'orders:checkout' order.course.slug %}" style="align-self:center">{% translate "Try again" %}</a>
     {% endif %}
 
-    <a class="btn-link btn-link--sm" href="{% url 'accounts:orders' %}">Order history</a>
+    <a class="btn-link btn-link--sm" href="{% url 'accounts:orders' %}">{% translate "Order history" %}</a>
   </div>
 </section>
 {% endblock %}

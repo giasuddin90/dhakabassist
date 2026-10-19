@@ -7,11 +7,12 @@ from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 
+from core.testing import EnglishPagesMixin
 from courses.models import Course, Module
 from pages.models import ContactMessage, Faq, LegalPage
 
 
-class PublicPageTests(TestCase):
+class PublicPageTests(EnglishPagesMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.course = Course.objects.create(
@@ -79,7 +80,7 @@ class PublicPageTests(TestCase):
         response = self.client.get(reverse("pages:home"))
         self.assertNotContains(response, "trailer-cta")
         Course.objects.filter(pk=self.course.pk).update(
-            trailer_url="https://youtu.be/dQw4w9WgXcQ"
+            trailer_url_en="https://youtu.be/dQw4w9WgXcQ"
         )
         response = self.client.get(reverse("pages:home"))
         self.assertContains(response, f'href="{self.course.get_absolute_url()}#trailer"')
@@ -127,7 +128,7 @@ class PublicPageTests(TestCase):
         self.assertContains(response, "BreadcrumbList")
 
     def test_404_page_uses_the_site_layout(self):
-        response = self.client.get("/no-such-page/")
+        response = self.client.get("/en/no-such-page/")
         self.assertEqual(response.status_code, 404)
         self.assertContains(response, "could not find that page", status_code=404)
 
@@ -168,7 +169,7 @@ class DiscoveryFileTests(TestCase):
         self.assertIn("Not available to crawlers", body)
 
 
-class ContactFormTests(TestCase):
+class ContactFormTests(EnglishPagesMixin, TestCase):
     def test_a_valid_message_is_saved(self):
         response = self.client.post(
             reverse("pages:about"),

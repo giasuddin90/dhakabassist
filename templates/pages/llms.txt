@@ -1,4 +1,4 @@
-{% load money %}# {{ site.name }}
+{% load i18n money %}# {{ site.name }}
 
 > {{ site.tagline }} Online music theory courses taught by {{ site.instructor }}, an independent musician and music educator based in {{ site.location }}.
 
@@ -13,7 +13,7 @@
 - **Modules**: {{ course.module_count }}{% if course.total_runtime %}
 - **Total video**: {{ course.total_runtime }}{% endif %}{% if course.free_module %}
 - **Free preview**: Module {{ course.free_module.number_plain }} ({{ course.free_module.title }}) is free with any registered account{% endif %}
-- **Languages**: English, with Bangla module titles
+- **Languages**: Bangla and English; every page, lesson and quiz exists in both
 - **Each module contains**: a video lesson, written notes in Markdown, MP3 audio examples, SVG notation diagrams, downloadable worksheets and a multiple-choice quiz
 - **Unlocking**: a module unlocks once the previous module's quiz is answered with 100% accuracy; students may retry a question until they choose the correct answer
 
@@ -38,6 +38,10 @@ Within 7 days of purchase, if fewer than two modules have been completed. See {{
 ### {{ faq.question }}
 {{ faq.answer }}
 {% endfor %}{% endif %}
+
+## Languages
+
+Every public page exists in Bangla, the primary language, and in English. The links below are the English pages; the Bangla page is the same address without the /en/ prefix (for example {{ base_url }}{% language 'bn' %}{% url 'courses:list' %}{% endlanguage %}).
 
 ## Pages
 

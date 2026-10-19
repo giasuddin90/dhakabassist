@@ -14,6 +14,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
 
+from core.testing import EnglishPagesMixin
 from courses.models import Author, Course
 
 
@@ -37,7 +38,7 @@ def png_upload(name="author.png"):
 
 
 @override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
-class AuthorProfileTests(TestCase):
+class AuthorProfileTests(EnglishPagesMixin, TestCase):
     """The course page's author card and the public author photo."""
 
     def setUp(self):
@@ -110,7 +111,7 @@ class AuthorProfileTests(TestCase):
 
 
 @override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
-class AuthorOnPublicPagesTests(TestCase):
+class AuthorOnPublicPagesTests(EnglishPagesMixin, TestCase):
     """The home and About pages show the promoted course's author."""
 
     @classmethod
@@ -166,7 +167,7 @@ class SeedDemoAuthorTests(TestCase):
         """Both demo courses point at the seeded author, whose photo is in storage."""
         call_command("seed_demo", stdout=io.StringIO())
         author = Author.objects.get()
-        self.assertEqual(author.name, "Tanveer Haque")
+        self.assertEqual(author.name_en, "Tanveer Haque")
         self.assertTrue(author.bio)
         self.assertTrue(author.photo.storage.exists(author.photo.name))
         self.assertEqual(author.courses.count(), 2)

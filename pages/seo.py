@@ -10,9 +10,11 @@ from dataclasses import dataclass, field
 
 from django.conf import settings
 from django.templatetags.static import static
-from django.urls import reverse
+from django.urls import reverse, translate_url
+from django.utils import translation
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
+from django.utils.translation import get_language_from_path
 
 
 def absolute(path):
@@ -23,10 +25,27 @@ def absolute(path):
     return f"{base}{path if path.startswith('/') else '/' + path}"
 
 
+def localized(path, language=None):
+    """`path` in `language` (default: the active one), e.g. "/" -> "/en/".
+
+    Views hand over paths like "/" that carry no language, so the canonical
+    URL, hreflang links and breadcrumbs all go through here. The path is
+    resolved in its own language (a bare path is Bangla), since `/` is not
+    an English address.
+    """
+    target = language or translation.get_language()
+    with translation.override(get_language_from_path(path) or settings.LANGUAGE_CODE):
+        return translate_url(path, target)
+
+
 @dataclass
 class Breadcrumb:
     name: str
     url: str = ""
+
+    def __post_init__(self):
+        if self.url:
+            self.url = localized(self.url)
 
 
 @dataclass
@@ -47,7 +66,20 @@ class SEO:
 
     @property
     def canonical(self):
-        return absolute(self.canonical_path or "/")
+        return absolute(localized(self.canonical_path or "/"))
+
+    @property
+    def alternates(self):
+        """(hreflang, URL) pairs for every language, plus x-default.
+
+        Private pages are not indexed, so they get none.
+        """
+        if self.robots.startswith("noindex"):
+            return []
+        path = self.canonical_path or "/"
+        pairs = [(code, absolute(localized(path, code))) for code, _name in settings.LANGUAGES]
+        pairs.append(("x-default", absolute(localized(path, settings.LANGUAGE_CODE))))
+        return pairs
 
     @property
     def image(self):
@@ -60,7 +92,7 @@ class SEO:
         if self.breadcrumbs:
             graph.append(breadcrumb_list(self.breadcrumbs))
         payload = {"@context": "https://schema.org", "@graph": graph}
-        return mark_safe(  # noqa: S308 - json.dumps + escaped </ cannot break out
+        return mark_safe(
             json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
         )
 
@@ -126,7 +158,7 @@ def course_schema(course):
         "name": course.title,
         "url": absolute(course.get_absolute_url()),
         "description": course.summary,
-        "inLanguage": ["en", "bn"],
+        "inLanguage": translation.get_language(),
         "educationalLevel": course.level,
         "numberOfCredits": course.module_count,
         "teaches": [m.title for m in course.module_list],

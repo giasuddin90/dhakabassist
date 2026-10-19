@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static money %}
+{% load static i18n money %}
 
 {% block content %}
 <section class="shell" style="padding-block:40px 80px;display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
@@ -34,7 +34,7 @@
                  width="160" height="160" alt="" loading="lazy" decoding="async">
           {% endif %}
           <div class="stack u-gap-10">
-            <p class="eyebrow">About the author</p>
+            <p class="eyebrow">{% translate "About the author" %}</p>
             <h2 class="display-4" id="author-title">{{ author.name }}</h2>
             {% if author.bio %}<div class="prose">{{ author.bio_html }}</div>{% endif %}
           </div>
@@ -44,11 +44,11 @@
 
     <div class="stack u-gap-18" id="curriculum">
       <div class="split" style="align-items:baseline">
-        <h2 class="display-4">Curriculum</h2>
-        <p class="u-fs-15 muted">
-          Module {{ course.free_module.number_plain|default:'1' }} is free. Each module unlocks
+        <h2 class="display-4">{% translate "Curriculum" %}</h2>
+        <p class="u-fs-15 muted">{% blocktranslate trimmed with number=course.free_module.number_plain|default:'1' %}
+          Module {{ number }} is free. Each module unlocks
           when you pass the previous quiz with 100%.
-        </p>
+        {% endblocktranslate %}</p>
       </div>
 
       <div class="ruled" data-accordion>
@@ -60,8 +60,7 @@
                 <span class="stack u-gap-6">
                   <span class="cluster" style="--cluster-gap:10px">
                     <span class="module-row__title">{{ module.title }}</span>
-                    {% if module.title_bn %}<span class="muted u-fs-15">{{ module.title_bn }}</span>{% endif %}
-                    {% if module.is_free %}<span class="badge">FREE</span>{% endif %}
+                    {% if module.is_free %}<span class="badge">{% translate "FREE" %}</span>{% endif %}
                   </span>
                   <span class="u-fs-14 muted">{{ module.meta_line }}</span>
                 </span>
@@ -74,7 +73,7 @@
                 {% endfor %}
                 {% if state.is_unlocked %}
                   <a class="btn-link" href="{{ module.get_absolute_url }}" style="align-self:flex-start">
-                    {% if state.is_complete %}Review this module{% else %}Open this module{% endif %}
+                    {% if state.is_complete %}{% translate "Review this module" %}{% else %}{% translate "Open this module" %}{% endif %}
                   </a>
                 {% endif %}
               </div>
@@ -87,17 +86,17 @@
 
   {# --------------------------------------------------------------- sidebar #}
   <aside class="panel panel--framed u-sticky stack u-gap-18"
-         style="flex:1 1 300px;max-width:400px" id="pricing" aria-label="Enrolment">
+         style="flex:1 1 300px;max-width:400px" id="pricing" aria-label="{% translate 'Enrolment' %}">
     {% if course.trailer_embed_url %}
       <div class="media media--wide" style="border-radius:var(--radius-sm)" id="trailer">
         {# The page sends only its origin as referrer, which YouTube needs to play embeds. #}
         <iframe src="{{ course.trailer_embed_url }}"
-                title="{{ course.trailer_label|default:'Watch the trailer' }} — {{ course.title }}"
+                title="{% if course.trailer_label %}{{ course.trailer_label }}{% else %}{% translate 'Watch the trailer' %}{% endif %} — {{ course.title }}"
                 loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
                 allow="accelerometer; gyroscope; encrypted-media; picture-in-picture; fullscreen"
                 allowfullscreen></iframe>
       </div>
-      {% if course.trailer_duration %}<p class="u-fs-14 muted">{{ course.trailer_label|default:"Trailer" }} · {{ course.trailer_duration }}</p>{% endif %}
+      {% if course.trailer_duration %}<p class="u-fs-14 muted">{% if course.trailer_label %}{{ course.trailer_label }}{% else %}{% translate "Trailer" %}{% endif %} · {{ course.trailer_duration }}</p>{% endif %}
     {% else %}
       <div class="media media--wide" style="border-radius:var(--radius-sm)">
         <span class="media__overlay">
@@ -108,20 +107,20 @@
 
     <p class="cluster" style="--cluster-gap:10px;align-items:baseline">
       <span class="price price--sm">{{ course.price|taka }}</span>
-      <span class="muted u-fs-15">one-time</span>
+      <span class="muted u-fs-15">{% translate "one-time" %}</span>
     </p>
 
     {% if access.is_enrolled %}
-      <a class="btn btn--block" href="{% url 'courses:dashboard' %}">Go to my courses</a>
+      <a class="btn btn--block" href="{% url 'courses:dashboard' %}">{% translate "Go to my courses" %}</a>
     {% else %}
-      <a class="btn btn--block" href="{% url 'orders:checkout' course.slug %}">Enroll now</a>
+      <a class="btn btn--block" href="{% url 'orders:checkout' course.slug %}">{% translate "Enroll now" %}</a>
       {% if not user.is_authenticated and course.free_module %}
         <a class="btn btn--outline btn--block" href="{% url 'accounts:register' %}">
-          Try Module {{ course.free_module.number_plain }} free
+          {% blocktranslate with number=course.free_module.number_plain %}Try Module {{ number }} free{% endblocktranslate %}
         </a>
       {% elif course.free_module %}
         <a class="btn btn--outline btn--block" href="{{ course.free_module.get_absolute_url }}">
-          Open Module {{ course.free_module.number_plain }}
+          {% blocktranslate with number=course.free_module.number_plain %}Open Module {{ number }}{% endblocktranslate %}
         </a>
       {% endif %}
     {% endif %}
@@ -135,8 +134,8 @@
     {% include "includes/payment_chips.html" %}
 
     <p class="u-fs-13 muted" style="line-height:1.5">
-      7-day refund if you have completed fewer than two modules.
-      <a href="{% url 'pages:legal' 'refunds' %}">Refund policy</a>
+      {% translate "7-day refund if you have completed fewer than two modules." %}
+      <a href="{% url 'pages:legal' 'refunds' %}">{% translate "Refund policy" %}</a>
     </p>
   </aside>
 </section>

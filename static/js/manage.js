@@ -140,13 +140,27 @@
   // Without script each file shows its Markdown to copy; with it, Insert puts
   // that Markdown into the notes and the list can be searched and filtered.
   document.querySelectorAll("[data-library-picker]").forEach(function (picker) {
-    var area = document.getElementById(picker.dataset.target);
-    if (!area) return;
+    // One notes field per language, ids separated by spaces. Inserts go to
+    // the one last clicked into, the first (Bangla) until then.
+    var areas = picker.dataset.target.split(" ").map(function (id) {
+      return document.getElementById(id);
+    }).filter(Boolean);
+    if (!areas.length) return;
+    var area = areas[0];
 
     // Until the administrator has clicked into the notes the cursor sits at
     // the very start, so an insert then goes to the end instead.
     var placed = false;
-    area.addEventListener("focus", function () { placed = true; }, { once: true });
+    areas.forEach(function (each) {
+      each.addEventListener("focus", function () {
+        area = each;
+        placed = true;
+      });
+    });
+
+    function areaWith(prefix) {
+      return areas.filter(function (each) { return each.value.indexOf(prefix) !== -1; })[0];
+    }
 
     picker.querySelectorAll("[data-picker-tools], [data-insert]").forEach(function (el) {
       el.hidden = false;
@@ -180,15 +194,15 @@
     // move or delete. Hidden for files linked only from the quiz.
     picker.querySelectorAll("[data-find]").forEach(function (button) {
       var prefix = button.dataset.find;
-      button.hidden = area.value.indexOf(prefix) === -1;
+      button.hidden = !areaWith(prefix);
       button.addEventListener("click", function () {
-        var at = area.value.indexOf(prefix);
-        if (at === -1) return;
-        var lineStart = area.value.lastIndexOf("\n", at) + 1;
-        var lineEnd = area.value.indexOf("\n", at);
-        area.focus();
-        area.setSelectionRange(lineStart, lineEnd === -1 ? area.value.length : lineEnd);
-        placed = true;
+        var found = areaWith(prefix);
+        if (!found) return;
+        var at = found.value.indexOf(prefix);
+        var lineStart = found.value.lastIndexOf("\n", at) + 1;
+        var lineEnd = found.value.indexOf("\n", at);
+        found.focus();
+        found.setSelectionRange(lineStart, lineEnd === -1 ? found.value.length : lineEnd);
       });
     });
 

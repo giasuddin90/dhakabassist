@@ -6,8 +6,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST, require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 
 from courses.access import CourseAccess, course_queryset
 from courses.models import Course
@@ -40,13 +42,14 @@ def checkout(request, slug):
     )
     access = CourseAccess(request.user, course)
     if access.is_enrolled:
-        messages.info(request, "You already have access to this course.")
+        messages.info(request, _("You already have access to this course."))
         return redirect("courses:dashboard")
 
     prerequisite = course.requires
     if prerequisite and not CourseAccess(request.user, prerequisite).is_enrolled:
         messages.warning(
-            request, f"{prerequisite.title} is required before this course."
+            request,
+            _("%(course)s is required before this course.") % {"course": prerequisite.title},
         )
         return redirect(prerequisite.get_absolute_url())
 
@@ -54,7 +57,7 @@ def checkout(request, slug):
 
     if request.method == "POST":
         if selected not in PaymentMethod.values:
-            messages.error(request, "Choose a payment method to continue.")
+            messages.error(request, _("Choose a payment method to continue."))
         else:
             order = Order.objects.create(
                 student=request.user,
@@ -71,7 +74,7 @@ def checkout(request, slug):
                 logger.warning("Checkout failed for %s: %s", order.reference, exc)
                 messages.error(
                     request,
-                    "The payment gateway could not be reached. Please try again.",
+                    _("The payment gateway could not be reached. Please try again."),
                 )
 
     return render(
@@ -82,7 +85,7 @@ def checkout(request, slug):
             "methods": payment_methods(),
             "selected": selected,
             "seo": seo.noindex(
-                "Checkout",
+                _("Checkout"),
                 canonical_path=reverse("orders:checkout", kwargs={"slug": slug}),
             ),
         },
@@ -107,7 +110,7 @@ def sandbox(request, reference):
         {
             "order": order,
             "method_label": order.get_method_display(),
-            "seo": seo.noindex("Payment"),
+            "seo": seo.noindex(_("Payment")),
         },
     )
 
@@ -121,7 +124,7 @@ def _finish(request, order, data):
         request.session.pop("pending_order", None)
         return redirect(reverse("orders:receipt", kwargs={"reference": order.reference}))
     order.mark_failed(reason)
-    messages.error(request, reason or "The payment did not complete.")
+    messages.error(request, _(reason) if reason else _("The payment did not complete."))
     return redirect(reverse("orders:checkout", kwargs={"slug": order.course.slug}))
 
 
@@ -151,12 +154,19 @@ def callback(request, outcome):
     reference = data.get("tran_id") or request.session.get("pending_order", "")
     order = Order.objects.filter(reference=reference).select_related("course").first()
     if order is None:
-        messages.error(request, "That payment could not be matched to an order.")
+        messages.error(request, _("That payment could not be matched to an order."))
         return redirect("pages:home")
     if outcome != "success":
-        reason = {"fail": "Payment failed.", "cancel": "Payment cancelled."}
+        # Stored in English for staff; shown to the student in their language.
+        reason = {
+            "fail": gettext_noop("Payment failed."),
+            "cancel": gettext_noop("Payment cancelled."),
+        }
         order.mark_failed(reason.get(outcome, ""))
-        messages.error(request, order.failure_reason or "The payment did not complete.")
+        messages.error(
+            request,
+            _(order.failure_reason) if order.failure_reason else _("The payment did not complete."),
+        )
         return redirect(reverse("orders:checkout", kwargs={"slug": order.course.slug}))
     return _finish(request, order, data)
 

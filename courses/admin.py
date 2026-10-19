@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from .i18n import columns
 from .models import (
     Author,
     Choice,
@@ -19,7 +20,7 @@ from .models import (
 class ModuleInline(admin.TabularInline):
     model = Module
     extra = 0
-    fields = ("number", "title", "access", "status")
+    fields = ("number", *columns("title"), "access", "status")
     ordering = ("number",)
     show_change_link = True
 
@@ -27,8 +28,8 @@ class ModuleInline(admin.TabularInline):
 @admin.register(Author)
 class AuthorAdmin(admin.ModelAdmin):
     list_display = ("name", "slug", "updated_at")
-    search_fields = ("name", "bio")
-    prepopulated_fields = {"slug": ("name",)}
+    search_fields = (*columns("name"), *columns("bio"))
+    prepopulated_fields = {"slug": ("name_en",)}
 
 
 @admin.register(Course)
@@ -38,8 +39,8 @@ class CourseAdmin(admin.ModelAdmin):
     )
     list_filter = ("status", "promote_on_home", "author")
     list_select_related = ("author",)
-    search_fields = ("title", "summary")
-    prepopulated_fields = {"slug": ("title",)}
+    search_fields = (*columns("title"), *columns("summary"))
+    prepopulated_fields = {"slug": ("title_en",)}
     autocomplete_fields = ("author",)
     inlines = [ModuleInline]
 
@@ -52,14 +53,17 @@ class LessonInline(admin.TabularInline):
 class MediaAssetInline(admin.TabularInline):
     model = MediaAsset
     extra = 0
-    fields = ("kind", "title", "file", "alt_text", "duration_seconds", "position")
+    fields = (
+        "kind", *columns("title"), *columns("file"), *columns("alt_text"),
+        *columns("duration_seconds"), "position",
+    )
 
 
 @admin.register(Module)
 class ModuleAdmin(admin.ModelAdmin):
     list_display = ("number", "title", "course", "access", "status")
     list_filter = ("course", "access", "status")
-    search_fields = ("title", "summary")
+    search_fields = (*columns("title"), *columns("summary"))
     ordering = ("course__position", "number")
     inlines = [LessonInline, MediaAssetInline]
 
@@ -80,7 +84,7 @@ class QuestionAdmin(admin.ModelAdmin):
 class QuestionInline(admin.TabularInline):
     model = Question
     extra = 0
-    fields = ("position", "text")
+    fields = ("position", *columns("text"))
     show_change_link = True
 
 
@@ -94,7 +98,7 @@ class QuizAdmin(admin.ModelAdmin):
 class MediaAssetAdmin(admin.ModelAdmin):
     list_display = ("title", "kind", "module", "duration_seconds")
     list_filter = ("kind", "module__course")
-    search_fields = ("title",)
+    search_fields = columns("title")
 
 
 @admin.register(Enrollment)
@@ -127,4 +131,4 @@ class LibraryFileAdmin(admin.ModelAdmin):
 
     list_display = ("title", "folder", "file", "created_at")
     list_filter = ("folder",)
-    search_fields = ("title", "file")
+    search_fields = (*columns("title"), "file")

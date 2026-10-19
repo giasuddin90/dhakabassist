@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from .models import ContactMessage
 
@@ -21,5 +22,5 @@ class ContactForm(forms.ModelForm):
     def clean(self):
         data = super().clean()
         if data.get("website"):
-            raise forms.ValidationError("This message could not be sent.")
+            raise forms.ValidationError(_("This message could not be sent."))
         return data

@@ -19,6 +19,7 @@ and, optionally, `chosen` (the folder being viewed, kept after a removal).
     <div class="stack u-gap-12 library-card__body">
       <div class="library-card__name">
         <span class="badge badge--status badge--neutral library-card__purpose">{{ item.get_purpose_display }}</span>
+        {% if item.language != "both" %}<span class="badge badge--status badge--neutral">{{ item.get_language_display }}</span>{% endif %}
         <h3 class="library-card__title">{{ item.title }}</h3>
         <span class="library-card__meta" title="{{ item.filename }}">{{ item.folder }} · {{ item.filename }}</span>
       </div>

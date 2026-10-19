@@ -38,8 +38,11 @@
   --err-bg: #f3e1d6;
 
   /* Type */
-  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
-  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* The Noto faces carry only Bengali glyphs (see their unicode-range), so
+     Latin text keeps the brand fonts and Bangla falls through to them. */
+  --font-display: "Fraunces", "Noto Serif Bengali", Georgia, "Times New Roman", serif;
+  --font-body: "Atkinson Hyperlegible", "Noto Sans Bengali", system-ui, -apple-system,
+    "Segoe UI", sans-serif;
   --font-mono: ui-monospace, Menlo, Consolas, monospace;
 
   /* Layout */
@@ -131,6 +134,28 @@
     U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
+/* Bangla. Fraunces and Atkinson have no Bengali glyphs; the browser only
+   downloads these when a page contains Bangla text. */
+@font-face {
+  font-family: "Noto Serif Bengali";
+  src: url("../fonts/noto-serif-bengali-var.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+0951-0952, U+0964-0965, U+0980-09FE, U+1CD0, U+1CD2, U+1CD5-1CD6,
+    U+1CD8, U+1CE1, U+1CEA, U+1CED, U+1CF2, U+1CF5-1CF7, U+200C-200D, U+20B9, U+25CC,
+    U+A8F1, U+11DF0-11DF1;
+}
+
+@font-face {
+  font-family: "Noto Sans Bengali";
+  src: url("../fonts/noto-sans-bengali-var.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+0951-0952, U+0964-0965, U+0980-09FE, U+1CD0, U+1CD2, U+1CD5-1CD6,
+    U+1CD8, U+1CE1, U+1CEA, U+1CED, U+1CF2, U+1CF5-1CF7, U+200C-200D, U+20B9, U+25CC,
+    U+A8F1, U+11DF0-11DF1;
+}
+
 /* ------------------------------------------------------------------- base */
 
 *,
@@ -164,6 +189,21 @@ h4 {
   line-height: 1.1;
   margin: 0;
   letter-spacing: -0.01em;
+}
+
+/* Bengali letters hang vowel signs above and below the line, so they need
+   more leading than Latin, and negative tracking breaks up conjuncts. */
+:lang(bn) body,
+body:lang(bn) {
+  line-height: 1.7;
+}
+
+:lang(bn) h1,
+:lang(bn) h2,
+:lang(bn) h3,
+:lang(bn) h4 {
+  line-height: 1.35;
+  letter-spacing: 0;
 }
 
 p {
@@ -1345,6 +1385,16 @@ select {
   align-items: center;
   gap: 14px;
   flex: none;
+}
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 4px;
+  font-size: 15px;
+  color: var(--ink);
+  text-underline-offset: 3px;
 }
 
 .avatar-link {

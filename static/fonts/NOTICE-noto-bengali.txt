@@ -1,0 +1,8 @@
+noto-serif-bengali-var.woff2 and noto-sans-bengali-var.woff2
+
+Noto Serif Bengali and Noto Sans Bengali, Copyright 2022 The Noto Project
+Authors (https://github.com/notofonts/bengali).
+
+Bengali-script subsets of the variable fonts, as served by Google Fonts.
+Licensed under the SIL Open Font License, Version 1.1:
+https://openfontlicense.org

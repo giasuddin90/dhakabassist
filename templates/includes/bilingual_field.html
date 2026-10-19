@@ -1,0 +1,8 @@
+{% comment %}
+One translated field: its Bangla and English inputs side by side, stacked on
+phones. Pass `pair`, e.g. `pair=form.bilingual.title` (see
+manage_panel.forms.BilingualFormMixin); `help` works as in field.html.
+{% endcomment %}
+<div class="lang-pair">
+  {% for field in pair %}{% include "includes/field.html" with field=field %}{% endfor %}
+</div>

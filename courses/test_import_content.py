@@ -47,12 +47,12 @@ class ImportContentTests(TestCase):
     def test_running_twice_updates_rather_than_duplicates(self):
         run(EXAMPLE)
         data = self.example()
-        data["courses"][0]["title"] = "Renamed"
+        data["courses"][0]["title_en"] = "Renamed"
         run(self.write(data))
         self.assertEqual(Course.objects.count(), 1)
         self.assertEqual(Module.objects.count(), 2)
         self.assertEqual(Question.objects.count(), 1)
-        self.assertEqual(Course.objects.get().title, "Renamed")
+        self.assertEqual(Course.objects.get().title_en, "Renamed")
         self.assertEqual(Faq.objects.count(), 1)
 
     def test_a_dry_run_saves_nothing(self):

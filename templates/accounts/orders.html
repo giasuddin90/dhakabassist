@@ -1,19 +1,20 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
 <section class="shell shell--narrow section section--tight stack u-gap-24">
   <div class="split">
-    <h1 class="display-3">Order history</h1>
-    <a class="btn-link btn-link--sm" href="{% url 'courses:dashboard' %}">My courses</a>
+    <h1 class="display-3">{% translate "Order history" %}</h1>
+    <a class="btn-link btn-link--sm" href="{% url 'courses:dashboard' %}">{% translate "My courses" %}</a>
   </div>
 
   {% if orders %}
     <div class="table-wrap panel panel--flush">
       <table class="dtable">
-        <caption class="visually-hidden">Your orders</caption>
+        <caption class="visually-hidden">{% translate "Your orders" %}</caption>
         <thead>
-          <tr><th scope="col">Order</th><th scope="col">Course</th><th scope="col">Amount</th>
-              <th scope="col">Method</th><th scope="col">Status</th><th scope="col">Date</th></tr>
+          <tr><th scope="col">{% translate "Order" %}</th><th scope="col">{% translate "Course" %}</th><th scope="col">{% translate "Amount" %}</th>
+              <th scope="col">{% translate "Method" %}</th><th scope="col">{% translate "Status" %}</th><th scope="col">{% translate "Date" %}</th></tr>
         </thead>
         <tbody>
           {% for order in orders %}
@@ -33,10 +34,14 @@
         </tbody>
       </table>
     </div>
-    <p class="u-fs-14 muted">Receipts are emailed at the time of payment. Need one again?
-      <a href="{% url 'pages:about' %}#contact">Ask us</a>.</p>
+    {% url 'pages:about' as about_url %}
+    <p class="u-fs-14 muted">{% blocktranslate trimmed %}
+      Receipts are emailed at the time of payment. Need one again?
+      <a href="{{ about_url }}#contact">Ask us</a>.
+    {% endblocktranslate %}</p>
   {% else %}
-    <p class="u-fs-17">You have no orders yet. <a href="{% url 'courses:list' %}">Browse the course</a>.</p>
+    {% url 'courses:list' as list_url %}
+    <p class="u-fs-17">{% blocktranslate %}You have no orders yet. <a href="{{ list_url }}">Browse the course</a>.{% endblocktranslate %}</p>
   {% endif %}
 </section>
 {% endblock %}

@@ -51,6 +51,13 @@ Every uploaded file goes in the media folder (`MEDIA_ROOT`, default `./media`, s
 - `DJANGO_DEBUG` toggles debug. `DJANGO_DB_URL` (`postgres://user:pass@host:port/name`) switches to PostgreSQL; leave it unset to use SQLite.
 - Commit `.env.example`, never `.env`.
 
+## Two languages (Bangla primary, English second)
+
+- URLs decide the language: Bangla without a prefix, English under `/en/` (`i18n_patterns(prefix_default_language=False)` in `core/urls.py`). `/manage/`, `/django-admin/`, discovery files and `/library/…` links sit outside it; the staff panel is English only (`core/middleware.py`).
+- **Content**: every translatable field is two columns, `<name>_bn` and `<name>_en`, plus `<name> = translated("<name>")` from `courses/i18n.py`, which reads the active language and falls back to the other. Media too (`video_uid_*`, `file_*`, `trailer_url_*`); pass `key=` so a duration follows its video. Query and order by the real columns (`columns("title")`), never the property. Required fields need one language, enforced by `in_some_language(...)` constraints and `BilingualFormMixin` (`manage_panel/forms.py`). Templates render a pair with `includes/bilingual_field.html`.
+- **Wording**: English msgids with `{% translate %}` / `{% blocktranslate %}` and `gettext`; Bangla lives in `locale/bn/LC_MESSAGES/django.po` with the compiled `.mo` committed. Run `makemessages -l bn` / `compilemessages` (needs GNU gettext) after changing wording; see `docs/DEPLOYMENT.md`. JS gets its wording from `data-` attributes the template translates.
+- Western digits in both languages. Emails render in `User.language`.
+
 ## Python and Django
 
 - Follow PEP 8. Ruff handles lint and formatting. Keep it clean.
@@ -123,6 +130,7 @@ Source: `Brand Assets/Brand Guideline.pdf` (originals, Fraunces font files). The
 
 - Display and headings: **Fraunces** (`--font-display`), self-hosted variable font `static/fonts/fraunces-var.woff2` (axes: wght, opsz, SOFT, WONK). The logo uses Fraunces Bold.
 - Body: **Atkinson Hyperlegible** (`--font-body`), 400/700 and 400 italic, latin and latin-ext subsets.
+- Bangla: **Noto Serif Bengali** (headings) and **Noto Sans Bengali** (body), Bengali-only variable subsets in `static/fonts/` (OFL, see the NOTICE there), next in the `--font-display` / `--font-body` stacks. Their `unicode-range` means Latin keeps the brand fonts. `:lang(bn)` gets taller line-height and no negative tracking.
 - Only the upright Fraunces is shipped. Before using italic display text, add `Fraunces-Italic[...].woff2` from `Brand Assets/` to `static/fonts/` with its own `@font-face`. Otherwise the browser fakes the slant.
 
 **Logos** (`static/img/`, all SVG, from `Brand Assets/`)

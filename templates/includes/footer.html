@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 <footer class="site-footer on-dark">
   <div class="shell site-footer__inner">
     <div class="site-footer__cols">
@@ -8,35 +8,35 @@
         <p class="u-fs-15" style="line-height:1.6">{{ site.tagline }}</p>
       </div>
 
-      <nav class="site-footer__links" aria-label="Footer">
+      <nav class="site-footer__links" aria-label="{% translate 'Footer' %}">
         <div class="site-footer__group">
-          <span class="site-footer__label">Course</span>
-          <a href="{% url 'courses:list' %}">Curriculum</a>
-          {% if primary_course %}<a href="{{ primary_course.get_absolute_url }}#pricing">Pricing</a>{% endif %}
-          <a href="{% url 'pages:faq' %}">FAQ</a>
+          <span class="site-footer__label">{% translate "Course" %}</span>
+          <a href="{% url 'courses:list' %}">{% translate "Curriculum" %}</a>
+          {% if primary_course %}<a href="{{ primary_course.get_absolute_url }}#pricing">{% translate "Pricing" %}</a>{% endif %}
+          <a href="{% url 'pages:faq' %}">{% translate "FAQ" %}</a>
         </div>
         <div class="site-footer__group">
           <span class="site-footer__label">{{ site.name }}</span>
-          <a href="{% url 'pages:about' %}">About</a>
-          <a href="{% url 'pages:about' %}#contact">Contact</a>
+          <a href="{% url 'pages:about' %}">{% translate "About" %}</a>
+          <a href="{% url 'pages:about' %}#contact">{% translate "Contact" %}</a>
           {% if user.is_authenticated %}
-            <a href="{% url 'courses:dashboard' %}">My courses</a>
+            <a href="{% url 'courses:dashboard' %}">{% translate "My courses" %}</a>
           {% else %}
-            <a href="{% url 'accounts:login' %}">Log in</a>
+            <a href="{% url 'accounts:login' %}">{% translate "Log in" %}</a>
           {% endif %}
         </div>
         <div class="site-footer__group">
-          <span class="site-footer__label">Legal</span>
-          <a href="{% url 'pages:legal' 'terms' %}">Terms &amp; Conditions</a>
-          <a href="{% url 'pages:legal' 'privacy' %}">Privacy Policy</a>
-          <a href="{% url 'pages:legal' 'refunds' %}">Refund Policy</a>
+          <span class="site-footer__label">{% translate "Legal" %}</span>
+          <a href="{% url 'pages:legal' 'terms' %}">{% translate "Terms & Conditions" %}</a>
+          <a href="{% url 'pages:legal' 'privacy' %}">{% translate "Privacy Policy" %}</a>
+          <a href="{% url 'pages:legal' 'refunds' %}">{% translate "Refund Policy" %}</a>
         </div>
       </nav>
     </div>
 
     <div class="site-footer__base">
-      <span>&copy; {% now "Y" %} {{ site.name }}. All rights reserved.</span>
-      <span>Payments secured by SSLCOMMERZ</span>
+      <span>&copy; {% now "Y" %} {% blocktranslate with name=site.name %}{{ name }}. All rights reserved.{% endblocktranslate %}</span>
+      <span>{% translate "Payments secured by SSLCOMMERZ" %}</span>
     </div>
   </div>
 </footer>

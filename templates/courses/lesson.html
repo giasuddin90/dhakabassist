@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
 {% block content %}
 <div class="shell shell--wide learn">
 
   {# --------------------------------------------------------- module nav #}
-  <aside class="learn__aside" aria-label="Course modules">
+  <aside class="learn__aside" aria-label="{% translate 'Course modules' %}">
     <div class="stack u-gap-8">
       <p class="u-serif u-fs-19" style="font-weight:600;font-size:20px">{{ course.title }}</p>
       <div class="meter meter--sm" role="progressbar"
            aria-valuenow="{{ access.percent_complete }}" aria-valuemin="0" aria-valuemax="100"
-           aria-label="Course progress">
+           aria-label="{% translate 'Course progress' %}">
         <span class="meter__fill" style="width:{{ access.percent_complete }}%"></span>
       </div>
-      <p class="u-fs-13 muted">{{ access.completed_count }} of {{ access.total_count }} complete</p>
+      <p class="u-fs-13 muted">{% blocktranslate with done=access.completed_count total=access.total_count %}{{ done }} of {{ total }} complete{% endblocktranslate %}</p>
     </div>
 
     <nav class="module-nav">
@@ -34,7 +34,7 @@
             <span class="module-nav__item is-locked">
               <span class="module-nav__dot" aria-hidden="true">{% include "includes/icon_lock.html" with size=10 height=11 %}</span>
               <span><span class="module-nav__number">{{ m.number }}</span>{{ m.title }}
-                <span class="visually-hidden">(locked)</span></span>
+                <span class="visually-hidden">{% translate "(locked)" %}</span></span>
             </span>
           {% endif %}
         {% endwith %}
@@ -45,7 +45,7 @@
   {# ------------------------------------------------------------- lesson #}
   <article class="learn__main">
     <header class="stack u-gap-8">
-      <p class="u-fs-14 muted">Module {{ module.number }}{% if module.title_bn %} · {{ module.title_bn }}{% endif %}</p>
+      <p class="u-fs-14 muted">{% blocktranslate with number=module.number %}Module {{ number }}{% endblocktranslate %}</p>
       <h1 class="display-3">{{ module.title }}</h1>
       {% if module.summary %}<p class="u-fs-17 muted" style="line-height:1.6;max-width:62ch">{{ module.summary }}</p>{% endif %}
     </header>
@@ -54,7 +54,7 @@
     {% if playback %}
       <div class="media media--wide">
         {% if playback.kind == "iframe" %}
-          <iframe src="{{ playback.src }}" title="{{ module.title }} — video lesson"
+          <iframe src="{{ playback.src }}" title="{% blocktranslate with title=module.title %}{{ title }} — video lesson{% endblocktranslate %}"
                   loading="lazy" allow="accelerometer; gyroscope; encrypted-media; picture-in-picture;"
                   allowfullscreen></iframe>
         {% else %}
@@ -64,37 +64,37 @@
                  data-csrf="{{ csrf_token }}"
                  {% if module.video_has_subtitles %}aria-describedby="subtitle-note"{% endif %}>
             <source src="{{ playback.src }}" type="video/mp4">
-            Your browser cannot play this video.
-            <a href="{{ playback.src }}">Open the video file</a> instead.
+            {% translate "Your browser cannot play this video." %}
+            <a href="{{ playback.src }}">{% translate "Open the video file instead." %}</a>
           </video>
         {% endif %}
       </div>
       {% if module.video_duration_display or module.video_has_subtitles %}
         <p class="u-fs-14 muted" id="subtitle-note">
           {% if module.video_duration_display %}{{ module.video_duration_display }}{% endif %}
-          {% if module.video_has_subtitles %}{% if module.video_duration_display %} · {% endif %}English subtitles{% endif %}
+          {% if module.video_has_subtitles %}{% if module.video_duration_display %} · {% endif %}{% translate "English subtitles" %}{% endif %}
         </p>
       {% endif %}
     {% endif %}
 
     {# -------------------------------------------------------------- tabs #}
-    <div class="tabs" role="tablist" aria-label="Lesson material" data-tabs>
+    <div class="tabs" role="tablist" aria-label="{% translate 'Lesson material' %}" data-tabs>
       <button type="button" role="tab" id="tab-notes" data-tab="notes"
-              aria-controls="panel-notes" aria-selected="true">Lesson notes</button>
+              aria-controls="panel-notes" aria-selected="true">{% translate "Lesson notes" %}</button>
       {% if module.audio_assets %}
         <button type="button" role="tab" id="tab-audio" data-tab="audio"
-                aria-controls="panel-audio" aria-selected="false" tabindex="-1">Audio</button>
+                aria-controls="panel-audio" aria-selected="false" tabindex="-1">{% translate "Audio" %}</button>
       {% endif %}
       {% if module.download_files %}
         <button type="button" role="tab" id="tab-files" data-tab="files"
-                aria-controls="panel-files" aria-selected="false" tabindex="-1">Downloads</button>
+                aria-controls="panel-files" aria-selected="false" tabindex="-1">{% translate "Downloads" %}</button>
       {% endif %}
     </div>
 
     {% comment %}Every panel is rendered server-side, so the content is present
        without JavaScript; the tab script only hides the inactive ones.{% endcomment %}
     <section class="prose" id="panel-notes" role="tabpanel" aria-labelledby="tab-notes">
-      {% if notes %}{{ notes }}{% else %}<p class="muted">Notes for this module are being prepared.</p>{% endif %}
+      {% if notes %}{{ notes }}{% else %}<p class="muted">{% translate "Notes for this module are being prepared." %}</p>{% endif %}
     </section>
 
     {% if module.audio_assets %}
@@ -105,7 +105,7 @@
               <p class="u-fs-16 u-bold">{{ asset.title }}</p>
               <audio controls preload="none" style="width:100%">
                 <source src="{{ asset.get_absolute_url }}" type="audio/mpeg">
-                <a href="{{ asset.get_absolute_url }}">Download the audio</a>
+                <a href="{{ asset.get_absolute_url }}">{% translate "Download the audio" %}</a>
               </audio>
             </div>
             {% if asset.duration_display %}<span class="u-fs-14 muted u-nowrap">{{ asset.duration_display }}</span>{% endif %}
@@ -122,7 +122,7 @@
               <span class="u-fs-16 u-bold">{{ asset.title }}</span>
               <span class="u-fs-14 muted">{{ asset.detail_line }}</span>
             </span>
-            <a class="u-fs-15" href="{{ asset.get_absolute_url }}" download>Download</a>
+            <a class="u-fs-15" href="{{ asset.get_absolute_url }}" download>{% translate "Download" %}</a>
           </div>
         {% endfor %}
       </section>
@@ -134,12 +134,12 @@
         <div class="stack u-gap-6">
           <p class="u-serif panel__cta-title">{{ quiz.display_title }}</p>
           <p class="u-fs-15 muted">
-            {{ module.quiz_question_count }} question{{ module.quiz_question_count|pluralize }}
-            {% if quiz.require_perfect_score %}· answer all correctly to unlock the next module{% endif %}
+            {% blocktranslate count count=module.quiz_question_count %}{{ count }} question{% plural %}{{ count }} questions{% endblocktranslate %}
+            {% if quiz.require_perfect_score %}· {% translate "answer all correctly to unlock the next module" %}{% endif %}
           </p>
         </div>
         <a class="btn" href="{% url 'courses:quiz' course.slug module.slug %}">
-          {% if state.is_complete %}Retake quiz{% else %}Start quiz{% endif %}
+          {% if state.is_complete %}{% translate "Retake quiz" %}{% else %}{% translate "Start quiz" %}{% endif %}
         </a>
       </div>
     {% else %}
@@ -147,17 +147,17 @@
       <div class="panel panel--framed panel--cta split">
         <div class="stack u-gap-6">
           <p class="u-serif panel__cta-title">
-            {% if state.is_complete %}Module {{ module.number_plain }} complete{% else %}Finished this module?{% endif %}
+            {% if state.is_complete %}{% blocktranslate with number=module.number_plain %}Module {{ number }} complete{% endblocktranslate %}{% else %}{% translate "Finished this module?" %}{% endif %}
           </p>
           <p class="u-fs-15 muted">
-            {% if state.is_complete %}You marked this module complete on {{ progress.completed_at|date:"j M Y" }}.
-            {% else %}Once you have watched the video and read the notes, mark it complete to unlock the next module.{% endif %}
+            {% if state.is_complete %}{% blocktranslate with date=progress.completed_at|date:"j M Y" %}You marked this module complete on {{ date }}.{% endblocktranslate %}
+            {% else %}{% translate "Once you have watched the video and read the notes, mark it complete to unlock the next module." %}{% endif %}
           </p>
         </div>
         {% if not state.is_complete %}
           <form method="post" action="{% url 'courses:module_complete' course.slug module.slug %}">
             {% csrf_token %}
-            <button class="btn" type="submit">Mark as complete</button>
+            <button class="btn" type="submit">{% translate "Mark as complete" %}</button>
           </form>
         {% endif %}
       </div>

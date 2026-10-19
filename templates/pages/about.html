@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
 <section class="shell" style="padding-block:40px 80px">
@@ -7,7 +8,7 @@
   <div class="duo duo--start" style="gap:64px;margin-top:24px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))">
 
     <div class="stack u-gap-22">
-      <p class="eyebrow">About</p>
+      <p class="eyebrow">{% translate "About" %}</p>
       <h1 class="display-2">{{ author_name }}</h1>
       <div class="media media--three-two media--face">
         {% include "includes/instructor_photo.html" with author=author name=author_name sizes="(max-width: 768px) 92vw, 540px" %}
@@ -15,19 +16,25 @@
       {% if author.bio %}
         <div class="prose">{{ author.bio_html }}</div>
       {% else %}
-        <p class="prose">{{ author_name }} is an independent musician and music educator
-          based in Dhaka, Bangladesh. He teaches bass and music theory to students of all ages.</p>
-        <p class="prose">Foundations of Music brings his classroom approach online: short lessons,
+        <p class="prose">{% blocktranslate trimmed with name=author_name %}
+          {{ name }} is an independent musician and music educator
+          based in Dhaka, Bangladesh. He teaches bass and music theory to students of all ages.
+        {% endblocktranslate %}</p>
+        <p class="prose">{% blocktranslate trimmed %}
+          Foundations of Music brings his classroom approach online: short lessons,
           clear notation, real audio examples and quizzes that make sure each idea is understood
-          before moving on.</p>
+          before moving on.
+        {% endblocktranslate %}</p>
       {% endif %}
     </div>
 
     <div class="stack u-gap-22" id="contact">
-      <p class="eyebrow">Contact</p>
-      <h2 class="display-3">Send a message</h2>
-      <p class="u-fs-17" style="line-height:1.6">Questions about the course, payments or access.
-        Replies within two working days.</p>
+      <p class="eyebrow">{% translate "Contact" %}</p>
+      <h2 class="display-3">{% translate "Send a message" %}</h2>
+      <p class="u-fs-17" style="line-height:1.6">{% blocktranslate trimmed %}
+        Questions about the course, payments or access.
+        Replies within two working days.
+      {% endblocktranslate %}</p>
 
       <form method="post" class="stack u-gap-16" novalidate>
         {% csrf_token %}
@@ -36,7 +43,7 @@
         {% include "includes/field.html" with field=form.name %}
         {% include "includes/field.html" with field=form.email %}
         {% include "includes/field.html" with field=form.message %}
-        <button class="btn" type="submit" style="align-self:flex-start">Send message</button>
+        <button class="btn" type="submit" style="align-self:flex-start">{% translate "Send message" %}</button>
       </form>
 
       <address class="u-fs-16" style="border-top:1px solid var(--line);padding-top:18px;line-height:1.7;font-style:normal">

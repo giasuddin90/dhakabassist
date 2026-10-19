@@ -16,6 +16,7 @@ from django.db.models import Q
 from django.forms import inlineformset_factory
 
 from accounts.forms import AccountSettingsForm
+from courses.i18n import LANGUAGE_CODES, columns
 from courses.models import (
     Author,
     Choice,
@@ -33,20 +34,86 @@ from pages.models import Faq, LegalPage
 User = get_user_model()
 
 
-class CourseForm(forms.ModelForm):
+def bilingual(*names):
+    """The `_bn` and `_en` columns of each name, for `Meta.fields`."""
+    return tuple(column for name in names for column in columns(name))
+
+
+def bilingual_widgets(**widgets):
+    """`Meta.widgets` with each widget used for both languages of the field."""
+    return {
+        f"{name}_{code}": widget
+        for name, widget in widgets.items()
+        for code in LANGUAGE_CODES
+    }
+
+
+class BilingualFormMixin:
+    """Edit content stored in Bangla and English side by side.
+
+    `bilingual_fields` lists the translated names the form edits, and
+    `required_bilingual` those that need at least one language, the same
+    rule the database enforces. Templates render a pair with
+    `{% include "includes/bilingual_field.html" with pair=form.bilingual.title %}`.
+    """
+
+    bilingual_fields = ()
+    required_bilingual = ()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for column in bilingual(*self.bilingual_fields):
+            field = self.fields[column]
+            # Right fonts and spell-checking while typing.
+            field.widget.attrs["lang"] = column.rsplit("_", 1)[1]
+            # A number left empty for one language (a video's duration, say)
+            # means its default, not an error.
+            if self._model_field(column).has_default():
+                field.required = False
+
+    def _model_field(self, column):
+        return self._meta.model._meta.get_field(column)
+
+    @property
+    def bilingual(self):
+        """Each translated name mapped to its (Bangla, English) bound fields."""
+        return {
+            name: [self[column] for column in columns(name)] for name in self.bilingual_fields
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        for column in bilingual(*self.bilingual_fields):
+            if column in cleaned and cleaned[column] is None:
+                cleaned[column] = self._model_field(column).get_default()
+        for name in self.required_bilingual:
+            if not any(cleaned.get(column) for column in columns(name)):
+                self.add_error(
+                    columns(name)[0], "Fill this in Bangla, English or both."
+                )
+        return cleaned
+
+
+class CourseForm(BilingualFormMixin, forms.ModelForm):
+    bilingual_fields = (
+        "title", "subtitle", "summary", "description", "level", "trailer_url",
+        "trailer_label", "trailer_duration", "meta_title", "meta_description",
+    )
+    required_bilingual = ("title", "summary", "description")
+
     class Meta:
         model = Course
         fields = (
-            "title", "subtitle", "slug", "summary", "description", "level",
+            *bilingual("title", "subtitle"), "slug", *bilingual("summary", "description", "level"),
             "price", "status", "requires", "promote_on_home", "author",
-            "trailer_url", "trailer_label", "trailer_duration", "meta_title",
-            "meta_description",
+            *bilingual("trailer_url", "trailer_label", "trailer_duration"),
+            *bilingual("meta_title", "meta_description"),
         )
-        widgets = {
-            "summary": forms.Textarea(attrs={"rows": 3}),
-            "description": forms.Textarea(attrs={"rows": 8}),
-            "meta_description": forms.Textarea(attrs={"rows": 2}),
-        }
+        widgets = bilingual_widgets(
+            summary=forms.Textarea(attrs={"rows": 3}),
+            description=forms.Textarea(attrs={"rows": 8}),
+            meta_description=forms.Textarea(attrs={"rows": 2}),
+        )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -58,7 +125,9 @@ class CourseForm(forms.ModelForm):
         self.fields["author"].empty_label = "No author"
 
 
-class AuthorForm(forms.ModelForm):
+class AuthorForm(BilingualFormMixin, forms.ModelForm):
+    bilingual_fields = ("name", "bio")
+    required_bilingual = ("name",)
     PHOTO_MAX_BYTES = 5 * 1024 * 1024
 
     # A separate tick box rather than ClearableFileInput, whose "Currently"
@@ -67,10 +136,10 @@ class AuthorForm(forms.ModelForm):
 
     class Meta:
         model = Author
-        fields = ("name", "slug", "photo", "bio")
+        fields = (*bilingual("name"), "slug", "photo", *bilingual("bio"))
         widgets = {
             "photo": forms.FileInput(attrs={"accept": "image/jpeg,image/png,image/webp"}),
-            "bio": forms.Textarea(attrs={"rows": 12, "class": "editor-area"}),
+            **bilingual_widgets(bio=forms.Textarea(attrs={"rows": 12, "class": "editor-area"})),
         }
 
     def clean_photo(self):
@@ -88,18 +157,24 @@ class AuthorForm(forms.ModelForm):
         return super().save(commit=commit)
 
 
-class ModuleForm(forms.ModelForm):
+class ModuleForm(BilingualFormMixin, forms.ModelForm):
+    bilingual_fields = (
+        "title", "summary", "notes_markdown", "video_uid", "video_duration_seconds",
+        "video_has_subtitles",
+    )
+    required_bilingual = ("title",)
+
     class Meta:
         model = Module
         fields = (
-            "number", "title", "title_bn", "slug", "summary", "notes_markdown",
-            "access", "status", "video_provider", "video_uid",
-            "video_duration_seconds", "video_has_subtitles",
+            "number", *bilingual("title"), "slug", *bilingual("summary", "notes_markdown"),
+            "access", "status", "video_provider",
+            *bilingual("video_uid", "video_duration_seconds", "video_has_subtitles"),
         )
-        widgets = {
-            "summary": forms.Textarea(attrs={"rows": 3}),
-            "notes_markdown": forms.Textarea(attrs={"rows": 14, "class": "editor-area"}),
-        }
+        widgets = bilingual_widgets(
+            summary=forms.Textarea(attrs={"rows": 3}),
+            notes_markdown=forms.Textarea(attrs={"rows": 14, "class": "editor-area"}),
+        )
 
     def clean_number(self):
         """Pad the number and refuse one the course already uses.
@@ -116,22 +191,27 @@ class ModuleForm(forms.ModelForm):
         return number
 
 
-class QuizForm(forms.ModelForm):
+class QuizForm(BilingualFormMixin, forms.ModelForm):
+    bilingual_fields = ("title",)
+
     class Meta:
         model = Quiz
-        fields = ("title", "require_perfect_score", "allow_unlimited_retries")
+        fields = (*bilingual("title"), "require_perfect_score", "allow_unlimited_retries")
         widgets = {
             "require_perfect_score": forms.CheckboxInput(attrs={"class": "switch"}),
             "allow_unlimited_retries": forms.CheckboxInput(attrs={"class": "switch"}),
         }
 
 
-class QuestionForm(forms.ModelForm):
+class QuestionForm(BilingualFormMixin, forms.ModelForm):
     """One question plus which of its options is correct.
 
     `correct` is a radio over the question's own choices, which is how the
     design presents it; `save` writes it back onto the Choice rows.
     """
+
+    bilingual_fields = ("text", "explanation")
+    required_bilingual = ("text",)
 
     correct = forms.ModelChoiceField(
         queryset=Choice.objects.none(),
@@ -142,11 +222,11 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        fields = ("text", "explanation", "notation", "audio")
-        widgets = {
-            "text": forms.Textarea(attrs={"rows": 2}),
-            "explanation": forms.Textarea(attrs={"rows": 2}),
-        }
+        fields = (*bilingual("text", "explanation"), "notation", "audio")
+        widgets = bilingual_widgets(
+            text=forms.Textarea(attrs={"rows": 2}),
+            explanation=forms.Textarea(attrs={"rows": 2}),
+        )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -172,13 +252,28 @@ class QuestionForm(forms.ModelForm):
         return question
 
 
+class ChoiceForm(BilingualFormMixin, forms.ModelForm):
+    """One answer option. Its two inputs sit in a row without visible labels."""
+
+    bilingual_fields = ("text",)
+    required_bilingual = ("text",)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for column, language in zip(columns("text"), ("Bangla", "English")):
+            self.fields[column].label = language
+            attrs = self.fields[column].widget.attrs
+            attrs.update(placeholder=language, **{"aria-label": language})
+
+
 ChoiceFormSet = inlineformset_factory(
     Question,
     Choice,
-    fields=("text",),
+    form=ChoiceForm,
+    fields=bilingual("text"),
     extra=0,
     can_delete=False,
-    widgets={"text": forms.TextInput()},
+    widgets=bilingual_widgets(text=forms.TextInput()),
 )
 
 
@@ -213,6 +308,14 @@ class LibraryUploadForm(forms.Form):
         initial=LibraryFile.Purpose.LESSON,
         widget=forms.RadioSelect,
     )
+    language = forms.ChoiceField(
+        label="Language",
+        required=False,
+        choices=LibraryFile.Language.choices,
+        initial=LibraryFile.Language.BOTH,
+        help_text="Which language's lesson pages list it under Downloads. "
+        "Links in the notes work whatever this says.",
+    )
     folder = forms.CharField(
         max_length=80,
         initial="General",
@@ -225,6 +328,9 @@ class LibraryUploadForm(forms.Form):
         "documents (PDF, Word, PowerPoint, Excel, TXT, CSV), scores and tabs "
         "(MIDI, MusicXML, Guitar Pro, MuseScore) or ZIP. Pick several at once.",
     )
+
+    def clean_language(self):
+        return self.cleaned_data["language"] or LibraryFile.Language.BOTH
 
     def clean_folder(self):
         """Collapse stray spaces so "Module  3" and "Module 3" are one folder."""
@@ -242,11 +348,14 @@ class LibraryUploadForm(forms.Form):
         """Create one library file per upload and return them."""
         purpose = self.cleaned_data["purpose"]
         folder = self.cleaned_data["folder"]
+        language = self.cleaned_data["language"]
         return [
             LibraryFile.objects.create(
                 purpose=purpose,
+                language=language,
                 folder=folder,
-                title=title_from_filename(upload.name),
+                # Filenames are Latin, so the readable default is English.
+                title_en=title_from_filename(upload.name),
                 file=upload,
             )
             for upload in self.cleaned_data["files"]
@@ -268,10 +377,10 @@ LIBRARY_KINDS = {
     "archive": LibraryFile.ARCHIVE_EXTENSIONS,
 }
 LIBRARY_SORTS = {
-    "folder": ("folder", "title", "id"),
+    "folder": ("folder", "title_bn", "title_en", "id"),
     "newest": ("-created_at", "-id"),
     "oldest": ("created_at", "id"),
-    "title": ("title", "id"),
+    "title": ("title_bn", "title_en", "id"),
 }
 
 
@@ -326,7 +435,11 @@ class LibraryFilterForm(forms.Form):
         if data.get("folder"):
             files = files.filter(folder=data["folder"])
         if data.get("q"):
-            files = files.filter(Q(title__icontains=data["q"]) | Q(file__icontains=data["q"]))
+            files = files.filter(
+                Q(title_bn__icontains=data["q"])
+                | Q(title_en__icontains=data["q"])
+                | Q(file__icontains=data["q"])
+            )
         if data.get("kind"):
             by_extension = Q()
             for extension in LIBRARY_KINDS[data["kind"]]:
@@ -360,7 +473,7 @@ class StudentFilterForm(forms.Form):
     )
     course = forms.ModelChoiceField(
         required=False,
-        queryset=Course.objects.order_by("position", "title"),
+        queryset=Course.objects.order_by("position", *columns("title")),
         to_field_name="slug",
         empty_label="All courses",
     )
@@ -423,7 +536,7 @@ class StudentForm(AccountSettingsForm):
     """
 
     courses = forms.ModelMultipleChoiceField(
-        queryset=Course.objects.order_by("position", "title"),
+        queryset=Course.objects.order_by("position", *columns("title")),
         to_field_name="slug",
         widget=forms.CheckboxSelectMultiple,
         required=False,
@@ -554,7 +667,7 @@ class ManualPaymentForm(OrderFieldsForm):
         super().__init__(*args, **kwargs)
         self.student = student
         course = self.fields["course"]
-        course.queryset = Course.objects.order_by("position", "title")
+        course.queryset = Course.objects.order_by("position", *columns("title"))
         if student is not None:
             course.queryset = course.queryset.exclude(
                 pk__in=student.enrollments.filter(is_active=True).values("course")
@@ -683,18 +796,24 @@ class OrderForm(OrderFieldsForm):
         return order
 
 
-class FaqForm(forms.ModelForm):
+class FaqForm(BilingualFormMixin, forms.ModelForm):
+    bilingual_fields = ("question", "answer")
+    required_bilingual = ("question", "answer")
+
     class Meta:
         model = Faq
-        fields = ("question", "answer", "position", "is_published")
-        widgets = {"answer": forms.Textarea(attrs={"rows": 4})}
+        fields = (*bilingual("question", "answer"), "position", "is_published")
+        widgets = bilingual_widgets(answer=forms.Textarea(attrs={"rows": 4}))
 
 
-class LegalPageForm(forms.ModelForm):
+class LegalPageForm(BilingualFormMixin, forms.ModelForm):
+    bilingual_fields = ("title", "body_markdown", "meta_description")
+    required_bilingual = ("title", "body_markdown")
+
     class Meta:
         model = LegalPage
-        fields = ("slug", "title", "body_markdown", "meta_description", "is_published")
-        widgets = {
-            "body_markdown": forms.Textarea(attrs={"rows": 18, "class": "editor-area"}),
-            "meta_description": forms.Textarea(attrs={"rows": 2}),
-        }
+        fields = ("slug", *bilingual("title", "body_markdown", "meta_description"), "is_published")
+        widgets = bilingual_widgets(
+            body_markdown=forms.Textarea(attrs={"rows": 18, "class": "editor-area"}),
+            meta_description=forms.Textarea(attrs={"rows": 2}),
+        )

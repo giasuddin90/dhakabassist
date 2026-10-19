@@ -29,6 +29,7 @@
         <span class="field__help">Lesson material goes in lesson notes, quiz material in questions and answers. Download material is always offered to students as a file to save, never played or shown inline.</span>
         {% for error in form.purpose.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
       </fieldset>
+      {% include "includes/field.html" with field=form.language %}
       {% include "includes/field.html" with field=form.folder %}
       <datalist id="library-folders">
         {% for folder in folders %}<option value="{{ folder }}">{% endfor %}

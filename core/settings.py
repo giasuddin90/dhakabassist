@@ -36,6 +36,9 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # The URL prefix picks the language: none for Bangla, /en/ for English.
+    "django.middleware.locale.LocaleMiddleware",
+    "core.middleware.staff_language_middleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -55,6 +58,7 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
+                "django.template.context_processors.i18n",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "pages.context_processors.site",
@@ -104,7 +108,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # -- Internationalisation ---------------------------------------------------
 
-LANGUAGE_CODE = "en"
+# Bangla is the primary language and is served without a URL prefix;
+# English lives under /en/. Content is stored in both (`<field>_bn` and
+# `<field>_en`), and `courses.i18n.translated` picks the active one.
+LANGUAGE_CODE = "bn"
+LANGUAGES = [("bn", "বাংলা"), ("en", "English")]
+LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "Asia/Dhaka"
 USE_I18N = True
 USE_TZ = True
@@ -180,7 +189,8 @@ SITE = {
     "email": "hello@dhakabassist.com",
     "location": "Dhaka, Bangladesh",
     "base_url": env_str("SITE_BASE_URL", "http://127.0.0.1:8000").rstrip("/"),
-    "locale": "en_BD",
+    # Open Graph locale per language code; see pages.context_processors.
+    "locales": {"bn": "bn_BD", "en": "en_BD"},
     "currency": "BDT",
     "currency_symbol": "৳",
 }

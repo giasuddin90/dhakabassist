@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 <header class="masthead">
   <div class="shell masthead__inner">
     <a class="brand" href="{% url 'pages:home' %}">
@@ -7,33 +7,34 @@
     </a>
 
     <button class="nav-toggle" type="button" data-nav-toggle
-            aria-expanded="false" aria-controls="primary-nav" aria-label="Menu">
+            aria-expanded="false" aria-controls="primary-nav" aria-label="{% translate 'Menu' %}">
       <svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true" focusable="false">
         <path d="M0 1h20M0 7h20M0 13h20" stroke="currentColor" stroke-width="1.6" fill="none"/>
       </svg>
     </button>
 
-    <nav class="nav" id="primary-nav" aria-label="Main">
-      <a href="{% url 'courses:list' %}"{% if nav_active == 'course' %} aria-current="page"{% endif %}>Course</a>
-      <a href="{% url 'pages:about' %}"{% if nav_active == 'about' %} aria-current="page"{% endif %}>About</a>
-      <a href="{% url 'pages:faq' %}"{% if nav_active == 'faq' %} aria-current="page"{% endif %}>FAQ</a>
-      <a href="{% url 'pages:about' %}#contact"{% if nav_active == 'contact' %} aria-current="page"{% endif %}>Contact</a>
+    <nav class="nav" id="primary-nav" aria-label="{% translate 'Main' %}">
+      <a href="{% url 'courses:list' %}"{% if nav_active == 'course' %} aria-current="page"{% endif %}>{% translate "Course" %}</a>
+      <a href="{% url 'pages:about' %}"{% if nav_active == 'about' %} aria-current="page"{% endif %}>{% translate "About" %}</a>
+      <a href="{% url 'pages:faq' %}"{% if nav_active == 'faq' %} aria-current="page"{% endif %}>{% translate "FAQ" %}</a>
+      <a href="{% url 'pages:about' %}#contact"{% if nav_active == 'contact' %} aria-current="page"{% endif %}>{% translate "Contact" %}</a>
     </nav>
 
     <div class="masthead__actions">
+      {% include "includes/language_switch.html" %}
       {% if user.is_authenticated %}
         {% if user.is_staff %}
-          <a class="btn-link btn-link--sm" href="{% url 'manage:overview' %}">Admin</a>
+          <a class="btn-link btn-link--sm" href="{% url 'manage:overview' %}">{% translate "Admin" %}</a>
         {% endif %}
         <a class="avatar-link" href="{% url 'courses:dashboard' %}">
-          <span class="avatar" aria-hidden="true">{{ user.initials }}</span>My courses
+          <span class="avatar" aria-hidden="true">{{ user.initials }}</span>{% translate "My courses" %}
         </a>
       {% else %}
-        <a class="btn-link" href="{% url 'accounts:login' %}">Log in</a>
+        <a class="btn-link" href="{% url 'accounts:login' %}">{% translate "Log in" %}</a>
         {% if primary_course %}
-          <a class="btn btn--md" href="{% url 'orders:checkout' primary_course.slug %}">Enroll</a>
+          <a class="btn btn--md" href="{% url 'orders:checkout' primary_course.slug %}">{% translate "Enroll" %}</a>
         {% else %}
-          <a class="btn btn--md" href="{% url 'courses:list' %}">Enroll</a>
+          <a class="btn btn--md" href="{% url 'courses:list' %}">{% translate "Enroll" %}</a>
         {% endif %}
       {% endif %}
     </div>

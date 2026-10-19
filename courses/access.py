@@ -7,7 +7,9 @@ the lesson page, the quiz and the course media stream can never disagree.
 from dataclasses import dataclass
 
 from django.db.models import Prefetch, Q
+from django.utils.translation import gettext as _
 
+from .i18n import columns
 from .models import Course, Enrollment, Module, ModuleProgress
 
 
@@ -27,10 +29,10 @@ class ModuleState:
     @property
     def status_label(self):
         if self.is_complete:
-            return "Complete"
+            return _("Complete")
         if self.is_current:
-            return "In progress"
-        return "Locked" if self.is_locked else "Not started"
+            return _("In progress")
+        return _("Locked") if self.is_locked else _("Not started")
 
 
 class CourseAccess:
@@ -178,22 +180,30 @@ def can_fetch_library_file(user, library_file):
     linking_modules = set(
         Module.objects.filter(
             Q(
-                notes_markdown__contains=prefix,
-                quiz__title__contains=prefix,
-                quiz__questions__text__contains=prefix,
-                quiz__questions__explanation__contains=prefix,
-                quiz__questions__choices__text__contains=prefix,
+                *(
+                    Q(**{f"{path}__contains": prefix})
+                    for path in (
+                        *columns("notes_markdown"),
+                        *(f"quiz__{c}" for c in columns("title")),
+                        *(f"quiz__questions__{c}" for c in columns("text")),
+                        *(f"quiz__questions__{c}" for c in columns("explanation")),
+                        *(f"quiz__questions__choices__{c}" for c in columns("text")),
+                    )
+                ),
                 downloads=library_file,
                 _connector=Q.OR,
             ),
             status=Module.Status.PUBLISHED,
         ).values_list("pk", flat=True)
     )
+    in_description = Q(
+        *(Q(**{f"{c}__contains": prefix}) for c in columns("description")), _connector=Q.OR
+    )
     linking = Course.published.filter(
-        Q(description__contains=prefix) | Q(modules__pk__in=linking_modules)
+        in_description | Q(modules__pk__in=linking_modules)
     ).values("pk")
     for course in course_queryset().filter(pk__in=linking):
-        if prefix in course.description:
+        if prefix in course.linkable_text:
             return True
         if not user.is_authenticated:
             continue

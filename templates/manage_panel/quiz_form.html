@@ -42,7 +42,7 @@
           class="panel panel--padded stack u-gap-12">
       {% csrf_token %}
       <p class="u-bold u-fs-14">Rules</p>
-      {% include "includes/field.html" with field=quiz_form.title %}
+      {% include "includes/bilingual_field.html" with pair=quiz_form.bilingual.title %}
       <label class="switch-row">
         {{ quiz_form.require_perfect_score.label }}
         {{ quiz_form.require_perfect_score }}
@@ -61,9 +61,10 @@
     {% csrf_token %}
     {% include "includes/form_errors.html" %}
 
-    {% with number=question_index|add:1|stringformat:"d" %}
-      {% include "includes/md_field.html" with field=form.text label="Question "|add:number %}
-    {% endwith %}
+    <p class="u-bold u-fs-14">Question {{ question_index|add:1 }}</p>
+    <div class="lang-pair">
+      {% for field in form.bilingual.text %}{% include "includes/md_field.html" with field=field %}{% endfor %}
+    </div>
 
     <div class="field-grid" style="grid-template-columns:1fr 1fr">
       {% include "includes/field.html" with field=form.notation %}
@@ -90,16 +91,25 @@
             <span class="visually-hidden">Mark option {{ option.instance.letter }} as the correct answer</span>
           </label>
           <span class="u-bold u-fs-14" style="width:16px" aria-hidden="true">{{ option.instance.letter }}</span>
-          {{ option.id }}{{ option.text }}
+          {{ option.id }}
+          <div class="answer-edit__texts">
+            {% for field in option.bilingual.text %}
+              <div class="answer-edit__text">
+                {{ field }}
+                {% include "includes/md_tools.html" with target=field.id_for_label name="Option "|add:option.instance.letter|add:" "|add:field.label|add:" formatting" %}
+              </div>
+            {% endfor %}
+          </div>
           {% if option.instance.is_correct %}<span class="answer-edit__tag">Correct answer</span>{% endif %}
-          {% include "includes/md_tools.html" with target=option.text.id_for_label name="Option "|add:option.instance.letter|add:" formatting" %}
         </div>
-        {% for error in option.text.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
+        {% for field in option.bilingual.text %}{% for error in field.errors %}<span class="field__error">{{ error }}</span>{% endfor %}{% endfor %}
       {% endfor %}
       {% for error in form.correct.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
     </div>
 
-    {% include "includes/md_field.html" with field=form.explanation help="Shown once the correct answer is selected." %}
+    <div class="lang-pair">
+      {% for field in form.bilingual.explanation %}{% include "includes/md_field.html" with field=field help="Shown once the correct answer is selected." %}{% endfor %}
+    </div>
 
     <div class="split" style="align-items:center">
       <button class="btn btn--sm" type="submit">Save question</button>

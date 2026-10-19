@@ -1,0 +1,18 @@
+{% comment %}
+A long Markdown field as a panel per language: heading, formatting buttons,
+the editor and its errors. Pass `pair` (as in bilingual_field.html) and
+optionally `foot`, a note shown under each editor.
+{% endcomment %}
+{% for field in pair %}
+  <section class="panel" aria-labelledby="{{ field.id_for_label }}-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="{{ field.id_for_label }}-title">
+        <label for="{{ field.id_for_label }}">{{ field.label|capfirst }}</label>
+      </h2>
+      {% include "includes/md_tools.html" with target=field.id_for_label %}
+    </div>
+    {{ field }}
+    {% for error in field.errors %}<p class="field__error panel__body">{{ error }}</p>{% endfor %}
+    {% if foot %}<p class="panel__foot">{{ foot }}</p>{% endif %}
+  </section>
+{% endfor %}

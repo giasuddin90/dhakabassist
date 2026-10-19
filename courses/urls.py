@@ -42,5 +42,4 @@ urlpatterns = [
     path("module/<int:pk>/position/", views.save_video_position, name="video_position"),
     path("module/<int:pk>/video/", views.protected_video, name="video"),
     path("asset/<int:pk>/", views.protected_asset, name="asset"),
-    path("library/<str:key>/<str:name>", views.library_file, name="library_file"),
 ]

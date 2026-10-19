@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
 <section class="shell" style="max-width:1080px;padding-block:48px 88px">
@@ -6,15 +7,15 @@
 
     <div class="split">
       <div class="stack u-gap-8">
-        <p class="u-fs-16 muted">Welcome back, {{ user.get_short_name }}</p>
-        <h1 class="display-2">My courses</h1>
+        <p class="u-fs-16 muted">{% blocktranslate with name=user.get_short_name %}Welcome back, {{ name }}{% endblocktranslate %}</p>
+        <h1 class="display-2">{% translate "My courses" %}</h1>
       </div>
       <div class="cluster" style="--cluster-gap:20px;font-size:15px">
-        <a href="{% url 'accounts:settings' %}">Account settings</a>
-        <a href="{% url 'accounts:orders' %}">Order history</a>
+        <a href="{% url 'accounts:settings' %}">{% translate "Account settings" %}</a>
+        <a href="{% url 'accounts:orders' %}">{% translate "Order history" %}</a>
         <form method="post" action="{% url 'accounts:logout' %}" style="display:contents">
           {% csrf_token %}
-          <button class="btn-link btn-link--sm" type="submit">Log out</button>
+          <button class="btn-link btn-link--sm" type="submit">{% translate "Log out" %}</button>
         </form>
       </div>
     </div>
@@ -28,20 +29,20 @@
                style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));overflow:hidden">
             <div style="padding:30px" class="stack u-gap-16">
               <p class="eyebrow">
-                {% if access.completed_count %}Continue where you left off{% else %}Start here{% endif %}
+                {% if access.completed_count %}{% translate "Continue where you left off" %}{% else %}{% translate "Start here" %}{% endif %}
               </p>
               <h2 class="u-serif" style="font-size:30px;font-weight:500;line-height:1.15">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}</h2>
               {% if resume %}
-                <p class="u-fs-17">Module {{ resume.module.number_plain }} · {{ resume.module.title }}</p>
+                <p class="u-fs-17">{% blocktranslate with number=resume.module.number_plain title=resume.module.title %}Module {{ number }} · {{ title }}{% endblocktranslate %}</p>
               {% endif %}
               {% include "includes/progress.html" with access=access %}
               {% if resume and resume.is_unlocked %}
                 <a class="btn" href="{{ resume.module.get_absolute_url }}" style="align-self:flex-start;margin-top:4px">
-                  {% if access.completed_count %}Resume lesson{% else %}Start Module {{ resume.module.number_plain }}{% endif %}
+                  {% if access.completed_count %}{% translate "Resume lesson" %}{% else %}{% blocktranslate with number=resume.module.number_plain %}Start Module {{ number }}{% endblocktranslate %}{% endif %}
                 </a>
               {% elif not access.is_enrolled %}
                 <a class="btn" href="{% url 'orders:checkout' course.slug %}" style="align-self:flex-start;margin-top:4px">
-                  Enroll to continue
+                  {% translate "Enroll to continue" %}
                 </a>
               {% endif %}
             </div>
@@ -49,7 +50,7 @@
             <div class="media" style="border-radius:0;min-height:240px">
               {% if resume and resume.is_unlocked %}
                 <a class="media__overlay" href="{{ resume.module.get_absolute_url }}"
-                   aria-label="Resume Module {{ resume.module.number_plain }}">
+                   aria-label="{% blocktranslate with number=resume.module.number_plain %}Resume Module {{ number }}{% endblocktranslate %}">
                   <span class="play" style="width:60px;height:60px" aria-hidden="true">{% include "includes/icon_play.html" with size=18 height=20 %}</span>
                 </a>
               {% else %}
@@ -58,14 +59,14 @@
                 </span>
               {% endif %}
               {% if card.resume_at %}
-                <span style="position:absolute;left:20px;bottom:16px;color:var(--parchment);font-size:14px">Resume at {{ card.resume_at }}</span>
+                <span style="position:absolute;left:20px;bottom:16px;color:var(--parchment);font-size:14px">{% blocktranslate with time=card.resume_at %}Resume at {{ time }}{% endblocktranslate %}</span>
               {% endif %}
             </div>
           </div>
 
           {# ------------------------------------------------------ modules #}
           <div class="stack u-gap-16">
-            <h2 class="display-4" style="font-size:28px">Modules</h2>
+            <h2 class="display-4" style="font-size:28px">{% translate "Modules" %}</h2>
             <ul class="ruled" style="list-style:none;padding:0;margin:0">
               {% for state in card.states %}
                 {% with module=state.module %}
@@ -89,7 +90,7 @@
                           <span class="u-fs-18 u-bold">{{ module.title }}</span>
                           <span class="u-fs-14 muted">{{ module.meta_line }}</span>
                         </span>
-                        <span class="badge badge--status badge--locked">Locked</span>
+                        <span class="badge badge--status badge--locked">{% translate "Locked" %}</span>
                       </span>
                     {% endif %}
                   </li>
@@ -102,10 +103,12 @@
 
     {% empty %}
       <div class="panel panel--framed stack u-gap-18">
-        <h2 class="display-4">You have not enrolled yet</h2>
-        <p class="u-fs-17" style="line-height:1.6">Create your free account gives you Module 1.
-          Enroll once to unlock every module, with lifetime access.</p>
-        <a class="btn" href="{% url 'courses:list' %}" style="align-self:flex-start">Browse the course</a>
+        <h2 class="display-4">{% translate "You have not enrolled yet" %}</h2>
+        <p class="u-fs-17" style="line-height:1.6">{% blocktranslate trimmed %}
+          Your free account gives you Module 1.
+          Enroll once to unlock every module, with lifetime access.
+        {% endblocktranslate %}</p>
+        <a class="btn" href="{% url 'courses:list' %}" style="align-self:flex-start">{% translate "Browse the course" %}</a>
       </div>
     {% endfor %}
   </div>

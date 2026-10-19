@@ -20,8 +20,8 @@
   {% csrf_token %}
   {% include "includes/form_errors.html" %}
 
-  <section class="panel panel--padded field-grid" aria-label="Details">
-    {% include "includes/field.html" with field=form.name %}
+  <section class="panel panel--padded stack u-gap-16" aria-label="Details">
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.name %}
     {% include "includes/field.html" with field=form.slug %}
   </section>
 
@@ -45,17 +45,7 @@
     </div>
   </section>
 
-  <section class="panel" aria-labelledby="bio-title">
-    <div class="panel__head">
-      <h2 class="panel__title" id="bio-title">
-        <label for="{{ form.bio.id_for_label }}">Bio</label>
-      </h2>
-      {% include "includes/md_tools.html" with target=form.bio.id_for_label %}
-    </div>
-    {{ form.bio }}
-    {% for error in form.bio.errors %}<p class="field__error panel__body">{{ error }}</p>{% endfor %}
-    <p class="panel__foot">Markdown. Shown under “About the author” on the course page.</p>
-  </section>
+  {% include "includes/bilingual_md_panel.html" with pair=form.bilingual.bio foot="Markdown. Shown under “About the author” on the course page." %}
 
   {% if courses %}
     <section class="panel panel--padded stack u-gap-10" aria-labelledby="teaches-title">

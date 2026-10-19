@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
@@ -11,11 +12,19 @@ admin.site.site_header = "DhakaBassist"
 admin.site.site_title = "DhakaBassist"
 admin.site.index_title = "Database administration"
 
-urlpatterns = [
+# Public and student pages exist in both languages: Bangla without a prefix
+# (the primary language), English under /en/.
+urlpatterns = i18n_patterns(
     path("", include("pages.urls")),
     path("", include("courses.urls")),
     path("", include("accounts.urls")),
     path("", include("orders.urls")),
+    prefix_default_language=False,
+)
+
+# Language-neutral: staff tools, discovery files and library file links.
+urlpatterns += [
+    path("", include("courses.library_urls")),
     path("manage/", include("manage_panel.urls")),
     path("django-admin/", admin.site.urls),
     # Discovery

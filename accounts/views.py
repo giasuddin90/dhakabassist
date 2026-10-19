@@ -4,6 +4,7 @@ from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext as _
 from django.views.generic import FormView, ListView, UpdateView
 
 from orders.models import Order
@@ -30,8 +31,8 @@ class StudentLoginView(LoginView):
         context.update(
             mode="login",
             seo=seo.SEO(
-                title="Log in",
-                description="Sign in to continue your music theory course.",
+                title=_("Log in"),
+                description=_("Sign in to continue your music theory course."),
                 canonical_path=reverse("accounts:login"),
                 robots="noindex, follow",
             ),
@@ -56,7 +57,7 @@ class RegisterView(FormView):
         user = form.save()
         login(self.request, user, backend="accounts.backends.EmailBackend")
         messages.success(
-            self.request, "Your account is ready. Module 1 is yours to study."
+            self.request, _("Your account is ready. Module 1 is yours to study.")
         )
         return super().form_valid(form)
 
@@ -68,8 +69,8 @@ class RegisterView(FormView):
         context.update(
             mode="register",
             seo=seo.SEO(
-                title="Create your account",
-                description=(
+                title=_("Create your account"),
+                description=_(
                     "Create a free DhakaBassist account and study Module 1 of "
                     "Foundations of Music at no cost."
                 ),
@@ -93,13 +94,13 @@ class AccountSettingsView(LoginRequiredMixin, UpdateView):
         return self.request.user
 
     def form_valid(self, form):
-        messages.success(self.request, "Your account details have been saved.")
+        messages.success(self.request, _("Your account details have been saved."))
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["seo"] = seo.noindex(
-            "Account settings", canonical_path=reverse("accounts:settings")
+            _("Account settings"), canonical_path=reverse("accounts:settings")
         )
         return context
 
@@ -114,6 +115,6 @@ class OrderHistoryView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["seo"] = seo.noindex(
-            "Order history", canonical_path=reverse("accounts:orders")
+            _("Order history"), canonical_path=reverse("accounts:orders")
         )
         return context

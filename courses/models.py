@@ -13,7 +13,11 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator, MinValueValidator, RegexValidator
+from django.core.validators import (
+    FileExtensionValidator,
+    MinValueValidator,
+    RegexValidator,
+)
 from django.db import models, transaction
 from django.db.models import F
 from django.urls import reverse
@@ -21,8 +25,16 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.html import strip_tags
 from django.utils.text import slugify
+from django.utils.translation import gettext, ngettext
 from django.utils.translation import gettext_lazy as _
 
+from .i18n import (
+    active_language,
+    columns,
+    in_some_language,
+    missing_language,
+    translated,
+)
 from .markup import render_inline, render_notes, split_audio
 from .video import CLOUDFLARE_UID, trailer_embed_url
 
@@ -39,7 +51,9 @@ def validate_trailer_url(value):
 def format_runtime(seconds):
     """Seconds as a human string, e.g. "2 hr 20 min" or "45 min"."""
     hours, minutes = divmod(round(seconds / 60), 60)
-    return f"{hours} hr {minutes} min" if hours else f"{minutes} min"
+    if hours:
+        return gettext("%(hours)s hr %(minutes)s min") % {"hours": hours, "minutes": minutes}
+    return gettext("%(minutes)s min") % {"minutes": minutes}
 
 
 # No SVG: the photo is served publicly, and an SVG can carry script.
@@ -62,13 +76,14 @@ class TimeStampedModel(models.Model):
 class Author(TimeStampedModel):
     """The person who teaches a course. One author can teach many courses."""
 
-    name = models.CharField(_("name"), max_length=120)
+    name_bn = models.CharField(_("name (Bangla)"), max_length=120, blank=True)
+    name_en = models.CharField(_("name (English)"), max_length=120, blank=True)
     slug = models.SlugField(
         _("slug"),
         max_length=140,
         unique=True,
         blank=True,
-        help_text=_("Left blank, it is made from the name."),
+        help_text=_("Left blank, it is made from the English name."),
     )
     photo = models.ImageField(
         _("photo"),
@@ -78,16 +93,25 @@ class Author(TimeStampedModel):
         validators=[FileExtensionValidator(AUTHOR_PHOTO_EXTENSIONS)],
         help_text=_("A square JPG, PNG or WEBP, at least 320 × 320 px, up to 5 MB."),
     )
-    bio = models.TextField(
-        _("bio"),
+    bio_bn = models.TextField(
+        _("bio (Bangla)"),
+        blank=True,
+        help_text=_("Markdown. Shown under “About the author” on the course page."),
+    )
+    bio_en = models.TextField(
+        _("bio (English)"),
         blank=True,
         help_text=_("Markdown. Shown under “About the author” on the course page."),
     )
 
+    name = translated("name")
+    bio = translated("bio")
+
     class Meta:
         verbose_name = _("author")
         verbose_name_plural = _("authors")
-        ordering = ("name", "id")
+        ordering = ("name_bn", "name_en", "id")
+        constraints = [in_some_language("author", "name")]
 
     def __str__(self):
         return self.name
@@ -99,7 +123,8 @@ class Author(TimeStampedModel):
 
     def _unique_slug(self):
         """The name as a slug, numbered when another author already has it."""
-        base = slugify(self.name)[:130] or "author"
+        # slugify drops Bangla letters, so the English name makes the slug.
+        base = slugify(self.name_en or self.name_bn)[:130] or "author"
         slug, number = base, 2
         while Author.objects.filter(slug=slug).exclude(pk=self.pk).exists():
             slug, number = f"{base}-{number}", number + 1
@@ -135,25 +160,37 @@ class Course(TimeStampedModel):
         DRAFT = "draft", _("Draft")
         PUBLISHED = "published", _("Published")
 
-    title = models.CharField(_("title"), max_length=160)
+    title_bn = models.CharField(_("title (Bangla)"), max_length=160, blank=True)
+    title_en = models.CharField(_("title (English)"), max_length=160, blank=True)
     slug = models.SlugField(_("slug"), max_length=180, unique=True)
-    subtitle = models.CharField(_("subtitle"), max_length=200, blank=True)
-    summary = models.TextField(
-        _("summary"),
+    subtitle_bn = models.CharField(_("subtitle (Bangla)"), max_length=200, blank=True)
+    subtitle_en = models.CharField(_("subtitle (English)"), max_length=200, blank=True)
+    summary_bn = models.TextField(
+        _("summary (Bangla)"),
+        blank=True,
         help_text=_("One or two sentences. Used on cards and in search results."),
     )
-    description = models.TextField(
-        _("description"), help_text=_("Markdown. Shown on the course page.")
+    summary_en = models.TextField(
+        _("summary (English)"),
+        blank=True,
+        help_text=_("One or two sentences. Used on cards and in search results."),
     )
-    level = models.CharField(_("level"), max_length=60, default="Beginner")
+    description_bn = models.TextField(
+        _("description (Bangla)"), blank=True, help_text=_("Markdown. Shown on the course page.")
+    )
+    description_en = models.TextField(
+        _("description (English)"), blank=True, help_text=_("Markdown. Shown on the course page.")
+    )
+    level_bn = models.CharField(_("level (Bangla)"), max_length=60, blank=True)
+    level_en = models.CharField(_("level (English)"), max_length=60, blank=True, default="Beginner")
     price = models.DecimalField(
         _("price (BDT)"), max_digits=10, decimal_places=2, default=3500
     )
     status = models.CharField(
         _("status"), max_length=12, choices=Status.choices, default=Status.DRAFT
     )
-    trailer_url = models.URLField(
-        _("trailer video link"),
+    trailer_url_bn = models.URLField(
+        _("trailer video link (Bangla)"),
         max_length=300,
         blank=True,
         validators=[validate_trailer_url],
@@ -162,11 +199,27 @@ class Course(TimeStampedModel):
             "Cloudflare turn off “require signed URLs” on this video."
         ),
     )
-    trailer_label = models.CharField(
-        _("trailer label"), max_length=60, blank=True, default="Watch the trailer"
+    trailer_url_en = models.URLField(
+        _("trailer video link (English)"),
+        max_length=300,
+        blank=True,
+        validators=[validate_trailer_url],
+        help_text=_(
+            "A YouTube or Cloudflare Stream link. The trailer is public, so for "
+            "Cloudflare turn off “require signed URLs” on this video."
+        ),
     )
-    trailer_duration = models.CharField(
-        _("trailer duration"), max_length=16, blank=True
+    trailer_label_bn = models.CharField(
+        _("trailer label (Bangla)"), max_length=60, blank=True, default="ট্রেইলার দেখুন"
+    )
+    trailer_label_en = models.CharField(
+        _("trailer label (English)"), max_length=60, blank=True, default="Watch the trailer"
+    )
+    trailer_duration_bn = models.CharField(
+        _("trailer duration (Bangla)"), max_length=16, blank=True
+    )
+    trailer_duration_en = models.CharField(
+        _("trailer duration (English)"), max_length=16, blank=True
     )
     # A later part can require an earlier one, which covers the Part 1 -> Part 2
     # progression in the brief without a separate bundling model.
@@ -199,29 +252,49 @@ class Course(TimeStampedModel):
         ),
     )
 
-    meta_title = models.CharField(_("meta title"), max_length=70, blank=True)
-    meta_description = models.CharField(
-        _("meta description"), max_length=170, blank=True
+    meta_title_bn = models.CharField(_("meta title (Bangla)"), max_length=70, blank=True)
+    meta_title_en = models.CharField(_("meta title (English)"), max_length=70, blank=True)
+    meta_description_bn = models.CharField(
+        _("meta description (Bangla)"), max_length=170, blank=True
     )
+    meta_description_en = models.CharField(
+        _("meta description (English)"), max_length=170, blank=True
+    )
+
+    title = translated("title")
+    subtitle = translated("subtitle")
+    summary = translated("summary")
+    description = translated("description")
+    level = translated("level")
+    trailer_label = translated("trailer_label")
+    trailer_url = translated("trailer_url")
+    trailer_duration = translated("trailer_duration", key="trailer_url")
+    meta_title = translated("meta_title")
+    meta_description = translated("meta_description")
 
     objects = models.Manager()
     published = PublishedCourseManager()
 
     # The home page and the header's Enroll button show the promoted course,
     # falling back to the first published one when none is promoted.
-    HOME_ORDERING = ("-promote_on_home", "position", "title")
+    HOME_ORDERING = ("-promote_on_home", "position", *columns("title"))
 
     class Meta:
         verbose_name = _("course")
         verbose_name_plural = _("courses")
-        ordering = ("position", "title")
+        ordering = ("position", "title_bn", "title_en")
+        constraints = [
+            in_some_language("course", "title"),
+            in_some_language("course", "summary"),
+            in_some_language("course", "description"),
+        ]
 
     def __str__(self):
         return self.title
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title)[:180]
+            self.slug = slugify(self.title_en or self.title_bn)[:180]
         super().save(*args, **kwargs)
         if self.promote_on_home:
             Course.objects.exclude(pk=self.pk).filter(promote_on_home=True).update(
@@ -230,6 +303,12 @@ class Course(TimeStampedModel):
 
     def get_absolute_url(self):
         return reverse("courses:detail", kwargs={"slug": self.slug})
+
+    @property
+    def linkable_text(self):
+        """Both languages of the description: the course text that may link to
+        media library files, which then become public."""
+        return "\n".join(getattr(self, column) for column in columns("description"))
 
     @cached_property
     def trailer_embed_url(self):
@@ -288,17 +367,18 @@ class Module(TimeStampedModel):
         validators=[RegexValidator(r"^\d{1,2}$", _("Enter one or two digits, e.g. 4 or 04."))],
         help_text=_('Sets the module\'s place in the course, e.g. "04".'),
     )
-    title = models.CharField(_("title"), max_length=160)
+    title_bn = models.CharField(_("title (Bangla)"), max_length=160, blank=True)
+    title_en = models.CharField(_("title (English)"), max_length=160, blank=True)
     slug = models.SlugField(_("slug"), max_length=180)
-    title_bn = models.CharField(
-        _("title (Bangla)"),
-        max_length=160,
+    summary_bn = models.TextField(_("summary (Bangla)"), blank=True)
+    summary_en = models.TextField(_("summary (English)"), blank=True)
+    notes_markdown_bn = models.TextField(
+        _("lesson notes (Bangla)"),
         blank=True,
-        help_text=_("Optional. Shown alongside the English title."),
+        help_text=_("Markdown. Headings, bold, lists, links, images and audio."),
     )
-    summary = models.TextField(_("summary"), blank=True)
-    notes_markdown = models.TextField(
-        _("lesson notes"),
+    notes_markdown_en = models.TextField(
+        _("lesson notes (English)"),
         blank=True,
         help_text=_("Markdown. Headings, bold, lists, links, images and audio."),
     )
@@ -318,16 +398,31 @@ class Module(TimeStampedModel):
             ("protected_file", _("Uploaded file")),
         ],
     )
-    video_uid = models.CharField(
-        _("video id or path"),
+    # One video per language; a module with only one plays it in both.
+    video_uid_bn = models.CharField(
+        _("Bangla video id or path"),
         max_length=255,
         blank=True,
         help_text=_("Cloudflare Stream UID, or a path under the media folder."),
     )
-    video_duration_seconds = models.PositiveIntegerField(
-        _("video duration (seconds)"), default=0
+    video_uid_en = models.CharField(
+        _("English video id or path"),
+        max_length=255,
+        blank=True,
+        help_text=_("Cloudflare Stream UID, or a path under the media folder."),
     )
-    video_has_subtitles = models.BooleanField(_("English subtitles"), default=False)
+    video_duration_seconds_bn = models.PositiveIntegerField(
+        _("Bangla video duration (seconds)"), default=0
+    )
+    video_duration_seconds_en = models.PositiveIntegerField(
+        _("English video duration (seconds)"), default=0
+    )
+    video_has_subtitles_bn = models.BooleanField(
+        _("Bangla video has English subtitles"), default=False
+    )
+    video_has_subtitles_en = models.BooleanField(
+        _("English video has English subtitles"), default=False
+    )
     # Handouts linked from the media library and listed under the module's
     # Downloads tab, free to anyone who may open the module.
     downloads = models.ManyToManyField(
@@ -337,11 +432,19 @@ class Module(TimeStampedModel):
         related_name="download_modules",
     )
 
+    title = translated("title")
+    summary = translated("summary")
+    notes_markdown = translated("notes_markdown")
+    video_uid = translated("video_uid")
+    video_duration_seconds = translated("video_duration_seconds", key="video_uid")
+    video_has_subtitles = translated("video_has_subtitles", key="video_uid")
+
     class Meta:
         verbose_name = _("module")
         verbose_name_plural = _("modules")
         ordering = ("number",)
         constraints = [
+            in_some_language("module", "title"),
             models.UniqueConstraint(
                 fields=("course", "slug"), name="module_slug_unique_per_course"
             ),
@@ -355,7 +458,7 @@ class Module(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title)[:180]
+            self.slug = slugify(self.title_en or self.title_bn)[:180]
         self.number = self.pad_number(self.number)
         super().save(*args, **kwargs)
 
@@ -394,17 +497,21 @@ class Module(TimeStampedModel):
 
     def clean(self):
         super().clean()
-        if self.video_provider == "cloudflare" and self.video_uid:
+        if self.video_provider != "cloudflare":
+            return
+        errors = {}
+        for column in columns("video_uid"):
             # The UID is signed into the playback token as-is, so a typo or a
             # pasted URL would only show up as a broken player for students.
-            self.video_uid = self.video_uid.strip().lower()
-            if not CLOUDFLARE_UID.match(self.video_uid):
-                raise ValidationError({
-                    "video_uid": _(
-                        "Enter the 32-character video ID from the Cloudflare "
-                        "Stream dashboard, not a link."
-                    )
-                })
+            uid = getattr(self, column).strip().lower()
+            setattr(self, column, uid)
+            if uid and not CLOUDFLARE_UID.match(uid):
+                errors[column] = _(
+                    "Enter the 32-character video ID from the Cloudflare "
+                    "Stream dashboard, not a link."
+                )
+        if errors:
+            raise ValidationError(errors)
 
     def get_absolute_url(self):
         return reverse(
@@ -415,6 +522,11 @@ class Module(TimeStampedModel):
     @property
     def is_free(self):
         return self.access == self.Access.FREE
+
+    @property
+    def needs_bangla(self):
+        """True when the title, summary or notes exist only in English."""
+        return missing_language(self, ("title", "summary", "notes_markdown"), "bn")
 
     @property
     def number_plain(self):
@@ -458,9 +570,10 @@ class Module(TimeStampedModel):
     @cached_property
     def download_files(self):
         """Everything under the Downloads tab: older per-module uploads, then
-        the files picked from the media library. Prefetch `assets` and
-        `downloads` first."""
-        return self.download_assets + list(self.downloads.all())
+        the files picked from the media library for this language. Prefetch
+        `assets` and `downloads` first."""
+        offered = (LibraryFile.Language.BOTH, active_language())
+        return self.download_assets + [f for f in self.downloads.all() if f.language in offered]
 
     @cached_property
     def notation_assets(self):
@@ -468,28 +581,35 @@ class Module(TimeStampedModel):
 
     @cached_property
     def linkable_text(self):
-        """The notes plus every word of the quiz: all the text that may link
-        to media library files. Prefetch `quiz__questions__choices` first."""
-        parts = [self.notes_markdown]
+        """The notes plus every word of the quiz, in both languages: all the
+        text that may link to media library files. Prefetch
+        `quiz__questions__choices` first."""
+        parts = [getattr(self, column) for column in columns("notes_markdown")]
         quiz = getattr(self, "quiz", None)
         if quiz:
-            parts.append(quiz.title)
+            parts += [getattr(quiz, column) for column in columns("title")]
             for question in quiz.questions.all():
-                parts += [question.text, question.explanation]
-                parts += [choice.text for choice in question.choices.all()]
+                for name in ("text", "explanation"):
+                    parts += [getattr(question, column) for column in columns(name)]
+                for choice in question.choices.all():
+                    parts += [getattr(choice, column) for column in columns("text")]
         return "\n".join(parts)
 
     @property
     def meta_line(self):
         bits = []
         if self.video_duration_display:
-            bits.append(f"Video {self.video_duration_display}")
+            bits.append(gettext("Video %(duration)s") % {"duration": self.video_duration_display})
         if self.notes_markdown:
-            bits.append("Reading")
+            bits.append(gettext("Reading"))
         if self.audio_assets:
-            bits.append("Audio")
+            bits.append(gettext("Audio"))
         if self.quiz_question_count:
-            bits.append(f"Quiz, {self.quiz_question_count} questions")
+            count = self.quiz_question_count
+            bits.append(
+                ngettext("Quiz, %(count)d question", "Quiz, %(count)d questions", count)
+                % {"count": count}
+            )
         return " · ".join(bits)
 
 
@@ -499,20 +619,34 @@ class Lesson(TimeStampedModel):
     module = models.ForeignKey(
         Module, verbose_name=_("module"), on_delete=models.CASCADE, related_name="lessons"
     )
-    title = models.CharField(_("title"), max_length=160)
+    title_bn = models.CharField(_("title (Bangla)"), max_length=160, blank=True)
+    title_en = models.CharField(_("title (English)"), max_length=160, blank=True)
     position = models.PositiveIntegerField(_("position"), default=0)
+
+    title = translated("title")
 
     class Meta:
         verbose_name = _("lesson")
         verbose_name_plural = _("lessons")
         ordering = ("position", "id")
+        constraints = [in_some_language("lesson", "title")]
 
     def __str__(self):
         return self.title
 
 
 def asset_upload_to(instance, filename):
+    """Where assets went before they had a file per language. Kept for the
+    migrations that name it."""
     return f"courses/{instance.module.course.slug}/{instance.module.slug}/{filename}"
+
+
+def asset_upload_to_bn(instance, filename):
+    return f"courses/{instance.module.course.slug}/{instance.module.slug}/bn/{filename}"
+
+
+def asset_upload_to_en(instance, filename):
+    return f"courses/{instance.module.course.slug}/{instance.module.slug}/en/{filename}"
 
 
 class MediaAsset(TimeStampedModel):
@@ -533,25 +667,48 @@ class MediaAsset(TimeStampedModel):
         Module, verbose_name=_("module"), on_delete=models.CASCADE, related_name="assets"
     )
     kind = models.CharField(_("kind"), max_length=10, choices=Kind.choices)
-    title = models.CharField(_("title"), max_length=200)
-    file = models.FileField(
-        _("file"),
-        upload_to=asset_upload_to,
-        max_length=255,
+    title_bn = models.CharField(_("title (Bangla)"), max_length=200, blank=True)
+    title_en = models.CharField(_("title (English)"), max_length=200, blank=True)
+    # One file per language; with only one, both languages get it.
+    file_bn = models.FileField(
+        _("Bangla file"), upload_to=asset_upload_to_bn, max_length=255, blank=True
     )
-    alt_text = models.CharField(
-        _("alt text"),
+    file_en = models.FileField(
+        _("English file"), upload_to=asset_upload_to_en, max_length=255, blank=True
+    )
+    alt_text_bn = models.CharField(
+        _("alt text (Bangla)"),
         max_length=255,
         blank=True,
         help_text=_("Describes the image for screen readers. Required for notation."),
     )
-    duration_seconds = models.PositiveIntegerField(_("duration (seconds)"), default=0)
+    alt_text_en = models.CharField(
+        _("alt text (English)"),
+        max_length=255,
+        blank=True,
+        help_text=_("Describes the image for screen readers. Required for notation."),
+    )
+    duration_seconds_bn = models.PositiveIntegerField(
+        _("Bangla file duration (seconds)"), default=0
+    )
+    duration_seconds_en = models.PositiveIntegerField(
+        _("English file duration (seconds)"), default=0
+    )
     position = models.PositiveIntegerField(_("position"), default=0)
+
+    title = translated("title")
+    alt_text = translated("alt_text")
+    file = translated("file")
+    duration_seconds = translated("duration_seconds", key="file")
 
     class Meta:
         verbose_name = _("media asset")
         verbose_name_plural = _("media assets")
         ordering = ("kind", "position", "id")
+        constraints = [
+            in_some_language("mediaasset", "title"),
+            in_some_language("mediaasset", "file"),
+        ]
 
     def __str__(self):
         return self.title
@@ -589,7 +746,7 @@ def file_size_display(file):
     return ""
 
 
-# The path of `courses:library_file`, found inside a pasted URL or Markdown.
+# The path of `library:file`, found inside a pasted URL or Markdown.
 LIBRARY_LINK_PATH = re.compile(r"/library/(?P<key>[\w-]+)/(?P<name>[^\s/()\[\]]+)")
 
 
@@ -612,6 +769,11 @@ class LibraryFile(TimeStampedModel):
     fetch it from which modules link to it or offer it, so the paywall
     still applies.
     """
+
+    class Language(models.TextChoices):
+        BOTH = "both", _("Both languages")
+        BANGLA = "bn", _("Bangla only")
+        ENGLISH = "en", _("English only")
 
     class Purpose(models.TextChoices):
         LESSON = "lesson", _("Lesson material")
@@ -643,6 +805,15 @@ class LibraryFile(TimeStampedModel):
         db_index=True,
         help_text=_("What the file is for. Download material is always offered as a download."),
     )
+    # Notes in each language link their own files, so a tag is enough: it
+    # only decides which downloads a module lists on each language's page.
+    language = models.CharField(
+        _("language"),
+        max_length=4,
+        choices=Language.choices,
+        default=Language.BOTH,
+        help_text=_("Which language's pages offer it as a module download."),
+    )
     folder = models.CharField(
         _("folder"),
         max_length=80,
@@ -650,7 +821,8 @@ class LibraryFile(TimeStampedModel):
         db_index=True,
         help_text=_("Group related files, e.g. “Module 3” or “Scales”."),
     )
-    title = models.CharField(_("title"), max_length=200)
+    title_bn = models.CharField(_("title (Bangla)"), max_length=200, blank=True)
+    title_en = models.CharField(_("title (English)"), max_length=200, blank=True)
     file = models.FileField(
         _("file"),
         upload_to=library_upload_to,
@@ -662,10 +834,13 @@ class LibraryFile(TimeStampedModel):
         _("key"), max_length=24, unique=True, default=new_library_key, editable=False
     )
 
+    title = translated("title")
+
     class Meta:
         verbose_name = _("library file")
         verbose_name_plural = _("library files")
-        ordering = ("folder", "title", "id")
+        ordering = ("folder", "title_bn", "title_en", "id")
+        constraints = [in_some_language("libraryfile", "title")]
 
     def __str__(self):
         return self.title
@@ -721,7 +896,7 @@ class LibraryFile(TimeStampedModel):
 
     def get_absolute_url(self):
         """The link the administrator pastes into notes."""
-        return reverse("courses:library_file", kwargs={"key": self.key, "name": self.filename})
+        return reverse("library:file", kwargs={"key": self.key, "name": self.filename})
 
     @property
     def markdown(self):
@@ -742,13 +917,16 @@ class Quiz(TimeStampedModel):
     module = models.OneToOneField(
         Module, verbose_name=_("module"), on_delete=models.CASCADE, related_name="quiz"
     )
-    title = models.CharField(_("title"), max_length=160, blank=True)
+    title_bn = models.CharField(_("title (Bangla)"), max_length=160, blank=True)
+    title_en = models.CharField(_("title (English)"), max_length=160, blank=True)
     require_perfect_score = models.BooleanField(
         _("require 100% to unlock the next module"), default=True
     )
     allow_unlimited_retries = models.BooleanField(
         _("allow unlimited retries"), default=True
     )
+
+    title = translated("title")
 
     class Meta:
         verbose_name = _("quiz")
@@ -759,7 +937,8 @@ class Quiz(TimeStampedModel):
 
     @property
     def display_title(self):
-        return self.title or f"Module {self.module.number.lstrip('0') or '0'} quiz"
+        number = self.module.number.lstrip("0") or "0"
+        return self.title or gettext("Module %(number)s quiz") % {"number": number}
 
     @cached_property
     def title_html(self):
@@ -776,10 +955,16 @@ class Question(TimeStampedModel):
     quiz = models.ForeignKey(
         Quiz, verbose_name=_("quiz"), on_delete=models.CASCADE, related_name="questions"
     )
-    text = models.TextField(_("question"))
+    text_bn = models.TextField(_("question (Bangla)"), blank=True)
+    text_en = models.TextField(_("question (English)"), blank=True)
     position = models.PositiveIntegerField(_("position"), default=0)
-    explanation = models.TextField(
-        _("explanation"),
+    explanation_bn = models.TextField(
+        _("explanation (Bangla)"),
+        blank=True,
+        help_text=_("Shown once the correct answer is selected."),
+    )
+    explanation_en = models.TextField(
+        _("explanation (English)"),
         blank=True,
         help_text=_("Shown once the correct answer is selected."),
     )
@@ -802,10 +987,14 @@ class Question(TimeStampedModel):
         limit_choices_to={"kind": MediaAsset.Kind.AUDIO},
     )
 
+    text = translated("text")
+    explanation = translated("explanation")
+
     class Meta:
         verbose_name = _("question")
         verbose_name_plural = _("questions")
         ordering = ("position", "id")
+        constraints = [in_some_language("question", "text")]
 
     def __str__(self):
         return self.text[:70]
@@ -832,14 +1021,18 @@ class Choice(models.Model):
         on_delete=models.CASCADE,
         related_name="choices",
     )
-    text = models.CharField(_("answer"), max_length=255)
+    text_bn = models.CharField(_("answer (Bangla)"), max_length=255, blank=True)
+    text_en = models.CharField(_("answer (English)"), max_length=255, blank=True)
     is_correct = models.BooleanField(_("correct answer"), default=False)
     position = models.PositiveIntegerField(_("position"), default=0)
+
+    text = translated("text")
 
     class Meta:
         verbose_name = _("answer option")
         verbose_name_plural = _("answer options")
         ordering = ("position", "id")
+        constraints = [in_some_language("choice", "text")]
 
     def __str__(self):
         return self.text

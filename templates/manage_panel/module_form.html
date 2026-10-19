@@ -45,30 +45,16 @@
           <h2 class="panel__title" id="details-title">Details</h2>
         </div>
         <div class="panel__body stack">
-          <div class="editor-fields">
-            {% include "includes/field.html" with field=form.number %}
-            {% include "includes/field.html" with field=form.title %}
-          </div>
           <div class="field-grid">
-            {% include "includes/field.html" with field=form.title_bn %}
-            {% include "includes/field.html" with field=form.slug help="The module's address. Left blank, it is made from the title." %}
+            {% include "includes/field.html" with field=form.number %}
+            {% include "includes/field.html" with field=form.slug help="The module's address. Left blank, it is made from the English title." %}
           </div>
-          {% include "includes/field.html" with field=form.summary %}
+          {% include "includes/bilingual_field.html" with pair=form.bilingual.title %}
+          {% include "includes/bilingual_field.html" with pair=form.bilingual.summary %}
         </div>
       </section>
 
-      <section class="panel" aria-labelledby="notes-title">
-        <div class="panel__head">
-          <h2 class="panel__title" id="notes-title">
-            <label for="{{ form.notes_markdown.id_for_label }}">Lesson notes</label>
-          </h2>
-          {% include "includes/md_tools.html" with target=form.notes_markdown.id_for_label %}
-        </div>
-        {{ form.notes_markdown }}
-        {% for error in form.notes_markdown.errors %}<p class="field__error panel__body">{{ error }}</p>{% endfor %}
-        <p class="panel__foot">Markdown. To add audio, a diagram or a download, find the file under
-          <strong>Library files</strong> and press <strong>Insert</strong>: its link goes in at the cursor.</p>
-      </section>
+      {% include "includes/bilingual_md_panel.html" with pair=form.bilingual.notes_markdown foot="Markdown. To add audio, a diagram or a download, find the file under Library files and press Insert: its link goes in at the cursor of the notes you last clicked into." %}
 
       <section class="panel" aria-labelledby="video-title">
         <div class="panel__head">
@@ -79,14 +65,17 @@
             <span class="badge badge--status badge--locked">No video yet</span>
           {% endif %}
         </div>
-        <div class="panel__body field-grid">
+        <div class="panel__body stack">
           {% include "includes/field.html" with field=form.video_provider %}
-          {% include "includes/field.html" with field=form.video_uid %}
-          {% include "includes/field.html" with field=form.video_duration_seconds %}
-          <label class="check editor-check">
-            {{ form.video_has_subtitles }} {{ form.video_has_subtitles.label }}
-          </label>
+          {% include "includes/bilingual_field.html" with pair=form.bilingual.video_uid %}
+          {% include "includes/bilingual_field.html" with pair=form.bilingual.video_duration_seconds %}
+          <div class="lang-pair">
+            {% for field in form.bilingual.video_has_subtitles %}
+              <label class="check editor-check">{{ field }} {{ field.label }}</label>
+            {% endfor %}
+          </div>
         </div>
+        <p class="panel__foot">Give one video and it plays on both the Bangla and English pages.</p>
         <p class="panel__foot">Students never receive a direct file link: Cloudflare playback is
           signed per request, and an uploaded file is streamed only after the enrolment check.</p>
       </section>
@@ -111,7 +100,7 @@
         </div>
       </section>
 
-      {% include "includes/library_picker.html" with files=library purposes=library_purposes linked=linked_files target=form.notes_markdown.id_for_label %}
+      {% include "includes/library_picker.html" with files=library purposes=library_purposes linked=linked_files target=form.notes_markdown_bn.id_for_label|add:" "|add:form.notes_markdown_en.id_for_label %}
 
       <section class="panel" aria-labelledby="quiz-card">
         <div class="panel__head">

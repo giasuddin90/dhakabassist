@@ -93,6 +93,8 @@
   if (quiz) {
     var feedback = quiz.querySelector("[data-quiz-feedback]");
     var nextForm = quiz.querySelector("[data-quiz-next]");
+    // Wording comes from the page, so it is in the page's language.
+    var text = quiz.dataset;
 
     quiz.addEventListener("submit", function (event) {
       var form = event.target.closest("[data-answer-form]");
@@ -116,7 +118,7 @@
         .then(function (data) {
           button.classList.add(data.correct ? "is-correct" : "is-wrong");
           var note = button.querySelector("[data-answer-note]");
-          if (note) note.textContent = data.correct ? "Correct" : "Try again";
+          if (note) note.textContent = data.correct ? text.textCorrect : text.textTryAgain;
           if (data.correct) {
             quiz.querySelectorAll("[data-answer-form] button").forEach(function (other) {
               other.disabled = true;
@@ -125,14 +127,14 @@
               // The server sends the explanation already rendered and
               // sanitised, so library audio and diagrams appear here too.
               if (data.explanation) feedback.innerHTML = data.explanation;
-              else feedback.textContent = "Correct.";
+              else feedback.textContent = text.textCorrectFull;
               feedback.className = "u-fs-16 quiz-feedback";
               feedback.style.color = "var(--ok)";
             }
             if (nextForm) nextForm.hidden = false;
           } else {
             if (feedback) {
-              feedback.textContent = "Not quite. Try another answer.";
+              feedback.textContent = text.textNotQuite;
               feedback.style.color = "var(--err)";
             }
           }

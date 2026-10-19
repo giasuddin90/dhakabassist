@@ -20,6 +20,7 @@ from pages.models import Faq, LegalPage
 User = get_user_model()
 
 AUTHOR_NAME = "Tanveer Haque"
+AUTHOR_NAME_BN = "তানভীর হক"
 
 AUTHOR_BIO = """\
 Tanveer Haque is an independent musician and music educator based in Dhaka,
@@ -383,7 +384,7 @@ class Command(BaseCommand):
     def _author(self):
         author, _ = Author.objects.update_or_create(
             slug=slugify(AUTHOR_NAME),
-            defaults={"name": AUTHOR_NAME, "bio": AUTHOR_BIO},
+            defaults={"name_bn": AUTHOR_NAME_BN, "name_en": AUTHOR_NAME, "bio_en": AUTHOR_BIO},
         )
         # Keep a photo an editor uploaded; only fill in a missing one (also
         # when the database survived but the media folder did not).
@@ -397,27 +398,35 @@ class Command(BaseCommand):
         course, _ = Course.objects.update_or_create(
             slug="foundations-of-music",
             defaults={
-                "title": "Foundations of Music",
-                "subtitle": "Part 1",
-                "summary": (
+                "title_bn": "সংগীতের ভিত্তি",
+                "title_en": "Foundations of Music",
+                "subtitle_bn": "পর্ব 1",
+                "subtitle_en": "Part 1",
+                "summary_bn": (
+                    "তানভীর হকের সংগীত তত্ত্বের কোর্স। নয়টি সহজ মডিউলে শব্দের মূল কথা থেকে "
+                    "স্কেল, কী আর পঞ্চম বৃত্ত পর্যন্ত, নিজের গতিতে। প্রথম মডিউল বিনামূল্যে।"
+                ),
+                "summary_en": (
                     "A music theory course by Tanveer Haque. Nine clear modules take you from "
                     "the basics of sound to scales, keys and the circle of fifths, at your own "
                     "pace. The first module is free."
                 ),
-                "description": (
+                "description_en": (
                     "A complete beginner course in music theory. Start with what sound is and "
                     "finish able to read notation, count rhythms, name intervals, build major "
                     "and minor scales and find your way around the circle of fifths."
                 ),
-                "level": "Beginner",
+                "level_bn": "প্রাথমিক",
+                "level_en": "Beginner",
                 "price": 3500,
                 "status": Course.Status.PUBLISHED,
-                "trailer_label": "Watch the trailer",
-                "trailer_duration": "2:10",
+                "trailer_label_bn": "ট্রেইলার দেখুন",
+                "trailer_label_en": "Watch the trailer",
+                "trailer_duration_en": "2:10",
                 "position": 0,
                 "author": author,
-                "meta_title": "Foundations of Music — online music theory course",
-                "meta_description": (
+                "meta_title_en": "Foundations of Music — online music theory course",
+                "meta_description_en": (
                     "Nine-module online music theory course by Tanveer Haque. Module 1 free, "
                     "lifetime access for ৳3,500. bKash, Nagad and card accepted."
                 ),
@@ -434,21 +443,21 @@ class Command(BaseCommand):
                 number=number,
                 defaults={
                     "slug": slugify(title),
-                    "title": title,
+                    "title_en": title,
                     "title_bn": title_bn,
-                    "summary": summary,
-                    "notes_markdown": notes,
+                    "summary_en": summary,
+                    "notes_markdown_en": notes,
                     "access": access,
                     "status": Module.Status.PUBLISHED,
                     "video_provider": "protected_file",
-                    "video_uid": f"foundations-of-music/module-{number}.mp4",
-                    "video_duration_seconds": duration,
-                    "video_has_subtitles": True,
+                    "video_uid_en": f"foundations-of-music/module-{number}.mp4",
+                    "video_duration_seconds_en": duration,
+                    "video_has_subtitles_en": True,
                 },
             )
             module.lessons.all().delete()
             Lesson.objects.bulk_create(
-                Lesson(module=module, title=title_, position=index)
+                Lesson(module=module, title_en=title_, position=index)
                 for index, title_ in enumerate(lessons)
             )
             questions = {"01": QUIZ_1, "04": QUIZ_4}.get(number)
@@ -460,7 +469,8 @@ class Command(BaseCommand):
         quiz, _ = Quiz.objects.update_or_create(
             module=module,
             defaults={
-                "title": f"Module {module.number.lstrip('0')} quiz",
+                "title_bn": f"মডিউল {module.number.lstrip('0')} কুইজ",
+                "title_en": f"Module {module.number.lstrip('0')} quiz",
                 "require_perfect_score": True,
                 "allow_unlimited_retries": True,
             },
@@ -468,12 +478,12 @@ class Command(BaseCommand):
         quiz.questions.all().delete()
         for position, (text, options, answer, explanation) in enumerate(rows):
             question = Question.objects.create(
-                quiz=quiz, text=text, position=position, explanation=explanation
+                quiz=quiz, text_en=text, position=position, explanation_en=explanation
             )
             Choice.objects.bulk_create(
                 Choice(
                     question=question,
-                    text=option,
+                    text_en=option,
                     position=index,
                     is_correct=index == answer,
                 )
@@ -485,14 +495,17 @@ class Command(BaseCommand):
         Course.objects.update_or_create(
             slug="foundations-of-music-part-2",
             defaults={
-                "title": "Foundations of Music",
-                "subtitle": "Part 2",
-                "summary": (
+                "title_bn": "সংগীতের ভিত্তি",
+                "title_en": "Foundations of Music",
+                "subtitle_bn": "পর্ব 2",
+                "subtitle_en": "Part 2",
+                "summary_en": (
                     "The second part of Foundations of Music: chords, harmony and how the "
                     "theory you have learned turns into music you can play."
                 ),
-                "description": "In production. Available to students who have completed Part 1.",
-                "level": "Intermediate",
+                "description_en": "In production. Available to students who have completed Part 1.",
+                "level_bn": "মধ্যম",
+                "level_en": "Intermediate",
                 "price": 3500,
                 "status": Course.Status.DRAFT,
                 "requires": part_one,
@@ -506,8 +519,8 @@ class Command(BaseCommand):
     def _faqs(self):
         for position, (question, answer) in enumerate(FAQS):
             Faq.objects.update_or_create(
-                question=question,
-                defaults={"answer": answer, "position": position, "is_published": True},
+                question_en=question,
+                defaults={"answer_en": answer, "position": position, "is_published": True},
             )
 
     def _legal(self):
@@ -515,9 +528,9 @@ class Command(BaseCommand):
             LegalPage.objects.update_or_create(
                 slug=slug,
                 defaults={
-                    "title": title,
-                    "meta_description": description,
-                    "body_markdown": body,
+                    "title_en": title,
+                    "meta_description_en": description,
+                    "body_markdown_en": body,
                     "is_published": True,
                 },
             )

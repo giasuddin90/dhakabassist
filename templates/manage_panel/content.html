@@ -28,8 +28,8 @@
 
     <form method="post" action="{% url 'manage:faq_create' %}" class="stack u-gap-12" style="padding:16px 18px">
       {% csrf_token %}
-      {% include "includes/field.html" with field=faq_form.question %}
-      {% include "includes/field.html" with field=faq_form.answer %}
+      {% include "includes/bilingual_field.html" with pair=faq_form.bilingual.question %}
+      {% include "includes/bilingual_field.html" with pair=faq_form.bilingual.answer %}
       <button class="btn btn--sm btn--outline" type="submit" style="align-self:flex-start">Add question</button>
     </form>
   </section>

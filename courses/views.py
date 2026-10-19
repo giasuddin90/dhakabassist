@@ -8,6 +8,8 @@ from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView, TemplateView
 
@@ -27,14 +29,14 @@ from .models import (
 )
 
 INCLUDES = (
-    "All 9 modules with video lessons",
-    "Written notes, audio and notation diagrams",
-    "Downloadable worksheets",
-    "Quizzes with instant feedback",
-    "Lifetime access on any device",
+    gettext_lazy("All 9 modules with video lessons"),
+    gettext_lazy("Written notes, audio and notation diagrams"),
+    gettext_lazy("Downloadable worksheets"),
+    gettext_lazy("Quizzes with instant feedback"),
+    gettext_lazy("Lifetime access on any device"),
 )
 
-PAYMENT_CHIPS = ("bKash", "Nagad", "Visa", "Mastercard", "International cards")
+PAYMENT_CHIPS = ("bKash", "Nagad", "Visa", "Mastercard", gettext_lazy("International cards"))
 
 
 def _clock(seconds):
@@ -57,13 +59,13 @@ class CourseListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["seo"] = seo.SEO(
-            title="Music theory courses",
-            description=(
+            title=_("Music theory courses"),
+            description=_(
                 "Online music theory courses by Tanveer Haque, taught from the "
                 "basics of sound through to the circle of fifths."
             ),
             canonical_path=reverse("courses:list"),
-            breadcrumbs=[seo.Breadcrumb("Home", "/"), seo.Breadcrumb("Courses")],
+            breadcrumbs=[seo.Breadcrumb(_("Home"), "/"), seo.Breadcrumb(_("Courses"))],
             schemas=[seo.course_schema(c) for c in context["courses"]],
         )
         return context
@@ -89,10 +91,13 @@ class CourseDetailView(DetailView):
             includes=INCLUDES,
             payment_chips=PAYMENT_CHIPS,
             facts=[
-                ("Modules", str(course.module_count)),
-                ("Total video", course.total_runtime or "—"),
-                ("Free preview", f"Module {free.number_plain}" if free else "—"),
-                ("Level", course.level),
+                (_("Modules"), str(course.module_count)),
+                (_("Total video"), course.total_runtime or "—"),
+                (
+                    _("Free preview"),
+                    _("Module %(number)s") % {"number": free.number_plain} if free else "—",
+                ),
+                (_("Level"), course.level),
             ],
             description=render_notes(course.description),
             seo=seo.SEO(
@@ -100,8 +105,8 @@ class CourseDetailView(DetailView):
                 description=course.meta_description or course.summary,
                 canonical_path=course.get_absolute_url(),
                 breadcrumbs=[
-                    seo.Breadcrumb("Home", "/"),
-                    seo.Breadcrumb("Courses", reverse("courses:list")),
+                    seo.Breadcrumb(_("Home"), "/"),
+                    seo.Breadcrumb(_("Courses"), reverse("courses:list")),
                     seo.Breadcrumb(course.title),
                 ],
                 schemas=[seo.course_schema(course)],
@@ -138,8 +143,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context.update(
             cards=cards,
             seo=seo.noindex(
-                "My courses",
-                "Your enrolled courses and progress.",
+                _("My courses"),
+                _("Your enrolled courses and progress."),
                 reverse("courses:dashboard"),
             ),
         )
@@ -176,7 +181,7 @@ class LessonView(LoginRequiredMixin, TemplateView):
                 "includes": INCLUDES,
                 "payment_chips": PAYMENT_CHIPS,
                 "seo": seo.noindex(
-                    "Enroll to continue",
+                    _("Enroll to continue"),
                     canonical_path=module.get_absolute_url(),
                 ),
             }

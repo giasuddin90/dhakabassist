@@ -51,6 +51,25 @@ writes the manifest WhiteNoise needs, so skipping it breaks the site.
 
 Then restart gunicorn.
 
+### Translations
+
+The interface wording lives in `locale/bn/LC_MESSAGES/django.po` (Bangla),
+with the compiled `django.mo` committed beside it, so a deploy needs no
+extra step. After changing wording in a template or in Python, refresh and
+recompile it on a machine with GNU gettext (`sudo apt install gettext`):
+
+```bash
+.venv/bin/python manage.py makemessages -l bn -i ".venv/*" -i "manage_panel/*" -i "templates/manage_panel/*"
+```
+
+Translate the new entries in `django.po`, then:
+
+```bash
+.venv/bin/python manage.py compilemessages -l bn
+```
+
+Untranslated entries show in English. The staff panel is English only.
+
 ## Cloudflare Stream
 
 Lesson videos play in Cloudflare's player through a token the application

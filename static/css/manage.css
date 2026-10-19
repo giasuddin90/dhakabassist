@@ -318,6 +318,19 @@ body.manage {
   gap: 16px;
 }
 
+/* A translated field: Bangla and English stacked on phones, side by side
+   from md up. */
+.lang-pair {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .lang-pair {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 .editor-area {
   width: 100%;
   display: block;
@@ -784,6 +797,24 @@ body.manage {
 .answer-edit .md-tools {
   margin-left: auto;
   padding-bottom: 4px;
+}
+
+/* Bangla above English, each with its own formatting buttons. */
+.answer-edit__texts {
+  flex: 1 1 12rem;
+  min-width: 0;
+  display: grid;
+}
+
+.answer-edit__text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.answer-edit__text + .answer-edit__text {
+  border-top: 1px solid var(--line);
 }
 
 .answer-edit__tag {

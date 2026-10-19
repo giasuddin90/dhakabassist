@@ -184,16 +184,16 @@ class StaffPanelTests(TestCase):
         response = self.client.post(
             reverse("manage:course_edit", kwargs={"slug": self.course.slug}),
             {
-                "title": "Foundations of Music",
-                "subtitle": "Part 1",
+                "title_en": "Foundations of Music",
+                "subtitle_en": "Part 1",
                 "slug": self.course.slug,
-                "summary": "A new summary.",
-                "description": "Description.",
-                "level": "Beginner",
+                "summary_en": "A new summary.",
+                "description_en": "Description.",
+                "level_en": "Beginner",
                 "price": "4000",
                 "status": Course.Status.PUBLISHED,
-                "trailer_label": "Watch the trailer",
-                "trailer_duration": "2:10",
+                "trailer_label_en": "Watch the trailer",
+                "trailer_duration_en": "2:10",
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -203,10 +203,10 @@ class StaffPanelTests(TestCase):
 
     def _course_post(self, **changes):
         data = {
-            "title": self.course.title, "slug": self.course.slug,
-            "summary": "Summary.", "description": "Description.",
-            "level": "Beginner", "price": "3500", "status": Course.Status.PUBLISHED,
-            "trailer_label": "Watch the trailer",
+            "title_en": self.course.title, "slug": self.course.slug,
+            "summary_en": "Summary.", "description_en": "Description.",
+            "level_en": "Beginner", "price": "3500", "status": Course.Status.PUBLISHED,
+            "trailer_label_en": "Watch the trailer",
         }
         data.update(changes)
         return self.client.post(
@@ -215,7 +215,7 @@ class StaffPanelTests(TestCase):
 
     def test_a_trailer_link_and_home_promotion_can_be_set(self):
         response = self._course_post(
-            trailer_url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            trailer_url_en="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             promote_on_home="on",
         )
         self.assertEqual(response.status_code, 302)
@@ -227,7 +227,7 @@ class StaffPanelTests(TestCase):
         )
 
     def test_an_unsupported_trailer_link_is_refused(self):
-        response = self._course_post(trailer_url="https://vimeo.com/76979871")
+        response = self._course_post(trailer_url_en="https://vimeo.com/76979871")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Paste a YouTube or Cloudflare Stream link")
 
@@ -240,17 +240,17 @@ class StaffPanelTests(TestCase):
             ),
             {
                 "number": module.number,
-                "title": "Notation",
+                "title_en": "Notation",
                 "title_bn": "স্বরলিপি",
                 "slug": module.slug,
-                "summary": "The staff and clefs.",
-                "notes_markdown": "## Notation\n\nThe staff has five lines.",
+                "summary_en": "The staff and clefs.",
+                "notes_markdown_en": "## Notation\n\nThe staff has five lines.",
                 "access": Module.Access.FREE,
                 "status": Module.Status.PUBLISHED,
                 "video_provider": "protected_file",
-                "video_uid": "course/module-02.mp4",
-                "video_duration_seconds": "902",
-                "video_has_subtitles": "on",
+                "video_uid_en": "course/module-02.mp4",
+                "video_duration_seconds_en": "902",
+                "video_has_subtitles_en": "on",
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -264,16 +264,16 @@ class StaffPanelTests(TestCase):
             reverse("manage:module_new", kwargs={"slug": self.course.slug}),
             {
                 "number": "04",
-                "title": "Meter",
+                "title_en": "Meter",
                 "title_bn": "",
                 "slug": "meter",
-                "summary": "Bars and beats.",
-                "notes_markdown": "",
+                "summary_en": "Bars and beats.",
+                "notes_markdown_en": "",
                 "access": Module.Access.PAID,
                 "status": Module.Status.DRAFT,
                 "video_provider": "",
-                "video_uid": "",
-                "video_duration_seconds": "0",
+                "video_uid_en": "",
+                "video_duration_seconds_en": "0",
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -282,10 +282,10 @@ class StaffPanelTests(TestCase):
     def test_a_module_number_sets_its_place_and_is_padded(self):
         url = reverse("manage:module_new", kwargs={"slug": self.course.slug})
         data = {
-            "number": "0", "title": "Intro", "title_bn": "", "slug": "intro", "summary": "",
-            "notes_markdown": "", "access": Module.Access.PAID,
-            "status": Module.Status.DRAFT, "video_provider": "", "video_uid": "",
-            "video_duration_seconds": "0",
+            "number": "0", "title_en": "Intro", "title_bn": "", "slug": "intro", "summary_en": "",
+            "notes_markdown_en": "", "access": Module.Access.PAID,
+            "status": Module.Status.DRAFT, "video_provider": "", "video_uid_en": "",
+            "video_duration_seconds_en": "0",
         }
         self.assertEqual(self.client.post(url, data).status_code, 302)
         self.assertEqual(self.course.modules.first().slug, "intro")
@@ -295,10 +295,10 @@ class StaffPanelTests(TestCase):
         response = self.client.post(
             reverse("manage:module_new", kwargs={"slug": self.course.slug}),
             {
-                "number": "2", "title": "Again", "title_bn": "", "slug": "again",
-                "summary": "", "notes_markdown": "", "access": Module.Access.PAID,
-                "status": Module.Status.DRAFT, "video_provider": "", "video_uid": "",
-                "video_duration_seconds": "0",
+                "number": "2", "title_en": "Again", "title_bn": "", "slug": "again",
+                "summary_en": "", "notes_markdown_en": "", "access": Module.Access.PAID,
+                "status": Module.Status.DRAFT, "video_provider": "", "video_uid_en": "",
+                "video_duration_seconds_en": "0",
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -341,8 +341,8 @@ class StaffPanelTests(TestCase):
             "manage:quiz_edit", kwargs={"slug": self.course.slug, "module_slug": module.slug}
         )
         payload = {
-            "text": "How many beats in 4/4?",
-            "explanation": "Four.",
+            "text_en": "How many beats in 4/4?",
+            "explanation_en": "Four.",
             "notation": "",
             "audio": "",
             "correct": str(choices[2].pk),
@@ -353,7 +353,7 @@ class StaffPanelTests(TestCase):
         }
         for index, choice in enumerate(choices):
             payload[f"choices-{index}-id"] = str(choice.pk)
-            payload[f"choices-{index}-text"] = ["Two", "Three", "Four", "Eight"][index]
+            payload[f"choices-{index}-text_en"] = ["Two", "Three", "Four", "Eight"][index]
         response = self.client.post(url, payload)
         self.assertEqual(response.status_code, 302)
 
@@ -372,7 +372,7 @@ class StaffPanelTests(TestCase):
                 "manage:quiz_settings",
                 kwargs={"slug": self.course.slug, "module_slug": module.slug},
             ),
-            {"title": "Module 1 quiz", "allow_unlimited_retries": "on"},
+            {"title_en": "Module 1 quiz", "allow_unlimited_retries": "on"},
         )
         quiz = Quiz.objects.get(module=module)
         self.assertFalse(quiz.require_perfect_score)
@@ -425,10 +425,10 @@ class StaffPanelTests(TestCase):
     def test_a_faq_can_be_added(self):
         self.client.post(
             reverse("manage:faq_create"),
-            {"question": "Is there a certificate?", "answer": "Not yet.", "position": "0",
+            {"question_en": "Is there a certificate?", "answer_en": "Not yet.", "position": "0",
              "is_published": "on"},
         )
-        self.assertTrue(Faq.objects.filter(question="Is there a certificate?").exists())
+        self.assertTrue(Faq.objects.filter(question_en="Is there a certificate?").exists())
 
     def test_a_legal_page_can_be_edited(self):
         page = LegalPage.objects.create(
@@ -438,9 +438,9 @@ class StaffPanelTests(TestCase):
             reverse("manage:legal_edit", kwargs={"slug": page.slug}),
             {
                 "slug": page.slug,
-                "title": "Terms & Conditions",
-                "body_markdown": "## Terms\n\nNew text.",
-                "meta_description": "Our terms.",
+                "title_en": "Terms & Conditions",
+                "body_markdown_en": "## Terms\n\nNew text.",
+                "meta_description_en": "Our terms.",
                 "is_published": "on",
             },
         )
@@ -651,7 +651,7 @@ class AuthorEditorTests(TestCase):
             if author
             else reverse("manage:author_new")
         )
-        data = {"name": "Tanveer Haque", "bio": "Bassist and **teacher**."}
+        data = {"name_en": "Tanveer Haque", "bio_en": "Bassist and **teacher**."}
         data.update(extra)
         return self.client.post(url, data)
 
@@ -670,7 +670,8 @@ class AuthorEditorTests(TestCase):
         response = self.client.get(reverse("manage:author_new"))
         self.assertContains(response, 'enctype="multipart/form-data"')
         self.assertContains(response, 'name="photo"')
-        self.assertContains(response, 'name="bio"')
+        self.assertContains(response, 'name="bio_bn"')
+        self.assertContains(response, 'name="bio_en"')
 
     def test_name_photo_and_bio_are_saved(self):
         response = self.post_author(photo=png_upload())
@@ -709,14 +710,14 @@ class AuthorEditorTests(TestCase):
         response = self.client.post(
             reverse("manage:course_edit", kwargs={"slug": self.course.slug}),
             {
-                "title": self.course.title,
+                "title_en": self.course.title,
                 "slug": self.course.slug,
-                "summary": "Summary.",
-                "description": "Description.",
-                "level": "Beginner",
+                "summary_en": "Summary.",
+                "description_en": "Description.",
+                "level_en": "Beginner",
                 "price": "3500",
                 "status": Course.Status.PUBLISHED,
-                "trailer_label": "Watch the trailer",
+                "trailer_label_en": "Watch the trailer",
                 "author": author.pk,
             },
         )
@@ -781,8 +782,8 @@ class ModuleEditorLibraryTests(TestCase):
             title="Clip", file=SimpleUploadedFile("clip.mp3", b"ID3")
         )
         LibraryFile.objects.create(title="Unused", file=SimpleUploadedFile("u.mp3", b"ID3"))
-        self.module.notes_markdown = f"Listen.\n\n{in_notes.markdown}"
-        self.module.save(update_fields=["notes_markdown"])
+        self.module.notes_markdown_bn = f"Listen.\n\n{in_notes.markdown}"
+        self.module.save(update_fields=["notes_markdown_bn"])
         quiz = Quiz.objects.create(module=self.module)
         Question.objects.create(quiz=quiz, text=f"Which? {in_quiz.markdown}")
 
@@ -826,7 +827,7 @@ class LibraryTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
-            sorted(LibraryFile.objects.values_list("title", "folder")),
+            sorted(LibraryFile.objects.values_list("title_en", "folder")),
             [("C major scale", "Lesson material"), ("Treble clef", "Lesson material")],
         )
 
@@ -884,8 +885,8 @@ class LibraryTests(TestCase):
         item = LibraryFile.objects.create(
             title="Stave", file=SimpleUploadedFile("stave.svg", b"<svg></svg>")
         )
-        self.modules[0].notes_markdown = item.markdown
-        self.modules[0].save(update_fields=["notes_markdown"])
+        self.modules[0].notes_markdown_bn = item.markdown
+        self.modules[0].save(update_fields=["notes_markdown_bn"])
         response = self.client.get(reverse("manage:library"))
         self.assertContains(response, item.get_absolute_url())
         self.assertContains(response, "Module 01")
@@ -954,8 +955,8 @@ class LibraryTests(TestCase):
             title="Linked clip", file=SimpleUploadedFile("a.mp3", b"ID3")
         )
         LibraryFile.objects.create(title="Spare clip", file=SimpleUploadedFile("b.mp3", b"ID3"))
-        self.modules[0].notes_markdown = used.markdown
-        self.modules[0].save(update_fields=["notes_markdown"])
+        self.modules[0].notes_markdown_bn = used.markdown
+        self.modules[0].save(update_fields=["notes_markdown_bn"])
         response = self.client.get(reverse("manage:library"), {"usage": "unused"})
         self.assertContains(response, "Spare clip")
         self.assertNotContains(response, "Linked clip")

@@ -80,6 +80,7 @@
                 <th scope="row">
                   <span class="dtable__name">{{ module.title }}</span>
                   <span class="dtable__sub">{{ module.get_access_display }}</span>
+                  {% if module.needs_bangla %}<span class="badge badge--status badge--locked">Bangla missing</span>{% endif %}
                 </th>
                 <td class="u-nowrap">{{ module.video_duration_display|default:"—" }}</td>
                 <td class="u-nowrap">{{ module.audio_assets|length }} file{{ module.audio_assets|length|pluralize }}</td>

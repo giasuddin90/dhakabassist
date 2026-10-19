@@ -25,6 +25,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 
 from accounts.emails import send_welcome
+from courses.i18n import columns
 from courses.models import (
     Author,
     Course,
@@ -146,7 +147,7 @@ class OverviewView(ManageBase):
         total_accounts = paying + free_accounts
         conversion = round(paying / total_accounts * 100) if total_accounts else 0
 
-        course = Course.objects.order_by("position", "title").first()
+        course = Course.objects.order_by("position", *columns("title")).first()
         finished = self._finished_count(course) if course else 0
 
         context.update(
@@ -236,7 +237,7 @@ class CoursesView(ManageBase):
         context = super().get_context_data(**kwargs)
         courses = list(
             Course.objects.annotate(modules_count=Count("modules")).order_by(
-                "position", "title"
+                "position", *columns("title")
             )
         )
         selected_slug = self.request.GET.get("course")
@@ -414,7 +415,7 @@ def author_delete(request, slug):
     first instead of failing.
     """
     author = get_object_or_404(Author, slug=slug)
-    titles = list(author.courses.values_list("title", flat=True))
+    titles = [course.title for course in author.courses.all()]
     if titles:
         messages.error(
             request,
@@ -486,7 +487,9 @@ def library_rows(files):
             "quiz__questions__choices", "downloads"
         )
     )
-    courses = list(Course.objects.only("title", "slug", "description"))
+    courses = list(
+        Course.objects.only("slug", *columns("title"), *columns("description"))
+    )
     rows = []
     for item in files:
         prefix = item.link_prefix
@@ -498,7 +501,7 @@ def library_rows(files):
                     for m in modules
                     if prefix in m.linkable_text or item in m.downloads.all()
                 ],
-                "courses": [c for c in courses if prefix in c.description],
+                "courses": [c for c in courses if prefix in c.linkable_text],
             }
         )
     return rows
@@ -579,6 +582,21 @@ def library_delete(request, pk):
 # -- Quizzes ----------------------------------------------------------------
 
 
+def add_placeholder_question(quiz, position, first_is_correct=False):
+    """A new question with four options, in both languages, for staff to fill in."""
+    question = Question.objects.create(
+        quiz=quiz, text_bn="নতুন প্রশ্ন", text_en="New question", position=position
+    )
+    for index, (letter, letter_bn) in enumerate(zip("ABCD", "কখগঘ")):
+        question.choices.create(
+            text_bn=f"বিকল্প {letter_bn}",
+            text_en=f"Option {letter}",
+            position=index,
+            is_correct=first_is_correct and index == 0,
+        )
+    return question
+
+
 @staff_required
 def quiz_edit(request, slug, module_slug):
     """The quiz editor: one question at a time, with its four options."""
@@ -589,9 +607,7 @@ def quiz_edit(request, slug, module_slug):
     questions = list(quiz.questions.prefetch_related("choices"))
 
     if not questions:
-        question = Question.objects.create(quiz=quiz, text="New question", position=0)
-        for index, letter in enumerate("ABCD"):
-            question.choices.create(text=f"Option {letter}", position=index)
+        add_placeholder_question(quiz, position=0)
         return redirect(request.path)
 
     try:
@@ -658,11 +674,7 @@ def question_add(request, slug, module_slug):
     module = get_object_or_404(Module, course__slug=slug, slug=module_slug)
     quiz, _ = Quiz.objects.get_or_create(module=module)
     position = quiz.questions.count()
-    question = Question.objects.create(
-        quiz=quiz, text="New question", position=position
-    )
-    for index, letter in enumerate("ABCD"):
-        question.choices.create(text=f"Option {letter}", position=index, is_correct=index == 0)
+    add_placeholder_question(quiz, position, first_is_correct=True)
     url = reverse("manage:quiz_edit", kwargs={"slug": slug, "module_slug": module_slug})
     return redirect(f"{url}?q={position + 1}")
 
@@ -718,7 +730,7 @@ class StudentsView(ManageBase):
         form = StudentFilterForm(self.request.GET)
         chosen = form.cleaned_data.get("course") if form.is_valid() else None
         # Progress is measured against one course: the chosen one, else the first.
-        course = chosen or Course.objects.order_by("position", "title").first()
+        course = chosen or Course.objects.order_by("position", *columns("title")).first()
         total_modules = (
             course.modules.filter(status=Module.Status.PUBLISHED).count() if course else 0
         )
@@ -798,7 +810,7 @@ class StudentDetailView(ManageBase):
                 Q(enrollments__student=student) | Q(modules__progress__student=student)
             )
             .distinct()
-            .order_by("position", "title")
+            .order_by("position", *columns("title"))
             .prefetch_related(
                 Prefetch(
                     "modules",

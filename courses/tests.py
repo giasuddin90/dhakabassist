@@ -21,6 +21,7 @@ from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from core.testing import EnglishPagesMixin
 from courses.access import CourseAccess
 from courses.markup import render_inline, render_notes, split_audio
 from courses.models import (
@@ -333,7 +334,7 @@ class QuizTests(TestCase):
         self.assertEqual(QuizAttempt.objects.count(), 2)
 
 
-class MarkCompleteTests(TestCase):
+class MarkCompleteTests(EnglishPagesMixin, TestCase):
     """Modules without a quiz are finished by the student, not by a quiz."""
 
     def setUp(self):
@@ -460,7 +461,7 @@ class CourseMediaTests(TestCase):
 
     def test_a_locked_module_video_is_not_served(self):
         self.modules[1].video_uid = "foundations/module-02.mp4"
-        self.modules[1].save(update_fields=["video_uid"])
+        self.modules[1].save(update_fields=["video_uid_bn"])
         self.client.force_login(self.student)
         url = reverse("courses:video", kwargs={"pk": self.modules[1].pk})
         self.assertEqual(self.client.get(url).status_code, 404)
@@ -514,7 +515,7 @@ class MarkupTests(TestCase):
         self.assertIn('<audio controls preload="none" src="/library/a/clip.mp3">', audio)
 
 
-class CoursePageTests(TestCase):
+class CoursePageTests(EnglishPagesMixin, TestCase):
     def setUp(self):
         self.course, self.modules = make_course()
 
@@ -541,8 +542,8 @@ class CoursePageTests(TestCase):
         self.assertContains(response, "You have not enrolled yet")
 
     def test_the_trailer_is_embedded_when_a_link_is_set(self):
-        self.course.trailer_url = "https://youtu.be/dQw4w9WgXcQ"
-        self.course.save(update_fields=["trailer_url"])
+        self.course.trailer_url_en = "https://youtu.be/dQw4w9WgXcQ"
+        self.course.save(update_fields=["trailer_url_en"])
         response = self.client.get(self.course.get_absolute_url())
         self.assertContains(response, "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ")
 
@@ -603,7 +604,7 @@ class TrailerLinkTests(TestCase):
         course.trailer_url = "https://vimeo.com/76979871"
         with self.assertRaises(ValidationError) as caught:
             course.full_clean()
-        self.assertIn("trailer_url", caught.exception.message_dict)
+        self.assertIn("trailer_url_bn", caught.exception.message_dict)
 
 
 def stream_settings(**overrides):
@@ -695,7 +696,7 @@ class CloudflareLessonPageTests(TestCase):
         for module in self.modules[:2]:
             module.video_provider = "cloudflare"
             module.video_uid = CF_UID
-            module.save(update_fields=["video_provider", "video_uid"])
+            module.save(update_fields=["video_provider", "video_uid_bn"])
         self.client.force_login(
             User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
         )
@@ -731,7 +732,7 @@ class CloudflareVideoIdTests(SimpleTestCase):
                 module = Module(video_provider="cloudflare", video_uid=value)
                 with self.assertRaises(ValidationError) as caught:
                     module.clean()
-                self.assertIn("video_uid", caught.exception.message_dict)
+                self.assertIn("video_uid_bn", caught.exception.message_dict)
 
     def test_an_uploaded_file_path_is_not_checked_as_an_id(self):
         Module(video_provider="protected_file", video_uid="foundations/module-01.mp4").clean()
@@ -797,7 +798,7 @@ class XAccelRedirectTests(TestCase):
         self.assertNotIn("X-Accel-Redirect", response)
 
 
-class NoJavaScriptTests(TestCase):
+class NoJavaScriptTests(EnglishPagesMixin, TestCase):
     """The whole student path must work through plain requests and forms.
 
     This is what a crawler, a text browser, and a student on a flaky mobile
@@ -907,8 +908,8 @@ class LibraryFileTests(TestCase):
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def link(self, module, item):
-        module.notes_markdown += f"\n\n{item.markdown}\n"
-        module.save(update_fields=["notes_markdown"])
+        module.notes_markdown_bn += f"\n\n{item.markdown}\n"
+        module.save(update_fields=["notes_markdown_bn"])
 
     def test_markdown_uses_image_syntax_for_audio_and_images(self):
         self.assertEqual(
@@ -997,14 +998,14 @@ class LibraryFileTests(TestCase):
         self.assertEqual(self.client.get(self.audio.get_absolute_url()).status_code, 404)
 
     def test_a_file_in_a_published_course_description_is_public(self):
-        self.course.description += f"\n\n{self.diagram.markdown}"
-        self.course.save(update_fields=["description"])
+        self.course.description_bn += f"\n\n{self.diagram.markdown}"
+        self.course.save(update_fields=["description_bn"])
         self.assertEqual(self.client.get(self.diagram.get_absolute_url()).status_code, 200)
 
     def test_a_wrong_file_name_is_not_found(self):
         self.client.force_login(self.staff)
         url = reverse(
-            "courses:library_file", kwargs={"key": self.audio.key, "name": "other.mp3"}
+            "library:file", kwargs={"key": self.audio.key, "name": "other.mp3"}
         )
         self.assertEqual(self.client.get(url).status_code, 404)
 
@@ -1101,10 +1102,10 @@ class QuizLibraryMediaTests(TestCase):
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def test_question_markdown_renders_audio_and_diagrams(self):
-        self.question.text = (
+        self.question.text_bn = (
             f"Name this interval.\n\n{self.audio.markdown}\n\n{self.diagram.markdown}"
         )
-        self.question.save(update_fields=["text"])
+        self.question.save(update_fields=["text_bn"])
         response = self.client.get(self.quiz_url)
         self.assertContains(
             response, f'<audio controls preload="none" src="{self.audio.get_absolute_url()}">'
@@ -1113,8 +1114,8 @@ class QuizLibraryMediaTests(TestCase):
 
     def test_option_audio_sits_outside_the_answer_button(self):
         choice = self.question.choices.get(position=0)
-        choice.text = f"{self.audio.markdown}"
-        choice.save(update_fields=["text"])
+        choice.text_bn = f"{self.audio.markdown}"
+        choice.save(update_fields=["text_bn"])
         html = self.client.get(self.quiz_url).content.decode()
         player = html.index(f'src="{self.audio.get_absolute_url()}"')
         button = html.index('class="answer', player)
@@ -1123,14 +1124,14 @@ class QuizLibraryMediaTests(TestCase):
 
     def test_option_images_show_inside_the_button(self):
         choice = self.question.choices.get(position=1)
-        choice.text = f"This one {self.diagram.markdown}"
-        choice.save(update_fields=["text"])
+        choice.text_bn = f"This one {self.diagram.markdown}"
+        choice.save(update_fields=["text_bn"])
         response = self.client.get(self.quiz_url)
         self.assertContains(response, '<span class="answer__text">This one <img')
 
     def test_the_explanation_arrives_rendered(self):
-        self.question.explanation = f"Four. {self.diagram.markdown}"
-        self.question.save(update_fields=["explanation"])
+        self.question.explanation_bn = f"Four. {self.diagram.markdown}"
+        self.question.save(update_fields=["explanation_bn"])
         correct = self.question.choices.get(is_correct=True)
         response = self.client.post(
             reverse(
@@ -1143,20 +1144,20 @@ class QuizLibraryMediaTests(TestCase):
         self.assertIn("<img", response.json()["explanation"])
 
     def test_markdown_in_the_title_stays_out_of_the_browser_tab(self):
-        self.quiz.title = "Rhythm **check**"
-        self.quiz.save(update_fields=["title"])
+        self.quiz.title_bn = "Rhythm **check**"
+        self.quiz.save(update_fields=["title_bn"])
         response = self.client.get(self.quiz_url)
         self.assertContains(response, "Rhythm <strong>check</strong>")
         self.assertContains(response, "<title>Rhythm check")
 
     def test_a_file_linked_from_an_unlocked_quiz_is_served(self):
         choice = self.question.choices.first()
-        choice.text = self.audio.markdown
-        choice.save(update_fields=["text"])
+        choice.text_bn = self.audio.markdown
+        choice.save(update_fields=["text_bn"])
         self.assertEqual(self.client.get(self.audio.get_absolute_url()).status_code, 200)
 
     def test_a_file_linked_from_a_locked_quiz_is_not_served(self):
         _, question = make_quiz(self.modules[1])
-        question.explanation = self.diagram.markdown
-        question.save(update_fields=["explanation"])
+        question.explanation_bn = self.diagram.markdown
+        question.save(update_fields=["explanation_bn"])
         self.assertEqual(self.client.get(self.diagram.get_absolute_url()).status_code, 404)

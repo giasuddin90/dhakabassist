@@ -18,13 +18,38 @@ developer is needed for any of it.
 Deeper or one-off edits live in **Database admin** (`/django-admin/`), linked
 at the bottom of the sidebar.
 
+## Two languages
+
+Everything students read is stored in Bangla and English. Each editor shows
+the two side by side: **Bangla** on the left (on top on a phone),
+**English** on the right. Bangla is the site's main language; English pages
+live under `/en/`.
+
+- A field that is required needs **at least one** of the two. Leave the other
+  blank and that language's page shows the one you filled in, so nothing is
+  ever empty. Content from before the site was bilingual is in the English
+  boxes; add the Bangla when you are ready.
+- Media works the same way. A module can have a Bangla video and an English
+  one; with only one, both languages play it. A course can have a trailer
+  per language.
+- Web addresses (slugs) are shared and made from the English title, because
+  Bangla letters cannot go in an address. With no English title, type the
+  slug yourself.
+- Media library files carry a **Language**: *Both languages* (the default),
+  *Bangla only* or *English only*. It decides which language's lesson page
+  lists the file under Downloads. Links you paste into the notes work
+  whatever it says, so put Bangla handouts in the Bangla notes.
+- Emails (receipts, welcome links) go out in the student's language, which
+  they choose under Account settings and which starts as the language they
+  signed up in.
+
 ## Editing a module
 
 **Courses → pick the course → Edit** on a module row.
 
-The left column is the module itself: its number, title, Bangla title, web
-address, whether it is free or paid, whether it is published, the video, and
-the lesson notes. The right column holds the media panels and the quiz.
+The left column is the module itself: its number, web address, title and
+summary in both languages, the lesson notes in both languages, the video (one
+per language), whether it is free or paid, and whether it is published. The right column holds the media panels and the quiz.
 
 **Access** is the paywall switch. "Free preview" means any registered account
 can study it; "Paid" means enrolled students only. Module 1 is the free

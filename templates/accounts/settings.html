@@ -1,4 +1,5 @@
 {% extends "accounts/_auth_shell.html" %}
+{% load i18n %}
 
 {% block auth_body %}
   <form method="post" class="stack u-gap-16" novalidate>
@@ -9,13 +10,14 @@
     {% include "includes/field.html" with field=form.profession %}
     {% include "includes/field.html" with field=form.education %}
     {% include "includes/field.html" with field=form.location %}
+    {% include "includes/field.html" with field=form.language %}
     <label class="check">{{ form.marketing_opt_in }} {{ form.marketing_opt_in.label }}</label>
-    <button class="btn" type="submit" style="align-self:flex-start">Save changes</button>
+    <button class="btn" type="submit" style="align-self:flex-start">{% translate "Save changes" %}</button>
   </form>
 
   <div class="stack u-gap-10" style="border-top:1px solid var(--line);padding-top:22px">
-    <p class="u-fs-16"><a href="{% url 'accounts:password_change' %}">Change your password</a></p>
-    <p class="u-fs-16"><a href="{% url 'accounts:orders' %}">Order history</a></p>
-    <p class="u-fs-16"><a href="{% url 'courses:dashboard' %}">Back to my courses</a></p>
+    <p class="u-fs-16"><a href="{% url 'accounts:password_change' %}">{% translate "Change your password" %}</a></p>
+    <p class="u-fs-16"><a href="{% url 'accounts:orders' %}">{% translate "Order history" %}</a></p>
+    <p class="u-fs-16"><a href="{% url 'courses:dashboard' %}">{% translate "Back to my courses" %}</a></p>
   </div>
 {% endblock %}

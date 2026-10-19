@@ -29,6 +29,13 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra)
 
 
+class Language(models.TextChoices):
+    """The site's languages, as in `settings.LANGUAGES`. Bangla is primary."""
+
+    BANGLA = "bn", "বাংলা"
+    ENGLISH = "en", "English"
+
+
 class User(AbstractUser):
     """A student or administrator. Email is the login identifier."""
 
@@ -43,6 +50,14 @@ class User(AbstractUser):
         help_text=_("Turn off to suspend access to paid course material."),
     )
     marketing_opt_in = models.BooleanField(_("course news by email"), default=False)
+    # Emails are sent outside a request (receipts from a payment callback,
+    # welcomes from the staff panel), so the language has to be stored.
+    language = models.CharField(
+        _("email language"),
+        max_length=5,
+        choices=Language.choices,
+        default=Language.BANGLA,
+    )
     # Optional profile details the student fills in or updates from settings.
     profession = models.CharField(_("profession"), max_length=100, blank=True)
     education = models.CharField(_("education"), max_length=150, blank=True)

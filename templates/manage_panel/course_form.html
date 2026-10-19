@@ -17,11 +17,14 @@
   {% csrf_token %}
   {% include "includes/form_errors.html" %}
 
+  <section class="panel panel--padded stack u-gap-16" aria-label="Names">
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.title %}
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.subtitle %}
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.level %}
+  </section>
+
   <section class="panel panel--padded field-grid" aria-label="Basics">
-    {% include "includes/field.html" with field=form.title %}
-    {% include "includes/field.html" with field=form.subtitle %}
-    {% include "includes/field.html" with field=form.slug %}
-    {% include "includes/field.html" with field=form.level %}
+    {% include "includes/field.html" with field=form.slug help="The course's address. Left blank, it is made from the English title." %}
     {% include "includes/field.html" with field=form.price %}
     {% include "includes/field.html" with field=form.status %}
     {% include "includes/field.html" with field=form.requires %}
@@ -39,16 +42,16 @@
         <span class="badge badge--status badge--locked">No trailer yet</span>
       {% endif %}
     </div>
-    <div class="panel__body field-grid">
-      {% include "includes/field.html" with field=form.trailer_url %}
-      {% include "includes/field.html" with field=form.trailer_label %}
-      {% include "includes/field.html" with field=form.trailer_duration %}
+    <div class="panel__body stack">
+      {% include "includes/bilingual_field.html" with pair=form.bilingual.trailer_url %}
+      {% include "includes/bilingual_field.html" with pair=form.bilingual.trailer_duration %}
+      {% include "includes/bilingual_field.html" with pair=form.bilingual.trailer_label %}
     </div>
   </section>
 
   <section class="panel panel--padded stack u-gap-16" aria-label="Description">
-    {% include "includes/field.html" with field=form.summary %}
-    {% include "includes/field.html" with field=form.description %}
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.summary %}
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.description %}
   </section>
 
   <section class="panel" aria-labelledby="author-title">
@@ -66,8 +69,8 @@
 
   <section class="panel panel--padded stack u-gap-16" aria-labelledby="seo-title">
     <h2 class="panel__title" id="seo-title">Search appearance</h2>
-    {% include "includes/field.html" with field=form.meta_title help="Up to 70 characters. Falls back to the course title." %}
-    {% include "includes/field.html" with field=form.meta_description help="Up to 170 characters. Falls back to the summary." %}
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.meta_title help="Up to 70 characters. Falls back to the course title." %}
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.meta_description help="Up to 170 characters. Falls back to the summary." %}
   </section>
 </form>
 {% endblock %}

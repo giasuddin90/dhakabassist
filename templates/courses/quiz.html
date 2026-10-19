@@ -1,11 +1,15 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
-<section class="shell" style="max-width:760px;padding-block:40px 96px" data-quiz>
+<section class="shell" style="max-width:760px;padding-block:40px 96px" data-quiz
+         data-text-correct="{% translate 'Correct' %}" data-text-try-again="{% translate 'Try again' %}"
+         data-text-correct-full="{% translate 'Correct.' %}"
+         data-text-not-quite="{% translate 'Not quite. Try another answer.' %}">
   <div class="stack u-gap-28">
 
     <div class="split" style="align-items:center">
-      <a class="btn-link btn-link--sm" href="{{ module.get_absolute_url }}">Back to lesson</a>
+      <a class="btn-link btn-link--sm" href="{{ module.get_absolute_url }}">{% translate "Back to lesson" %}</a>
       <p class="u-fs-15 muted">{{ quiz.title_html }}</p>
     </div>
 
@@ -13,29 +17,32 @@
       {# ----------------------------------------------------------- result #}
       <div class="u-center stack u-gap-18" style="align-items:center;padding:40px 0">
         <p class="quiz-score">{{ attempt.score_percent }}%</p>
-        <h1 class="display-3">Module {{ module.number_plain }} complete</h1>
+        <h1 class="display-3">{% blocktranslate with number=module.number_plain %}Module {{ number }} complete{% endblocktranslate %}</h1>
         {% if next_state %}
           <p class="u-fs-18" style="line-height:1.6;max-width:44ch">
-            Module {{ next_state.module.number_plain }} · {{ next_state.module.title }} is now
-            {% if next_state.is_unlocked %}unlocked{% else %}available once you enroll{% endif %}.
+            {% if next_state.is_unlocked %}{% blocktranslate trimmed with number=next_state.module.number_plain title=next_state.module.title %}
+              Module {{ number }} · {{ title }} is now unlocked.
+            {% endblocktranslate %}{% else %}{% blocktranslate trimmed with number=next_state.module.number_plain title=next_state.module.title %}
+              Module {{ number }} · {{ title }} is now available once you enroll.
+            {% endblocktranslate %}{% endif %}
           </p>
         {% else %}
           <p class="u-fs-18" style="line-height:1.6;max-width:44ch">
-            That was the last module. Well done — the whole course is behind you.
+            {% translate "That was the last module. Well done — the whole course is behind you." %}
           </p>
         {% endif %}
         <div class="cluster" style="justify-content:center">
-          <a class="btn btn--outline" href="{% url 'courses:dashboard' %}">Back to my courses</a>
+          <a class="btn btn--outline" href="{% url 'courses:dashboard' %}">{% translate "Back to my courses" %}</a>
           {% if next_state %}
             <a class="btn" href="{{ next_state.module.get_absolute_url }}">
-              {% if next_state.is_unlocked %}Start Module {{ next_state.module.number_plain }}{% else %}Enroll to continue{% endif %}
+              {% if next_state.is_unlocked %}{% blocktranslate with number=next_state.module.number_plain %}Start Module {{ number }}{% endblocktranslate %}{% else %}{% translate "Enroll to continue" %}{% endif %}
             </a>
           {% endif %}
         </div>
         {% if quiz.allow_unlimited_retries %}
           <form method="post" action="{% url 'courses:quiz_restart' course.slug module.slug %}">
             {% csrf_token %}
-            <button class="btn-link btn-link--sm" type="submit">Take the quiz again</button>
+            <button class="btn-link btn-link--sm" type="submit">{% translate "Take the quiz again" %}</button>
           </form>
         {% endif %}
       </div>
@@ -46,7 +53,7 @@
         {% for dot in dots %}<span class="is-{{ dot.state }}"></span>{% endfor %}
       </div>
 
-      <h1 class="quiz-count">Question {{ question_number }} of {{ question_total }}</h1>
+      <h1 class="quiz-count">{% blocktranslate with number=question_number total=question_total %}Question {{ number }} of {{ total }}{% endblocktranslate %}</h1>
       {# Markdown, so audio and diagrams from the media library show where they are linked. #}
       <div class="quiz-question">{{ question.text_html }}</div>
 
@@ -61,7 +68,7 @@
         <div class="audio-row">
           <audio controls preload="none" style="width:100%">
             <source src="{{ question.audio.get_absolute_url }}" type="audio/mpeg">
-            <a href="{{ question.audio.get_absolute_url }}">Download the audio</a>
+            <a href="{{ question.audio.get_absolute_url }}">{% translate "Download the audio" %}</a>
           </audio>
           {% if question.audio.duration_display %}
             <span class="u-fs-14 muted u-nowrap">{{ question.audio.duration_display }}</span>
@@ -81,9 +88,9 @@
                       type="submit"
                       {% if solved or choice.id in picks %}disabled{% endif %}>
                 <span class="answer__letter" aria-hidden="true">{{ choice.letter }}</span>
-                <span class="answer__text">{{ choice.text_html|default:"Pick this one" }}</span>
+                <span class="answer__text">{% if choice.text_html %}{{ choice.text_html }}{% else %}{% translate "Pick this one" %}{% endif %}</span>
                 <span class="answer__note" data-answer-note>
-                  {% if choice.id in picks %}{% if choice.is_correct %}Correct{% else %}Try again{% endif %}{% endif %}
+                  {% if choice.id in picks %}{% if choice.is_correct %}{% translate "Correct" %}{% else %}{% translate "Try again" %}{% endif %}{% endif %}
                 </span>
               </button>
             </form>
@@ -94,20 +101,20 @@
       <div class="split" style="align-items:center;min-height:52px">
         <div class="u-fs-16 quiz-feedback" data-quiz-feedback aria-live="polite"
            style="color:{% if solved %}var(--ok){% elif picks %}var(--err){% else %}var(--text-muted){% endif %}">
-          {% if solved %}{{ question.explanation_html|default:"Correct." }}
-          {% elif picks %}Not quite. Try another answer.
-          {% else %}Choose one answer.{% endif %}
+          {% if solved %}{% if question.explanation_html %}{{ question.explanation_html }}{% else %}{% translate "Correct." %}{% endif %}
+          {% elif picks %}{% translate "Not quite. Try another answer." %}
+          {% else %}{% translate "Choose one answer." %}{% endif %}
         </div>
         <form method="post" action="{% url 'courses:quiz_advance' course.slug module.slug %}"
               data-quiz-next{% if not solved %} hidden{% endif %}>
           {% csrf_token %}
-          <button class="btn" type="submit">{% if is_last %}Finish quiz{% else %}Next question{% endif %}</button>
+          <button class="btn" type="submit">{% if is_last %}{% translate "Finish quiz" %}{% else %}{% translate "Next question" %}{% endif %}</button>
         </form>
       </div>
 
     {% else %}
-      <p class="u-fs-17">This quiz has no questions yet.</p>
-      <a class="btn" href="{{ module.get_absolute_url }}" style="align-self:flex-start">Back to the lesson</a>
+      <p class="u-fs-17">{% translate "This quiz has no questions yet." %}</p>
+      <a class="btn" href="{{ module.get_absolute_url }}" style="align-self:flex-start">{% translate "Back to the lesson" %}</a>
     {% endif %}
   </div>
 </section>

@@ -21,20 +21,15 @@
   {% csrf_token %}
   {% include "includes/form_errors.html" %}
 
-  <section class="panel panel--padded field-grid" aria-label="Basics">
-    {% include "includes/field.html" with field=form.title %}
-    {% include "includes/field.html" with field=form.slug %}
-    {% include "includes/field.html" with field=form.meta_description %}
-    <label class="check" style="align-self:end">{{ form.is_published }} Published</label>
+  <section class="panel panel--padded stack u-gap-16" aria-label="Basics">
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.title %}
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.meta_description %}
+    <div class="field-grid">
+      {% include "includes/field.html" with field=form.slug %}
+      <label class="check" style="align-self:end">{{ form.is_published }} Published</label>
+    </div>
   </section>
 
-  <section class="panel" aria-labelledby="body-title">
-    <div class="panel__head">
-      <h2 class="panel__title" id="body-title">Page text</h2>
-      {% include "includes/md_tools.html" with target=form.body_markdown.id_for_label %}
-    </div>
-    {{ form.body_markdown }}
-    <p class="panel__foot">Markdown. Headings, bold, lists and links are supported.</p>
-  </section>
+  {% include "includes/bilingual_md_panel.html" with pair=form.bilingual.body_markdown foot="Markdown. Headings, bold, lists and links are supported." %}
 </form>
 {% endblock %}

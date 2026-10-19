@@ -5,14 +5,18 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import translation
 from django.utils.decorators import method_decorator
 from django.utils.text import Truncator
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
 from django.views.generic import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 
+from courses import views as course_views
 from courses.access import course_queryset
 from courses.markup import render_notes
 from courses.models import Course
@@ -22,21 +26,33 @@ from .forms import ContactForm
 from .models import Faq, LegalPage
 
 HOW_IT_WORKS = (
-    ("01", "Watch", "A short video lesson introduces each idea with examples on the bass and keyboard."),
-    ("02", "Read", "Written notes and notation diagrams you can return to any time."),
-    ("03", "Listen", "Audio examples train your ear to recognise what you have just learned."),
-    ("04", "Quiz", "Answer every question correctly to unlock the next module."),
+    (
+        "01",
+        gettext_lazy("Watch"),
+        gettext_lazy(
+            "A short video lesson introduces each idea with examples on the bass and keyboard."
+        ),
+    ),
+    (
+        "02",
+        gettext_lazy("Read"),
+        gettext_lazy("Written notes and notation diagrams you can return to any time."),
+    ),
+    (
+        "03",
+        gettext_lazy("Listen"),
+        gettext_lazy("Audio examples train your ear to recognise what you have just learned."),
+    ),
+    (
+        "04",
+        gettext_lazy("Quiz"),
+        gettext_lazy("Answer every question correctly to unlock the next module."),
+    ),
 )
 
-INCLUDES = (
-    "All 9 modules with video lessons",
-    "Written notes, audio and notation diagrams",
-    "Downloadable worksheets",
-    "Quizzes with instant feedback",
-    "Lifetime access on any device",
-)
-
-PAYMENT_CHIPS = ("bKash", "Nagad", "Visa", "Mastercard", "International cards")
+# The same lists the course page shows.
+INCLUDES = course_views.INCLUDES
+PAYMENT_CHIPS = course_views.PAYMENT_CHIPS
 
 
 def primary_course():
@@ -75,8 +91,8 @@ class HomeView(TemplateView):
             includes=INCLUDES,
             payment_chips=PAYMENT_CHIPS,
             seo=seo.SEO(
-                title="Learn to read, hear and understand music",
-                description=(
+                title=_("Learn to read, hear and understand music"),
+                description=_(
                     "Foundations of Music — a nine-module online music theory course by "
                     "Tanveer Haque. Module 1 is free. Lifetime access for ৳3,500."
                 ),
@@ -101,7 +117,7 @@ class AboutView(FormView):
         self._notify(message)
         messages.success(
             self.request,
-            "Thank you — your message has been sent. We reply within two working days.",
+            _("Thank you — your message has been sent. We reply within two working days."),
         )
         return super().form_valid(form)
 
@@ -122,10 +138,10 @@ class AboutView(FormView):
         if author and author.bio:
             description = Truncator(author.bio_text).chars(155)
         else:
-            description = (
-                f"{name} is an independent musician and music educator based in "
+            description = _(
+                "%(name)s is an independent musician and music educator based in "
                 "Dhaka, teaching bass and music theory to students of all ages."
-            )
+            ) % {"name": name}
         person = (
             seo.author_person(author, description)
             if author
@@ -135,11 +151,11 @@ class AboutView(FormView):
             author=author,
             author_name=name,
             seo=seo.SEO(
-                title=f"About {name}",
+                title=_("About %(name)s") % {"name": name},
                 description=description,
                 canonical_path=reverse("pages:about"),
                 kind="profile",
-                breadcrumbs=[seo.Breadcrumb("Home", "/"), seo.Breadcrumb("About")],
+                breadcrumbs=[seo.Breadcrumb(_("Home"), "/"), seo.Breadcrumb(_("About"))],
                 schemas=[person],
             ),
         )
@@ -155,13 +171,13 @@ class FaqView(TemplateView):
         context.update(
             faqs=faqs,
             seo=seo.SEO(
-                title="Questions about the course",
-                description=(
+                title=_("Questions about the course"),
+                description=_(
                     "Answers on prior knowledge, the free module, payment methods, "
                     "access and refunds for Foundations of Music."
                 ),
                 canonical_path=reverse("pages:faq"),
-                breadcrumbs=[seo.Breadcrumb("Home", "/"), seo.Breadcrumb("FAQ")],
+                breadcrumbs=[seo.Breadcrumb(_("Home"), "/"), seo.Breadcrumb(_("FAQ"))],
                 schemas=[seo.faq_schema(faqs)] if faqs else [],
             ),
         )
@@ -186,7 +202,7 @@ class LegalPageView(DetailView):
                 description=page.meta_description or page.title,
                 canonical_path=page.get_absolute_url(),
                 kind="article",
-                breadcrumbs=[seo.Breadcrumb("Home", "/"), seo.Breadcrumb(page.title)],
+                breadcrumbs=[seo.Breadcrumb(_("Home"), "/"), seo.Breadcrumb(page.title)],
                 schemas=[
                     seo.article_schema(
                         page.title,
@@ -218,6 +234,14 @@ class LlmsTxtView(TemplateView):
     template_name = "pages/llms.txt"
     content_type = "text/plain; charset=utf-8"
 
+    def get(self, request, *args, **kwargs):
+        # Outside the language prefix, so pin English rather than follow the
+        # crawler's Accept-Language; the file points to the Bangla pages too.
+        with translation.override("en"):
+            response = super().get(request, *args, **kwargs)
+            response.render()
+        return response
+
     def get_context_data(self, **kwargs):
         course = primary_course()
         return {
@@ -236,7 +260,7 @@ def health(request):
 
 def not_found(request, exception):
     context = {
-        "seo": seo.noindex("Page not found", "The page you asked for does not exist."),
+        "seo": seo.noindex(_("Page not found"), _("The page you asked for does not exist.")),
         "course": primary_course(),
     }
     return render(request, "pages/404.html", context, status=404)
@@ -246,6 +270,6 @@ def server_error(request):
     return render(
         request,
         "pages/500.html",
-        {"seo": seo.noindex("Something went wrong")},
+        {"seo": seo.noindex(_("Something went wrong"))},
         status=500,
     )

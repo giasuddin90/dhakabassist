@@ -2,96 +2,96 @@
   "courses": [
     {
       "slug": "foundations-of-music",
-      "title": "Foundations of Music",
-      "subtitle": "Part 1",
-      "summary": "A music theory course by Tanveer Haque. Nine clear modules take you from the basics of sound to scales, keys and the circle of fifths, at your own pace. The first module is free.",
-      "description": "A complete beginner course in music theory. Start with what sound is and finish able to read notation, count rhythms, name intervals, build major and minor scales and find your way around the circle of fifths.",
-      "level": "Beginner",
+      "title_en": "Foundations of Music",
+      "subtitle_en": "Part 1",
+      "summary_en": "A music theory course by Tanveer Haque. Nine clear modules take you from the basics of sound to scales, keys and the circle of fifths, at your own pace. The first module is free.",
+      "description_en": "A complete beginner course in music theory. Start with what sound is and finish able to read notation, count rhythms, name intervals, build major and minor scales and find your way around the circle of fifths.",
+      "level_en": "Beginner",
       "price": 3500,
       "status": "published",
-      "trailer_label": "Watch the trailer",
-      "trailer_duration": "2:10",
+      "trailer_label_en": "Watch the trailer",
+      "trailer_duration_en": "2:10",
       "position": 0,
-      "meta_title": "Foundations of Music — online music theory course",
-      "meta_description": "Nine-module online music theory course by Tanveer Haque. Module 1 free, lifetime access for ৳3,500. bKash, Nagad and card accepted.",
+      "meta_title_en": "Foundations of Music — online music theory course",
+      "meta_description_en": "Nine-module online music theory course by Tanveer Haque. Module 1 free, lifetime access for ৳3,500. bKash, Nagad and card accepted.",
       "modules": [
         {
           "number": "01",
-          "title": "Sound",
-          "slug": "sound",
           "title_bn": "",
-          "summary": "What sound is, how pitch, volume and tone colour work, and the words musicians use to describe them.",
-          "notes_markdown": "## What sound actually is\n\nA sound is a vibration travelling through air. When a bass string moves back\nand forth it pushes the air around it, and that pressure wave reaches your ear.\nEverything else in music theory describes properties of that wave.\n\n## Pitch\n\nHow fast the string vibrates decides the **pitch** — how high or low a note\nsounds. Vibrations are measured in hertz (Hz), one hertz being one cycle per\nsecond. The A above middle C is usually tuned to 440 Hz.\n\nDouble the frequency and you get the same note one octave higher: 880 Hz is\nalso an A.\n\n## Volume and tone colour\n\n**Dynamics** describe how loud a note is; **timbre** describes its character —\nwhy a bass and a piano playing the same note still sound like different\ninstruments. Timbre comes from the quieter frequencies sounding above the main\none, called overtones.\n",
+          "title_en": "Sound",
+          "slug": "sound",
+          "summary_en": "What sound is, how pitch, volume and tone colour work, and the words musicians use to describe them.",
+          "notes_markdown_en": "## What sound actually is\n\nA sound is a vibration travelling through air. When a bass string moves back\nand forth it pushes the air around it, and that pressure wave reaches your ear.\nEverything else in music theory describes properties of that wave.\n\n## Pitch\n\nHow fast the string vibrates decides the **pitch** — how high or low a note\nsounds. Vibrations are measured in hertz (Hz), one hertz being one cycle per\nsecond. The A above middle C is usually tuned to 440 Hz.\n\nDouble the frequency and you get the same note one octave higher: 880 Hz is\nalso an A.\n\n## Volume and tone colour\n\n**Dynamics** describe how loud a note is; **timbre** describes its character —\nwhy a bass and a piano playing the same note still sound like different\ninstruments. Timbre comes from the quieter frequencies sounding above the main\none, called overtones.\n",
           "access": "free",
           "status": "published",
           "video_provider": "protected_file",
-          "video_uid": "foundations-of-music/module-01.mp4",
-          "video_duration_seconds": 740,
-          "video_has_subtitles": true,
+          "video_uid_en": "foundations-of-music/module-01.mp4",
+          "video_duration_seconds_en": 740,
+          "video_has_subtitles_en": true,
           "lessons": [
             "What is sound?",
             "Pitch and frequency",
             "Timbre and dynamics"
           ],
           "quiz": {
-            "title": "Module 1 quiz",
+            "title_en": "Module 1 quiz",
             "require_perfect_score": true,
             "allow_unlimited_retries": true,
             "questions": [
               {
-                "text": "What is a sound, physically?",
-                "explanation": "Sound is a pressure wave: a vibration moving through a medium such as air.",
+                "text_en": "What is a sound, physically?",
+                "explanation_en": "Sound is a pressure wave: a vibration moving through a medium such as air.",
                 "choices": [
                   {
-                    "text": "A vibration travelling through air",
+                    "text_en": "A vibration travelling through air",
                     "correct": true
                   },
                   {
-                    "text": "A change in air temperature"
+                    "text_en": "A change in air temperature"
                   },
                   {
-                    "text": "A magnetic field"
+                    "text_en": "A magnetic field"
                   },
                   {
-                    "text": "A kind of light"
+                    "text_en": "A kind of light"
                   }
                 ]
               },
               {
-                "text": "A note sounds at 440 Hz. What is the frequency of the same note one octave higher?",
-                "explanation": "An octave up doubles the frequency, so 440 Hz becomes 880 Hz.",
+                "text_en": "A note sounds at 440 Hz. What is the frequency of the same note one octave higher?",
+                "explanation_en": "An octave up doubles the frequency, so 440 Hz becomes 880 Hz.",
                 "choices": [
                   {
-                    "text": "220 Hz"
+                    "text_en": "220 Hz"
                   },
                   {
-                    "text": "444 Hz"
+                    "text_en": "444 Hz"
                   },
                   {
-                    "text": "660 Hz"
+                    "text_en": "660 Hz"
                   },
                   {
-                    "text": "880 Hz",
+                    "text_en": "880 Hz",
                     "correct": true
                   }
                 ]
               },
               {
-                "text": "Which word describes why a bass and a piano playing the same note still sound different?",
-                "explanation": "Timbre is tone colour — the pattern of overtones that gives an instrument its character.",
+                "text_en": "Which word describes why a bass and a piano playing the same note still sound different?",
+                "explanation_en": "Timbre is tone colour — the pattern of overtones that gives an instrument its character.",
                 "choices": [
                   {
-                    "text": "Pitch"
+                    "text_en": "Pitch"
                   },
                   {
-                    "text": "Timbre",
+                    "text_en": "Timbre",
                     "correct": true
                   },
                   {
-                    "text": "Dynamics"
+                    "text_en": "Dynamics"
                   },
                   {
-                    "text": "Tempo"
+                    "text_en": "Tempo"
                   }
                 ]
               }
@@ -100,17 +100,17 @@
         },
         {
           "number": "02",
-          "title": "Notation",
-          "slug": "notation",
           "title_bn": "স্বরলিপি",
-          "summary": "The staff, clefs and note names. Read notes on the treble and bass clef with confidence.",
-          "notes_markdown": "",
+          "title_en": "Notation",
+          "slug": "notation",
+          "summary_en": "The staff, clefs and note names. Read notes on the treble and bass clef with confidence.",
+          "notes_markdown_en": "",
           "access": "paid",
           "status": "published",
           "video_provider": "protected_file",
-          "video_uid": "foundations-of-music/module-02.mp4",
-          "video_duration_seconds": 902,
-          "video_has_subtitles": true,
+          "video_uid_en": "foundations-of-music/module-02.mp4",
+          "video_duration_seconds_en": 902,
+          "video_has_subtitles_en": true,
           "lessons": [
             "The staff and clefs",
             "Note names",
@@ -119,17 +119,17 @@
         },
         {
           "number": "03",
-          "title": "Rhythm",
-          "slug": "rhythm",
           "title_bn": "ছন্দ",
-          "summary": "Note values, rests and the beat. Count and clap rhythms from whole notes to sixteenths.",
-          "notes_markdown": "",
+          "title_en": "Rhythm",
+          "slug": "rhythm",
+          "summary_en": "Note values, rests and the beat. Count and clap rhythms from whole notes to sixteenths.",
+          "notes_markdown_en": "",
           "access": "paid",
           "status": "published",
           "video_provider": "protected_file",
-          "video_uid": "foundations-of-music/module-03.mp4",
-          "video_duration_seconds": 851,
-          "video_has_subtitles": true,
+          "video_uid_en": "foundations-of-music/module-03.mp4",
+          "video_duration_seconds_en": 851,
+          "video_has_subtitles_en": true,
           "lessons": [
             "Note values",
             "Rests",
@@ -138,81 +138,81 @@
         },
         {
           "number": "04",
-          "title": "Meter and Time Signatures",
-          "slug": "meter-and-time-signatures",
           "title_bn": "তাল ও মাত্রা",
-          "summary": "How bars are organised, simple and compound meter, and how to read a time signature.",
-          "notes_markdown": "## What a time signature tells you\n\nMusic is organised into bars (also called measures). The time signature at the\nstart of a piece tells you how many beats are in each bar, and which note value\ncounts as one beat.\n\nIn **4/4**, the top number says there are four beats per bar. The bottom\nnumber, 4, says a quarter note gets one beat.\n\nListen to the examples in the Audio tab and count along. Notice how the first\nbeat of every bar feels slightly stronger.\n\n## Simple and compound meter\n\nIn *simple* meter each beat divides into two. In *compound* meter each beat\ndivides into three — 6/8 counted in two is the clearest example.\n\n- **2/4** — two beats per bar, duple\n- **3/4** — three beats per bar, the waltz\n- **4/4** — four beats per bar, also written as C for common time\n- **6/8** — two beats per bar, each divided into three\n",
+          "title_en": "Meter and Time Signatures",
+          "slug": "meter-and-time-signatures",
+          "summary_en": "How bars are organised, simple and compound meter, and how to read a time signature.",
+          "notes_markdown_en": "## What a time signature tells you\n\nMusic is organised into bars (also called measures). The time signature at the\nstart of a piece tells you how many beats are in each bar, and which note value\ncounts as one beat.\n\nIn **4/4**, the top number says there are four beats per bar. The bottom\nnumber, 4, says a quarter note gets one beat.\n\nListen to the examples in the Audio tab and count along. Notice how the first\nbeat of every bar feels slightly stronger.\n\n## Simple and compound meter\n\nIn *simple* meter each beat divides into two. In *compound* meter each beat\ndivides into three — 6/8 counted in two is the clearest example.\n\n- **2/4** — two beats per bar, duple\n- **3/4** — three beats per bar, the waltz\n- **4/4** — four beats per bar, also written as C for common time\n- **6/8** — two beats per bar, each divided into three\n",
           "access": "paid",
           "status": "published",
           "video_provider": "protected_file",
-          "video_uid": "foundations-of-music/module-04.mp4",
-          "video_duration_seconds": 965,
-          "video_has_subtitles": true,
+          "video_uid_en": "foundations-of-music/module-04.mp4",
+          "video_duration_seconds_en": 965,
+          "video_has_subtitles_en": true,
           "lessons": [
             "Bars and bar lines",
             "Reading time signatures",
             "Simple vs compound meter"
           ],
           "quiz": {
-            "title": "Module 4 quiz",
+            "title_en": "Module 4 quiz",
             "require_perfect_score": true,
             "allow_unlimited_retries": true,
             "questions": [
               {
-                "text": "In 4/4 time, how many quarter-note beats are in each bar?",
-                "explanation": "The top number of a time signature counts the beats in each bar — four in 4/4.",
+                "text_en": "In 4/4 time, how many quarter-note beats are in each bar?",
+                "explanation_en": "The top number of a time signature counts the beats in each bar — four in 4/4.",
                 "choices": [
                   {
-                    "text": "Two"
+                    "text_en": "Two"
                   },
                   {
-                    "text": "Three"
+                    "text_en": "Three"
                   },
                   {
-                    "text": "Four",
+                    "text_en": "Four",
                     "correct": true
                   },
                   {
-                    "text": "Eight"
+                    "text_en": "Eight"
                   }
                 ]
               },
               {
-                "text": "What does the bottom number of a time signature tell you?",
-                "explanation": "The bottom number names the beat unit: 4 means a quarter note, 8 means an eighth note.",
+                "text_en": "What does the bottom number of a time signature tell you?",
+                "explanation_en": "The bottom number names the beat unit: 4 means a quarter note, 8 means an eighth note.",
                 "choices": [
                   {
-                    "text": "How many bars are in the piece"
+                    "text_en": "How many bars are in the piece"
                   },
                   {
-                    "text": "Which note value gets one beat",
+                    "text_en": "Which note value gets one beat",
                     "correct": true
                   },
                   {
-                    "text": "How fast to play"
+                    "text_en": "How fast to play"
                   },
                   {
-                    "text": "How many beats are in each bar"
+                    "text_en": "How many beats are in each bar"
                   }
                 ]
               },
               {
-                "text": "A bar divides into two beats, and each beat divides into three. Which meter is that?",
-                "explanation": "Two beats per bar makes it duple; each beat dividing into three makes it compound.",
+                "text_en": "A bar divides into two beats, and each beat divides into three. Which meter is that?",
+                "explanation_en": "Two beats per bar makes it duple; each beat dividing into three makes it compound.",
                 "choices": [
                   {
-                    "text": "2/4 — simple duple"
+                    "text_en": "2/4 — simple duple"
                   },
                   {
-                    "text": "6/8 — compound duple",
+                    "text_en": "6/8 — compound duple",
                     "correct": true
                   },
                   {
-                    "text": "3/4 — simple triple"
+                    "text_en": "3/4 — simple triple"
                   },
                   {
-                    "text": "4/4 — simple quadruple"
+                    "text_en": "4/4 — simple quadruple"
                   }
                 ]
               }
@@ -221,17 +221,17 @@
         },
         {
           "number": "05",
-          "title": "Intervals",
-          "slug": "intervals",
           "title_bn": "স্বরান্তর",
-          "summary": "The distance between two notes. Name, hear and build intervals from a unison to an octave.",
-          "notes_markdown": "",
+          "title_en": "Intervals",
+          "slug": "intervals",
+          "summary_en": "The distance between two notes. Name, hear and build intervals from a unison to an octave.",
+          "notes_markdown_en": "",
           "access": "paid",
           "status": "published",
           "video_provider": "protected_file",
-          "video_uid": "foundations-of-music/module-05.mp4",
-          "video_duration_seconds": 1120,
-          "video_has_subtitles": true,
+          "video_uid_en": "foundations-of-music/module-05.mp4",
+          "video_duration_seconds_en": 1120,
+          "video_has_subtitles_en": true,
           "lessons": [
             "Half and whole steps",
             "Interval numbers",
@@ -240,17 +240,17 @@
         },
         {
           "number": "06",
-          "title": "Major Scales",
-          "slug": "major-scales",
           "title_bn": "মেজর স্কেল",
-          "summary": "The pattern of whole and half steps behind every major scale, and how to build one from any note.",
-          "notes_markdown": "",
+          "title_en": "Major Scales",
+          "slug": "major-scales",
+          "summary_en": "The pattern of whole and half steps behind every major scale, and how to build one from any note.",
+          "notes_markdown_en": "",
           "access": "paid",
           "status": "published",
           "video_provider": "protected_file",
-          "video_uid": "foundations-of-music/module-06.mp4",
-          "video_duration_seconds": 930,
-          "video_has_subtitles": true,
+          "video_uid_en": "foundations-of-music/module-06.mp4",
+          "video_duration_seconds_en": 930,
+          "video_has_subtitles_en": true,
           "lessons": [
             "The major scale pattern",
             "Building scales",
@@ -259,17 +259,17 @@
         },
         {
           "number": "07",
-          "title": "Keys and Key Signatures",
-          "slug": "keys-and-key-signatures",
           "title_bn": "কী ও কী সিগনেচার",
-          "summary": "What a key is, how sharps and flats appear in a key signature and how to identify the key of a piece.",
-          "notes_markdown": "",
+          "title_en": "Keys and Key Signatures",
+          "slug": "keys-and-key-signatures",
+          "summary_en": "What a key is, how sharps and flats appear in a key signature and how to identify the key of a piece.",
+          "notes_markdown_en": "",
           "access": "paid",
           "status": "published",
           "video_provider": "protected_file",
-          "video_uid": "foundations-of-music/module-07.mp4",
-          "video_duration_seconds": 1032,
-          "video_has_subtitles": true,
+          "video_uid_en": "foundations-of-music/module-07.mp4",
+          "video_duration_seconds_en": 1032,
+          "video_has_subtitles_en": true,
           "lessons": [
             "What is a key?",
             "Sharp keys",
@@ -278,17 +278,17 @@
         },
         {
           "number": "08",
-          "title": "The Circle of Fifths",
-          "slug": "the-circle-of-fifths",
           "title_bn": "পঞ্চম বৃত্ত",
-          "summary": "A map of every key. Use the circle to find key signatures and related keys quickly.",
-          "notes_markdown": "",
+          "title_en": "The Circle of Fifths",
+          "slug": "the-circle-of-fifths",
+          "summary_en": "A map of every key. Use the circle to find key signatures and related keys quickly.",
+          "notes_markdown_en": "",
           "access": "paid",
           "status": "published",
           "video_provider": "protected_file",
-          "video_uid": "foundations-of-music/module-08.mp4",
-          "video_duration_seconds": 888,
-          "video_has_subtitles": true,
+          "video_uid_en": "foundations-of-music/module-08.mp4",
+          "video_duration_seconds_en": 888,
+          "video_has_subtitles_en": true,
           "lessons": [
             "Moving in fifths",
             "Reading the circle",
@@ -297,17 +297,17 @@
         },
         {
           "number": "09",
-          "title": "Minor Scales",
-          "slug": "minor-scales",
           "title_bn": "মাইনর স্কেল",
-          "summary": "Natural, harmonic and melodic minor scales and how each relates to its major key.",
-          "notes_markdown": "",
+          "title_en": "Minor Scales",
+          "slug": "minor-scales",
+          "summary_en": "Natural, harmonic and melodic minor scales and how each relates to its major key.",
+          "notes_markdown_en": "",
           "access": "paid",
           "status": "published",
           "video_provider": "protected_file",
-          "video_uid": "foundations-of-music/module-09.mp4",
-          "video_duration_seconds": 1145,
-          "video_has_subtitles": true,
+          "video_uid_en": "foundations-of-music/module-09.mp4",
+          "video_duration_seconds_en": 1145,
+          "video_has_subtitles_en": true,
           "lessons": [
             "Natural minor",
             "Harmonic minor",
@@ -318,11 +318,11 @@
     },
     {
       "slug": "foundations-of-music-part-2",
-      "title": "Foundations of Music",
-      "subtitle": "Part 2",
-      "summary": "The second part of Foundations of Music: chords, harmony and how the theory you have learned turns into music you can play.",
-      "description": "In production. Available to students who have completed Part 1.",
-      "level": "Intermediate",
+      "title_en": "Foundations of Music",
+      "subtitle_en": "Part 2",
+      "summary_en": "The second part of Foundations of Music: chords, harmony and how the theory you have learned turns into music you can play.",
+      "description_en": "In production. Available to students who have completed Part 1.",
+      "level_en": "Intermediate",
       "price": 3500,
       "status": "draft",
       "requires": "foundations-of-music",
@@ -331,38 +331,38 @@
   ],
   "faqs": [
     {
-      "question": "Do I need to know how to read music?",
-      "answer": "No. The course starts from the very beginning and assumes no prior knowledge.",
+      "question_en": "Do I need to know how to read music?",
+      "answer_en": "No. The course starts from the very beginning and assumes no prior knowledge.",
       "position": 0,
       "is_published": true
     },
     {
-      "question": "Can I try the course before buying?",
-      "answer": "Yes. Create a free account and Module 1 is yours, including its video, notes, audio and quiz. Enroll when you want to continue to Module 2.",
+      "question_en": "Can I try the course before buying?",
+      "answer_en": "Yes. Create a free account and Module 1 is yours, including its video, notes, audio and quiz. Enroll when you want to continue to Module 2.",
       "position": 1,
       "is_published": true
     },
     {
-      "question": "How long do I have access?",
-      "answer": "Lifetime access. Study at your own pace and return whenever you like.",
+      "question_en": "How long do I have access?",
+      "answer_en": "Lifetime access. Study at your own pace and return whenever you like.",
       "position": 2,
       "is_published": true
     },
     {
-      "question": "How do I pay?",
-      "answer": "bKash, Nagad, Visa and Mastercard. International cards are also accepted. You are enrolled automatically once payment is confirmed.",
+      "question_en": "How do I pay?",
+      "answer_en": "bKash, Nagad, Visa and Mastercard. International cards are also accepted. You are enrolled automatically once payment is confirmed.",
       "position": 3,
       "is_published": true
     },
     {
-      "question": "Can I get a refund?",
-      "answer": "Yes, within 7 days of purchase if you have completed fewer than two modules. See the Refund Policy for details.",
+      "question_en": "Can I get a refund?",
+      "answer_en": "Yes, within 7 days of purchase if you have completed fewer than two modules. See the Refund Policy for details.",
       "position": 4,
       "is_published": true
     },
     {
-      "question": "Will there be more courses?",
-      "answer": "Part 2 of Foundations of Music is in production. Students who finish Part 1 will be offered it first.",
+      "question_en": "Will there be more courses?",
+      "answer_en": "Part 2 of Foundations of Music is in production. Students who finish Part 1 will be offered it first.",
       "position": 5,
       "is_published": true
     }
@@ -370,23 +370,23 @@
   "legal_pages": [
     {
       "slug": "terms",
-      "title": "Terms & Conditions",
-      "meta_description": "The terms under which DhakaBassist sells and delivers its online music theory courses.",
-      "body_markdown": "## Who we are\n\nDhakaBassist is operated by Tanveer Haque, Dhaka, Bangladesh. These terms apply\nto every purchase made through this website.\n\n## Your account\n\nYou are responsible for keeping your password confidential and for activity on\nyour account. One account is for one person; course access may not be shared,\nresold or transferred.\n\n## The course\n\nEnrolment grants you a personal, non-transferable licence to study the course\nmaterial for as long as the course remains available on this platform. Videos,\naudio, notation, written notes and worksheets remain the copyright of Tanveer\nHaque. You may download the worksheets provided for your own study. You may not\nredistribute, publish, resell or publicly perform any part of the course.\n\n## Payment\n\nPrices are in Bangladeshi Taka and include any gateway fee. Payment is handled\nby our payment provider; we never receive or store your card details. Access is\ngranted automatically once payment is confirmed.\n\n## Availability\n\nWe aim to keep the platform available at all times, but we do not guarantee\nuninterrupted access. Course content may be corrected, improved or extended.\n\n## Changes\n\nWe may update these terms. Material changes will be announced on this page, and\nthe date below always shows when the terms last changed.\n\n## Contact\n\nQuestions about these terms: hello@dhakabassist.com\n",
+      "title_en": "Terms & Conditions",
+      "meta_description_en": "The terms under which DhakaBassist sells and delivers its online music theory courses.",
+      "body_markdown_en": "## Who we are\n\nDhakaBassist is operated by Tanveer Haque, Dhaka, Bangladesh. These terms apply\nto every purchase made through this website.\n\n## Your account\n\nYou are responsible for keeping your password confidential and for activity on\nyour account. One account is for one person; course access may not be shared,\nresold or transferred.\n\n## The course\n\nEnrolment grants you a personal, non-transferable licence to study the course\nmaterial for as long as the course remains available on this platform. Videos,\naudio, notation, written notes and worksheets remain the copyright of Tanveer\nHaque. You may download the worksheets provided for your own study. You may not\nredistribute, publish, resell or publicly perform any part of the course.\n\n## Payment\n\nPrices are in Bangladeshi Taka and include any gateway fee. Payment is handled\nby our payment provider; we never receive or store your card details. Access is\ngranted automatically once payment is confirmed.\n\n## Availability\n\nWe aim to keep the platform available at all times, but we do not guarantee\nuninterrupted access. Course content may be corrected, improved or extended.\n\n## Changes\n\nWe may update these terms. Material changes will be announced on this page, and\nthe date below always shows when the terms last changed.\n\n## Contact\n\nQuestions about these terms: hello@dhakabassist.com\n",
       "is_published": true
     },
     {
       "slug": "privacy",
-      "title": "Privacy Policy",
-      "meta_description": "What personal data DhakaBassist collects, why, and how long it is kept.",
-      "body_markdown": "## What we collect\n\n- **Your account**: name, email address and a hashed password. Passwords are\n  stored as one-way hashes and cannot be read by us.\n- **Your learning**: which modules you have opened and completed, your quiz\n  answers and where you paused a video, so your progress is there next time.\n- **Your orders**: the amount, the method you chose and the reference our\n  payment provider returns. We never receive or store your card number.\n- **Technical data**: server logs holding IP address and browser, kept briefly\n  for security and troubleshooting.\n\n## Why we collect it\n\nTo give you access to what you bought, to show your progress, to answer support\nquestions and to meet our accounting obligations. We do not sell your data and\nwe do not share it for advertising.\n\n## Who else processes it\n\nOur payment provider processes your payment. Our hosting and email providers\nprocess data on our behalf under contract. Course videos may be delivered by a\nstreaming provider.\n\n## How long we keep it\n\nAccount and progress data for as long as your account exists. Order records for\nas long as tax law requires. You may ask us to delete your account at any time;\norder records are retained where we are legally required to keep them.\n\n## Your rights\n\nYou can see and correct your details in your account settings, download a copy\nof your data, or ask us to delete your account. Email hello@dhakabassist.com and\nwe will reply within two working days.\n\n## Cookies\n\nWe use one session cookie to keep you signed in and one cookie to protect forms\nagainst cross-site request forgery. Neither is used for tracking or\nadvertising.\n",
+      "title_en": "Privacy Policy",
+      "meta_description_en": "What personal data DhakaBassist collects, why, and how long it is kept.",
+      "body_markdown_en": "## What we collect\n\n- **Your account**: name, email address and a hashed password. Passwords are\n  stored as one-way hashes and cannot be read by us.\n- **Your learning**: which modules you have opened and completed, your quiz\n  answers and where you paused a video, so your progress is there next time.\n- **Your orders**: the amount, the method you chose and the reference our\n  payment provider returns. We never receive or store your card number.\n- **Technical data**: server logs holding IP address and browser, kept briefly\n  for security and troubleshooting.\n\n## Why we collect it\n\nTo give you access to what you bought, to show your progress, to answer support\nquestions and to meet our accounting obligations. We do not sell your data and\nwe do not share it for advertising.\n\n## Who else processes it\n\nOur payment provider processes your payment. Our hosting and email providers\nprocess data on our behalf under contract. Course videos may be delivered by a\nstreaming provider.\n\n## How long we keep it\n\nAccount and progress data for as long as your account exists. Order records for\nas long as tax law requires. You may ask us to delete your account at any time;\norder records are retained where we are legally required to keep them.\n\n## Your rights\n\nYou can see and correct your details in your account settings, download a copy\nof your data, or ask us to delete your account. Email hello@dhakabassist.com and\nwe will reply within two working days.\n\n## Cookies\n\nWe use one session cookie to keep you signed in and one cookie to protect forms\nagainst cross-site request forgery. Neither is used for tracking or\nadvertising.\n",
       "is_published": true
     },
     {
       "slug": "refunds",
-      "title": "Refund Policy",
-      "meta_description": "When a DhakaBassist course purchase can be refunded, and how to ask.",
-      "body_markdown": "## The short version\n\nYou can have your money back within **7 days** of purchase if you have\ncompleted **fewer than two modules**.\n\n## Why that condition\n\nModule 1 is free precisely so you can decide before paying. Once several modules\nhave been studied, the material has been delivered.\n\n## How to request a refund\n\nEmail hello@dhakabassist.com from the address on your account, quoting your\norder number. You do not need to give a reason. We reply within two working\ndays.\n\n## How the money is returned\n\nRefunds go back to the original payment method through our payment provider.\nbKash and Nagad usually settle within a few working days; card refunds can take\nup to ten, depending on your bank.\n\n## Exceptions\n\nWe will consider a refund outside these conditions if the platform failed in a\nway that prevented you from studying, or where a payment was made in error or\nduplicated. Nothing here limits any statutory right you have.\n",
+      "title_en": "Refund Policy",
+      "meta_description_en": "When a DhakaBassist course purchase can be refunded, and how to ask.",
+      "body_markdown_en": "## The short version\n\nYou can have your money back within **7 days** of purchase if you have\ncompleted **fewer than two modules**.\n\n## Why that condition\n\nModule 1 is free precisely so you can decide before paying. Once several modules\nhave been studied, the material has been delivered.\n\n## How to request a refund\n\nEmail hello@dhakabassist.com from the address on your account, quoting your\norder number. You do not need to give a reason. We reply within two working\ndays.\n\n## How the money is returned\n\nRefunds go back to the original payment method through our payment provider.\nbKash and Nagad usually settle within a few working days; card refunds can take\nup to ten, depending on your bank.\n\n## Exceptions\n\nWe will consider a refund outside these conditions if the platform failed in a\nway that prevented you from studying, or where a payment was made in error or\nduplicated. Nothing here limits any statutory right you have.\n",
       "is_published": true
     }
   ]

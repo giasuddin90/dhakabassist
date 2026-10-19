@@ -12,8 +12,16 @@ from courses.models import Course
 from .models import LegalPage
 
 
-class StaticViewSitemap(Sitemap):
+class BilingualSitemap(Sitemap):
+    """Every page once per language, each listing the other as an alternate."""
+
     protocol = "https"
+    i18n = True
+    alternates = True
+    x_default = True
+
+
+class StaticViewSitemap(BilingualSitemap):
     changefreq = "monthly"
 
     def items(self):
@@ -31,8 +39,7 @@ class StaticViewSitemap(Sitemap):
         return item[1]
 
 
-class CourseSitemap(Sitemap):
-    protocol = "https"
+class CourseSitemap(BilingualSitemap):
     changefreq = "weekly"
     priority = 0.9
 
@@ -43,8 +50,7 @@ class CourseSitemap(Sitemap):
         return obj.updated_at
 
 
-class LegalSitemap(Sitemap):
-    protocol = "https"
+class LegalSitemap(BilingualSitemap):
     changefreq = "yearly"
     priority = 0.3
 
