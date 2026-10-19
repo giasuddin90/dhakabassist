@@ -221,7 +221,7 @@
                 </span>
               </td>
               <td class="muted u-nowrap">{{ order.created_at|date:"j M Y" }}</td>
-              <td>{% include "includes/refund_button.html" %}</td>
+              <td>{% include "includes/order_actions.html" %}</td>
             </tr>
           {% empty %}
             <tr><td colspan="5" class="muted">No orders.</td></tr>

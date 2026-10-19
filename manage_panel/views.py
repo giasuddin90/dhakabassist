@@ -23,6 +23,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 
+from accounts.emails import send_welcome
 from courses.models import (
     Author,
     Course,
@@ -47,6 +48,7 @@ from .forms import (
     ModuleForm,
     QuestionForm,
     QuizForm,
+    StudentCreateForm,
     StudentFilterForm,
     StudentForm,
 )
@@ -838,6 +840,31 @@ def course_progress(course, enrollment, progress):
         "watched_seconds": sum(p.watched_seconds for p in started),
         "last_seen": max((p.last_seen_at for p in started), default=None),
     }
+
+
+@staff_required
+def student_create(request):
+    """Add a student by hand, e.g. someone who paid before signing up."""
+    form = StudentCreateForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        student = form.save()
+        if form.cleaned_data["send_invite"]:
+            send_welcome(student)
+        messages.success(
+            request,
+            f"{student.get_full_name()} has been added. Assign a course or record a payment.",
+        )
+        return redirect("manage:student_detail", pk=student.pk)
+    return render(
+        request,
+        "manage_panel/student_form.html",
+        {
+            "form": form,
+            "section": "students",
+            "counts": nav_counts(),
+            "seo": noindex("Add a student"),
+        },
+    )
 
 
 @staff_required

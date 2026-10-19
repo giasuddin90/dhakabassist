@@ -1,0 +1,8 @@
+{% comment %}
+Row actions for one order in /manage/: edit, and refund when it is paid.
+Pass `order`. Editing returns to the page it was opened from.
+{% endcomment %}
+<span class="cluster order-actions">
+  <a class="btn-link btn-link--sm" href="{% url 'manage:order_edit' order.reference %}?next={{ request.get_full_path|urlencode }}">Edit<span class="visually-hidden"> order {{ order.reference }}</span></a>
+  {% include "includes/refund_button.html" %}
+</span>

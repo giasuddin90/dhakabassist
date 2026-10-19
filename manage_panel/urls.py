@@ -47,6 +47,7 @@ urlpatterns = [
     path("questions/<int:pk>/delete/", views.question_delete, name="question_delete"),
     # Students and orders
     path("students/", views.StudentsView.as_view(), name="students"),
+    path("students/new/", views.student_create, name="student_create"),
     path("students/<int:pk>/", views.StudentDetailView.as_view(), name="student_detail"),
     path("students/<int:pk>/edit/", views.student_edit, name="student_edit"),
     path("students/<int:pk>/access/", views.student_access, name="student_access"),
@@ -58,6 +59,7 @@ urlpatterns = [
         name="student_record_payment",
     ),
     path("orders/", views.OrdersView.as_view(), name="orders"),
+    path("orders/<str:reference>/edit/", enrolment_views.order_edit, name="order_edit"),
     path("orders/<str:reference>/refund/", enrolment_views.order_refund, name="order_refund"),
     # Site content
     path("content/", views.ContentView.as_view(), name="content"),

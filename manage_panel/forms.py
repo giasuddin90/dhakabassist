@@ -5,10 +5,12 @@ changes never need a developer. Deeper structural edits stay in the Django
 admin at /django-admin/.
 """
 
+import secrets
 from pathlib import Path
 
 from django import forms
 from django.core.validators import FileExtensionValidator, MinValueValidator
+from django.db import transaction
 from django.db.models import Q
 from django.forms import inlineformset_factory
 
@@ -415,7 +417,70 @@ class StudentForm(AccountSettingsForm):
         }
 
 
-class ManualPaymentForm(forms.ModelForm):
+class StudentCreateForm(AccountSettingsForm):
+    """A student added by staff, e.g. someone who paid by bKash before signing up."""
+
+    send_invite = forms.BooleanField(
+        label="Email a link to set their password",
+        required=False,
+        initial=True,
+        help_text="Leave off to tell them yourself; they can use “Forgot password”.",
+    )
+
+    class Meta(AccountSettingsForm.Meta):
+        fields = ("full_name", "email", "marketing_opt_in")
+        labels = {"marketing_opt_in": "Receives course news by email"}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["full_name"].required = True
+
+    def save(self, commit=True):
+        student = super().save(commit=False)
+        # A random password nobody knows, rather than an unusable one: Django's
+        # password reset skips accounts without a usable password, and the
+        # student needs it to choose their own.
+        student.set_password(secrets.token_urlsafe(32))
+        if commit:
+            student.save()
+        return student
+
+
+class OrderFieldsForm(forms.ModelForm):
+    """What staff may set on an order, shared by recording and editing one."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["method"].choices = PaymentMethod.choices
+        self.fields["amount"].validators.append(MinValueValidator(0))
+
+    def clean_gateway_reference(self):
+        """A TrxID pasted from a phone often carries stray spaces."""
+        return self.cleaned_data["gateway_reference"].strip()
+
+    def clean(self):
+        """One transaction can pay for one order only, even after a refund."""
+        cleaned = super().clean()
+        reference = cleaned.get("gateway_reference")
+        # A form without a status field records a payment, so the order is paid.
+        status = cleaned.get("status", Order.Status.PAID)
+        if (
+            reference
+            and status in (Order.Status.PAID, Order.Status.REFUNDED)
+            and Order.objects.filter(
+                gateway_reference=reference,
+                status__in=(Order.Status.PAID, Order.Status.REFUNDED),
+            )
+            .exclude(pk=self.instance.pk)
+            .exists()
+        ):
+            self.add_error(
+                "gateway_reference", "Another order already uses this transaction ID."
+            )
+        return cleaned
+
+
+class ManualPaymentForm(OrderFieldsForm):
     """A payment taken outside the gateway, recorded so it enrols the student.
 
     For bKash or Nagad Send Money and similar, until (or alongside) the
@@ -446,20 +511,8 @@ class ManualPaymentForm(forms.ModelForm):
         course.to_field_name = "slug"
         course.empty_label = None
         course.label_from_instance = lambda c: " · ".join(filter(None, (c.title, c.subtitle)))
-        self.fields["method"].choices = PaymentMethod.choices
         self.fields["amount"].required = False
-        self.fields["amount"].validators.append(MinValueValidator(0))
         self.fields["gateway_reference"].required = True
-
-    def clean_gateway_reference(self):
-        """One transaction can pay for one order only, even after a refund."""
-        reference = self.cleaned_data["gateway_reference"].strip()
-        if Order.objects.filter(
-            gateway_reference=reference,
-            status__in=(Order.Status.PAID, Order.Status.REFUNDED),
-        ).exists():
-            raise forms.ValidationError("Another order already uses this transaction ID.")
-        return reference
 
     def clean(self):
         """A blank amount means the student paid the course price."""
@@ -467,6 +520,40 @@ class ManualPaymentForm(forms.ModelForm):
         if cleaned.get("amount") is None and cleaned.get("course"):
             cleaned["amount"] = cleaned["course"].price
         return cleaned
+
+
+class OrderForm(OrderFieldsForm):
+    """Correct an order: the amount, method, transaction ID or status.
+
+    The status goes through `Order.change_status`, so course access follows
+    it. Student and course stay fixed; record a new order for another course.
+    """
+
+    status = forms.ChoiceField(
+        choices=Order.Status.choices,
+        help_text="Paid enrols the student. Refunded, failed or pending removes "
+        "the access this order paid for; a manual grant is kept.",
+    )
+
+    class Meta:
+        model = Order
+        fields = ("amount", "method", "gateway_reference")
+        labels = {"gateway_reference": "Transaction ID"}
+        help_texts = {"gateway_reference": "The gateway's reference, or the bKash or Nagad TrxID."}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["status"].initial = self.instance.status
+        self.order_fields(("status", *self.Meta.fields))
+
+    @transaction.atomic
+    def save(self, commit=True):
+        order = super().save(commit=False)
+        # Only the edited columns: the status may have changed since the page
+        # loaded (a gateway callback), and `change_status` reads it afresh.
+        order.save(update_fields=[*self.Meta.fields, "updated_at"])
+        order.change_status(self.cleaned_data["status"])
+        return order
 
 
 class FaqForm(forms.ModelForm):

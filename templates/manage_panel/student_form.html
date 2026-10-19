@@ -5,9 +5,13 @@
   <div class="stack u-gap-6">
     <nav class="manage-head__crumbs" aria-label="Breadcrumb">
       <a href="{% url 'manage:students' %}">Students</a> /
-      <a href="{% url 'manage:student_detail' student.pk %}">{{ student.get_full_name }}</a> / Edit
+      {% if student %}
+        <a href="{% url 'manage:student_detail' student.pk %}">{{ student.get_full_name }}</a> / Edit
+      {% else %}
+        Add
+      {% endif %}
     </nav>
-    <h1>Edit student</h1>
+    <h1>{% if student %}Edit student{% else %}Add a student{% endif %}</h1>
   </div>
 </header>
 
@@ -32,8 +36,13 @@
   </section>
 
   <div class="cluster">
-    <button class="btn btn--sm" type="submit">Save changes</button>
-    <a class="btn-link btn-link--sm" href="{% url 'manage:student_detail' student.pk %}">Cancel</a>
+    {% if student %}
+      <button class="btn btn--sm" type="submit">Save changes</button>
+      <a class="btn-link btn-link--sm" href="{% url 'manage:student_detail' student.pk %}">Cancel</a>
+    {% else %}
+      <button class="btn btn--sm" type="submit">Add student</button>
+      <a class="btn-link btn-link--sm" href="{% url 'manage:students' %}">Cancel</a>
+    {% endif %}
   </div>
 </form>
 {% endblock %}

@@ -1540,6 +1540,10 @@ a.pager__step:hover {
   --cluster-gap: 10px;
 }
 
+.order-actions {
+  flex-wrap: nowrap;
+}
+
 .grant-form select {
   min-height: 44px;
   padding: 8px 12px;

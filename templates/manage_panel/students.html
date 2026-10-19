@@ -9,6 +9,7 @@
     <h1>Students</h1>
     {% if course %}<p class="manage-head__date">Progress shown for “{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}”{% if not chosen %}; enrolment for any course{% endif %}.</p>{% endif %}
   </div>
+  <a class="btn btn--sm" href="{% url 'manage:student_create' %}">Add a student</a>
 </header>
 
 <form method="get" class="panel panel--padded stack u-gap-12" data-autosubmit>

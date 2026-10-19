@@ -1,4 +1,6 @@
-"""Granting, revoking, manual payments and refunds from /manage/."""
+"""Granting, revoking, manual payments, order edits, refunds and adding students."""
+
+from urllib.parse import urlsplit
 
 from django.contrib.auth import get_user_model
 from django.core import mail
@@ -134,3 +136,175 @@ class EnrollmentControlTests(TestCase):
             self.assertEqual(self.client.post(url).status_code, 404)
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PAID)
+
+
+class OrderEditTests(TestCase):
+    """Correcting an order by hand keeps course access in step with its status."""
+
+    def setUp(self):
+        self.course, self.modules = make_course()
+        self.staff = User.objects.create_user(
+            email="tanveer@example.com", password=PASSWORD, is_staff=True
+        )
+        self.student = User.objects.create_user(
+            email="rafiq@example.com", password=PASSWORD, full_name="Rafiq Ahmed"
+        )
+        self.order = Order.objects.create(
+            student=self.student,
+            course=self.course,
+            amount=3500,
+            method=PaymentMethod.BKASH,
+            gateway_reference="BK123456",
+        )
+        self.url = reverse("manage:order_edit", kwargs={"reference": self.order.reference})
+        self.client.force_login(self.staff)
+
+    def is_enrolled(self):
+        return CourseAccess(self.student, self.course).is_enrolled
+
+    def edit(self, **extra):
+        data = {
+            "status": Order.Status.PENDING,
+            "amount": "3500",
+            "method": PaymentMethod.BKASH,
+            "gateway_reference": "BK123456",
+        }
+        data.update(extra)
+        return self.client.post(self.url, data)
+
+    def test_the_details_can_be_corrected(self):
+        response = self.edit(amount="3000", method=PaymentMethod.NAGAD, gateway_reference="NG9")
+        self.assertRedirects(response, reverse("manage:orders"))
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.amount, 3000)
+        self.assertEqual(self.order.method, PaymentMethod.NAGAD)
+        self.assertEqual(self.order.gateway_reference, "NG9")
+        self.assertEqual(self.order.status, Order.Status.PENDING)
+
+    def test_marking_paid_enrols_and_sends_the_receipt(self):
+        self.edit(status=Order.Status.PAID)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, Order.Status.PAID)
+        self.assertIsNotNone(self.order.paid_at)
+        self.assertTrue(self.is_enrolled())
+        self.assertEqual(len(mail.outbox), 1)
+        # Saving a paid order again sends nothing new.
+        self.edit(status=Order.Status.PAID, amount="3400")
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_leaving_paid_withdraws_the_access_it_paid_for(self):
+        self.order.mark_paid()
+        self.edit(status=Order.Status.FAILED)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, Order.Status.FAILED)
+        self.assertIsNone(self.order.paid_at)
+        self.assertFalse(self.is_enrolled())
+
+    def test_a_manual_grant_survives_a_status_change(self):
+        self.order.mark_paid()
+        Enrollment.objects.filter(student=self.student).update(granted_manually=True)
+        self.edit(status=Order.Status.REFUNDED)
+        self.assertTrue(self.is_enrolled())
+
+    def test_another_paid_order_keeps_the_access(self):
+        self.order.mark_paid()
+        Order.objects.create(
+            student=self.student,
+            course=self.course,
+            amount=3500,
+            method=PaymentMethod.NAGAD,
+            status=Order.Status.PAID,
+        )
+        self.edit(status=Order.Status.FAILED)
+        self.assertTrue(self.is_enrolled())
+
+    def test_a_paid_status_cannot_reuse_a_transaction_id(self):
+        Order.objects.create(
+            student=User.objects.create_user(email="nadia@example.com", password=PASSWORD),
+            course=self.course,
+            amount=3500,
+            method=PaymentMethod.BKASH,
+            gateway_reference="BK999",
+            status=Order.Status.PAID,
+        )
+        response = self.edit(status=Order.Status.PAID, gateway_reference="BK999")
+        self.assertContains(response, "Another order already uses this transaction ID.")
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, Order.Status.PENDING)
+        self.assertFalse(self.is_enrolled())
+
+    def test_it_returns_to_the_page_it_came_from_but_never_off_site(self):
+        detail = reverse("manage:student_detail", kwargs={"pk": self.student.pk})
+        self.assertRedirects(self.edit(next=detail), detail)
+        self.assertRedirects(self.edit(next="https://evil.example/"), reverse("manage:orders"))
+
+    def test_the_pages_link_to_the_edit_form(self):
+        self.assertContains(self.client.get(reverse("manage:orders")), self.url)
+        detail = self.client.get(reverse("manage:student_detail", kwargs={"pk": self.student.pk}))
+        self.assertContains(detail, self.url)
+        response = self.client.get(self.url)
+        self.assertContains(response, f"Edit order {self.order.reference}")
+        self.assertContains(response, "noindex")
+
+    def test_it_is_staff_only(self):
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.get(self.url).status_code, 404)
+        self.assertEqual(self.edit(status=Order.Status.PAID).status_code, 404)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, Order.Status.PENDING)
+
+
+class StudentCreateTests(TestCase):
+    """Adding a student by hand from /manage/students/new/."""
+
+    def setUp(self):
+        self.staff = User.objects.create_user(
+            email="tanveer@example.com", password=PASSWORD, is_staff=True
+        )
+        self.url = reverse("manage:student_create")
+        self.client.force_login(self.staff)
+
+    def add(self, **extra):
+        data = {"full_name": "Nadia Islam", "email": "nadia@example.com", "send_invite": "on"}
+        data.update(extra)
+        return self.client.post(self.url, data)
+
+    def test_adding_creates_a_student_and_emails_a_password_link(self):
+        response = self.add()
+        student = User.objects.get(email="nadia@example.com")
+        self.assertRedirects(
+            response, reverse("manage:student_detail", kwargs={"pk": student.pk})
+        )
+        self.assertFalse(student.is_staff)
+        self.assertTrue(student.is_active)
+        # A password nobody knows, but usable so the reset link works.
+        self.assertTrue(student.has_usable_password())
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["nadia@example.com"])
+        link = next(w for w in mail.outbox[0].body.split() if "/password/reset/" in w)
+        page = self.client.get(urlsplit(link).path, follow=True)
+        self.assertContains(page, "new_password1")
+
+    def test_the_invite_is_optional(self):
+        self.add(send_invite="")
+        self.assertTrue(User.objects.filter(email="nadia@example.com").exists())
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_an_email_already_in_use_is_refused(self):
+        User.objects.create_user(email="Nadia@example.com", password=PASSWORD)
+        response = self.add()
+        self.assertContains(response, "Another account already uses this email.")
+        self.assertEqual(User.objects.filter(email__iexact="nadia@example.com").count(), 1)
+
+    def test_a_name_is_required(self):
+        self.add(full_name="")
+        self.assertFalse(User.objects.filter(email="nadia@example.com").exists())
+
+    def test_the_students_page_links_to_the_form(self):
+        self.assertContains(self.client.get(reverse("manage:students")), self.url)
+        self.assertContains(self.client.get(self.url), "Add a student")
+
+    def test_it_is_staff_only(self):
+        self.client.force_login(User.objects.create_user(email="x@example.com", password=PASSWORD))
+        self.assertEqual(self.add().status_code, 404)
+        self.assertFalse(User.objects.filter(email="nadia@example.com").exists())

@@ -67,6 +67,8 @@ it from `/manage/`, never the Django admin:
 | Revoke access | Student page, per course | Enrolment turned off. Orders are not touched. |
 | Refund | Orders page or student page | Paid order marked refunded and its paid enrolment turned off; a manual grant is kept. Issue the money back in the gateway first. |
 | Suspend access | Student page | Every paid course blocked; enrolments and orders kept. |
+| Edit an order | Orders page or student page | Amount, method, TrxID and status. Paid enrols and emails the receipt; leaving paid turns the paid enrolment off unless a manual grant or another paid order covers it. Student and course cannot change. |
+| Add a student | Students page | Account with a random password nobody knows, optionally emailed a one-time link to choose their own. Not staff. |
 
 A gateway payment enrols the student by itself through `Order.mark_paid`.
 A later "fail" or "cancel" callback cannot undo a paid order.

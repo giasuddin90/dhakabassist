@@ -136,10 +136,48 @@ class Order(TimeStampedModel):
             return False
         self.status = order.status = self.Status.REFUNDED
         order.save(update_fields=["status", "updated_at"])
-        Enrollment.objects.filter(
-            student_id=self.student_id, course_id=self.course_id, granted_manually=False
-        ).update(is_active=False)
+        self.withdraw_paid_access()
         return True
+
+    @transaction.atomic
+    def change_status(self, status):
+        """Set the status by hand from /manage/ and keep course access in step.
+
+        Paid enrols the student, as a gateway payment would. Leaving paid
+        withdraws the access this order bought, as a refund would.
+        """
+        if status == self.Status.PAID:
+            return self.mark_paid()
+        order = Order.objects.select_for_update().get(pk=self.pk)
+        if order.status == status:
+            return False
+        was_paid = order.status == self.Status.PAID
+        self.status = status
+        if status != self.Status.REFUNDED:
+            # A refunded order was paid once; a pending or failed one never was.
+            self.paid_at = None
+        self.save(update_fields=["status", "paid_at", "updated_at"])
+        if was_paid:
+            self.withdraw_paid_access()
+        return True
+
+    def withdraw_paid_access(self):
+        """Close the enrolment this order paid for.
+
+        Kept when a manual grant or another paid order for the same course
+        still covers it.
+        """
+        still_paid = (
+            Order.objects.filter(
+                student_id=self.student_id, course_id=self.course_id, status=self.Status.PAID
+            )
+            .exclude(pk=self.pk)
+            .exists()
+        )
+        if not still_paid:
+            Enrollment.objects.filter(
+                student_id=self.student_id, course_id=self.course_id, granted_manually=False
+            ).update(is_active=False)
 
     def mark_failed(self, reason=""):
         # A late "fail" or "cancel" callback must not undo a confirmed payment.
