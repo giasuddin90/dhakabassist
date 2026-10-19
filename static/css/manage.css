@@ -355,6 +355,16 @@ body.manage {
   background: var(--highlight);
 }
 
+/* Label on the left, formatting buttons on the right; the buttons drop
+   under the label when the column is too narrow for both. */
+.md-field__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .md-tools__link {
   display: inline-flex;
   align-items: center;
@@ -708,8 +718,9 @@ body.manage {
 
 .answer-edit {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 4px 12px;
   border-radius: var(--radius-sm);
   padding: 4px 12px 4px 4px;
   border: 1.5px solid var(--line);
@@ -758,13 +769,19 @@ body.manage {
 }
 
 .answer-edit input[type="text"] {
-  flex: 1;
+  flex: 1 1 12rem;
   min-width: 0;
   border: 0;
   background: transparent;
   font-size: 15px;
   color: var(--ink);
   padding: 10px 0;
+}
+
+/* On a phone the buttons take their own line under the option text. */
+.answer-edit .md-tools {
+  margin-left: auto;
+  padding-bottom: 4px;
 }
 
 .answer-edit__tag {

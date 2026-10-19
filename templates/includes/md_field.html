@@ -1,0 +1,16 @@
+{% comment %}
+A Markdown field with formatting buttons beside its label. Pass `field`;
+optionally `label` to replace the field's own and `help` as in field.html.
+The buttons sit outside the <label> so they do not become part of its name.
+{% endcomment %}
+{% firstof label field.label as field_label %}
+<div class="field{% if field.errors %} field--invalid{% endif %}">
+  <div class="md-field__head">
+    <label for="{{ field.id_for_label }}">{{ field_label }}</label>
+    {% include "includes/md_tools.html" with target=field.id_for_label name=field_label|add:" formatting" %}
+  </div>
+  {{ field }}
+  {% firstof field.help_text help as field_help %}
+  {% if field_help %}<span class="field__help">{{ field_help }}</span>{% endif %}
+  {% for error in field.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
+</div>

@@ -61,11 +61,9 @@
     {% csrf_token %}
     {% include "includes/form_errors.html" %}
 
-    <label class="field" for="{{ form.text.id_for_label }}">
-      Question {{ question_index|add:1 }}
-      {{ form.text }}
-      {% for error in form.text.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
-    </label>
+    {% with number=question_index|add:1|stringformat:"d" %}
+      {% include "includes/md_field.html" with field=form.text label="Question "|add:number %}
+    {% endwith %}
 
     <div class="field-grid" style="grid-template-columns:1fr 1fr">
       {% include "includes/field.html" with field=form.notation %}
@@ -94,13 +92,14 @@
           <span class="u-bold u-fs-14" style="width:16px" aria-hidden="true">{{ option.instance.letter }}</span>
           {{ option.id }}{{ option.text }}
           {% if option.instance.is_correct %}<span class="answer-edit__tag">Correct answer</span>{% endif %}
+          {% include "includes/md_tools.html" with target=option.text.id_for_label name="Option "|add:option.instance.letter|add:" formatting" %}
         </div>
         {% for error in option.text.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
       {% endfor %}
       {% for error in form.correct.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
     </div>
 
-    {% include "includes/field.html" with field=form.explanation help="Shown once the correct answer is selected." %}
+    {% include "includes/md_field.html" with field=form.explanation help="Shown once the correct answer is selected." %}
 
     <div class="split" style="align-items:center">
       <button class="btn btn--sm" type="submit">Save question</button>

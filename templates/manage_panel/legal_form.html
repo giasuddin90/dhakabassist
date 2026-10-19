@@ -31,13 +31,7 @@
   <section class="panel" aria-labelledby="body-title">
     <div class="panel__head">
       <h2 class="panel__title" id="body-title">Page text</h2>
-      <div class="md-tools">
-        <button type="button" data-md-tool="H2" data-md-target="{{ form.body_markdown.id_for_label }}">H2</button>
-        <button type="button" data-md-tool="B" data-md-target="{{ form.body_markdown.id_for_label }}">B</button>
-        <button type="button" data-md-tool="I" data-md-target="{{ form.body_markdown.id_for_label }}">I</button>
-        <button type="button" data-md-tool="List" data-md-target="{{ form.body_markdown.id_for_label }}">List</button>
-        <button type="button" data-md-tool="Link" data-md-target="{{ form.body_markdown.id_for_label }}">Link</button>
-      </div>
+      {% include "includes/md_tools.html" with target=form.body_markdown.id_for_label %}
     </div>
     {{ form.body_markdown }}
     <p class="panel__foot">Markdown. Headings, bold, lists and links are supported.</p>

@@ -321,7 +321,6 @@ def module_edit(request, slug, module_slug=None):
                 f"{reverse('manage:library')}?purpose={LibraryFile.Purpose.DOWNLOAD}"
             ),
             "quiz": getattr(module, "quiz", None) if module.pk else None,
-            "md_tools": ["H2", "B", "I", "List", "Link"],
             "section": "courses",
             "counts": nav_counts(),
             "seo": noindex(module.title or "New module"),

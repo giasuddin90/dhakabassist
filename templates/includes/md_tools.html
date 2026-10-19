@@ -1,0 +1,12 @@
+{% comment %}
+Markdown formatting buttons for one text field. Pass `target`, the field's id;
+optionally `name` to label the toolbar when a page has several. manage.js
+wires the buttons up.
+{% endcomment %}
+<div class="md-tools" role="toolbar" aria-label="{{ name|default:'Formatting' }}" aria-controls="{{ target }}">
+  <button type="button" data-md-tool="H2" data-md-target="{{ target }}">H2</button>
+  <button type="button" data-md-tool="B" data-md-target="{{ target }}">B</button>
+  <button type="button" data-md-tool="I" data-md-target="{{ target }}">I</button>
+  <button type="button" data-md-tool="List" data-md-target="{{ target }}">List</button>
+  <button type="button" data-md-tool="Link" data-md-target="{{ target }}">Link</button>
+</div>

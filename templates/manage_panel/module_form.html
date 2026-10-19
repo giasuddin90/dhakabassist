@@ -62,11 +62,7 @@
           <h2 class="panel__title" id="notes-title">
             <label for="{{ form.notes_markdown.id_for_label }}">Lesson notes</label>
           </h2>
-          <div class="md-tools" role="toolbar" aria-label="Formatting" aria-controls="{{ form.notes_markdown.id_for_label }}">
-            {% for tool in md_tools %}
-              <button type="button" data-md-tool="{{ tool }}" data-md-target="{{ form.notes_markdown.id_for_label }}">{{ tool }}</button>
-            {% endfor %}
-          </div>
+          {% include "includes/md_tools.html" with target=form.notes_markdown.id_for_label %}
         </div>
         {{ form.notes_markdown }}
         {% for error in form.notes_markdown.errors %}<p class="field__error panel__body">{{ error }}</p>{% endfor %}
