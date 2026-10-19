@@ -2,6 +2,8 @@
 
 from django import template
 
+from courses.models import format_runtime
+
 register = template.Library()
 
 
@@ -21,3 +23,9 @@ def querystring(context, **changes):
             params[key] = value
     encoded = params.urlencode()
     return f"?{encoded}" if encoded else context["request"].path
+
+
+@register.filter
+def runtime(seconds):
+    """Seconds as "1 hr 5 min" or "12 min", for watch time."""
+    return format_runtime(seconds or 0)

@@ -434,20 +434,25 @@ def quiz_restart(request, slug, module_slug):
 @login_required
 @require_POST
 def save_video_position(request, pk):
-    """Remember where a student paused, so "resume" is accurate."""
+    """Remember where a student paused, and how long they have watched."""
     module = get_object_or_404(Module, pk=pk)
     if not CourseAccess(request.user, module.course).can_view(module):
         raise Http404("No such module.")
-    try:
-        seconds = max(0, int(float(request.POST.get("seconds", 0))))
-    except (TypeError, ValueError):
-        seconds = 0
-    ModuleProgress.objects.update_or_create(
-        student=request.user,
-        module=module,
-        defaults={"video_position_seconds": seconds, "last_seen_at": timezone.now()},
+    ModuleProgress.record_playback(
+        request.user,
+        module,
+        position=_whole_seconds(request.POST.get("seconds")),
+        watched=_whole_seconds(request.POST.get("watched")),
     )
     return JsonResponse({"saved": True})
+
+
+def _whole_seconds(value):
+    """A posted number of seconds, or 0 when it is missing or garbage."""
+    try:
+        return max(0, int(float(value or 0)))
+    except (TypeError, ValueError, OverflowError):
+        return 0
 
 
 # -- Course media -----------------------------------------------------------

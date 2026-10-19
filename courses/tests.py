@@ -205,6 +205,18 @@ class LessonViewTests(TestCase):
         progress = ModuleProgress.objects.get(student=self.student, module=self.modules[0])
         self.assertEqual(progress.video_position_seconds, 0)
 
+    def test_watch_time_adds_up_across_reports_and_is_capped(self):
+        url = reverse("courses:video_position", kwargs={"pk": self.modules[0].pk})
+        self.client.post(url, {"seconds": "40", "watched": "15"})
+        self.client.post(url, {"seconds": "55", "watched": "15"})
+        self.client.post(url, {"seconds": "60", "watched": "99999"})
+        self.client.post(url, {"seconds": "60", "watched": "nonsense"})
+        progress = ModuleProgress.objects.get(student=self.student, module=self.modules[0])
+        self.assertEqual(progress.video_position_seconds, 60)
+        self.assertEqual(
+            progress.watched_seconds, 30 + ModuleProgress.MAX_WATCHED_PER_REPORT
+        )
+
     def test_the_position_endpoint_rejects_a_locked_module(self):
         response = self.client.post(
             reverse("courses:video_position", kwargs={"pk": self.modules[1].pk}),

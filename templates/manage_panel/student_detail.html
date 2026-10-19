@@ -1,4 +1,5 @@
 {% extends "manage_panel/base.html" %}
+{% load manage_tags %}
 
 {% block manage_content %}
 <header class="manage-head">
@@ -19,6 +20,49 @@
     <a class="btn btn--sm" href="{% url 'manage:student_edit' student.pk %}">Edit student</a>
   </div>
 </header>
+
+<section class="panel" aria-labelledby="summary-title">
+  <div class="panel__head">
+    <h2 class="panel__title" id="summary-title">Courses</h2>
+  </div>
+  <div class="table-wrap">
+    <table class="dtable">
+      <caption class="visually-hidden">Each course this student is enrolled in or has started, with progress and watch time</caption>
+      <thead>
+        <tr>
+          <th scope="col">Course</th>
+          <th scope="col">Modules done</th>
+          <th scope="col">Complete</th>
+          <th scope="col">Watched</th>
+          <th scope="col">Last seen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in courses %}
+          <tr>
+            <th scope="row">
+              <a class="dtable__name" href="#course-{{ row.course.pk }}-title">{{ row.course.title }}{% if row.course.subtitle %} · {{ row.course.subtitle }}{% endif %}</a>
+              <span class="dtable__sub">{% include "includes/enrolment_badge.html" %}</span>
+            </th>
+            <td class="u-nowrap">{{ row.completed }} of {{ row.total }}</td>
+            <td>
+              <span class="cluster">
+                <span class="meter meter--sm meter--grow">
+                  <span class="meter__fill" style="width:{{ row.width }}%"></span>
+                </span>
+                <span class="u-fs-13 u-nowrap">{{ row.width }}%</span>
+              </span>
+            </td>
+            <td class="u-nowrap">{{ row.watched_seconds|runtime }}</td>
+            <td class="muted u-nowrap">{% if row.last_seen %}{{ row.last_seen|timesince }} ago{% else %}—{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="muted">Not enrolled in any course yet. Assign one below.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
 
 <div class="manage-grid">
   <section class="panel" aria-labelledby="account-title">
@@ -45,7 +89,7 @@
 
   <section class="panel" aria-labelledby="grant-title">
     <div class="panel__head">
-      <h2 class="panel__title" id="grant-title">Grant a course</h2>
+      <h2 class="panel__title" id="grant-title">Assign a new course</h2>
     </div>
     <div class="panel--padded stack u-gap-12">
       {% if grantable %}
@@ -56,7 +100,7 @@
           <select name="course" id="grant-course">
             {% for course in grantable %}<option value="{{ course.slug }}">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}</option>{% endfor %}
           </select>
-          <button class="btn btn--sm" type="submit">Grant access</button>
+          <button class="btn btn--sm" type="submit">Assign course</button>
         </form>
         <p class="form-note">For refunds, comps and support fixes. No payment is recorded.</p>
       {% else %}
@@ -92,11 +136,7 @@
       <h2 class="panel__title" id="course-{{ row.course.pk }}-title">{{ row.course.title }}{% if row.course.subtitle %} · {{ row.course.subtitle }}{% endif %}</h2>
       {% if row.enrollment and row.enrollment.is_active %}
         <span class="cluster">
-          {% if row.enrollment.granted_manually %}
-            <span class="badge badge--status badge--current">Granted {{ row.enrollment.created_at|date:"j M Y" }}</span>
-          {% else %}
-            <span class="badge badge--status badge--ok">Enrolled {{ row.enrollment.created_at|date:"j M Y" }}</span>
-          {% endif %}
+          {% include "includes/enrolment_badge.html" %}
           <form method="post" action="{% url 'manage:student_revoke' student.pk %}"
                 data-confirm="Remove {{ student.get_full_name }}'s access to {{ row.course.title }}? Orders are not refunded.">
             {% csrf_token %}
@@ -105,10 +145,8 @@
             <button class="btn btn--sm btn--outline" type="submit">Revoke access</button>
           </form>
         </span>
-      {% elif row.enrollment %}
-        <span class="badge badge--status badge--neutral">Enrolment inactive</span>
       {% else %}
-        <span class="badge badge--status badge--locked">Free modules only</span>
+        {% include "includes/enrolment_badge.html" %}
       {% endif %}
     </div>
     <div class="table-wrap">
@@ -119,6 +157,7 @@
             <th scope="col">Module</th>
             <th scope="col">Quiz passed</th>
             <th scope="col">Completed</th>
+            <th scope="col">Watched</th>
             <th scope="col">Last seen</th>
           </tr>
         </thead>
@@ -138,19 +177,16 @@
                   <span class="muted">Not started</span>
                 {% endif %}
               </td>
+              <td class="u-nowrap">{% if item.progress %}{{ item.progress.watched_seconds|runtime }}{% else %}—{% endif %}</td>
               <td class="muted u-nowrap">{% if item.progress %}{{ item.progress.last_seen_at|timesince }} ago{% else %}—{% endif %}</td>
             </tr>
           {% empty %}
-            <tr><td colspan="4" class="muted">No published modules.</td></tr>
+            <tr><td colspan="5" class="muted">No published modules.</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    <p class="panel__foot">{{ row.completed }} of {{ row.total }} modules complete ({{ row.width }}%).</p>
-  </section>
-{% empty %}
-  <section class="panel panel--padded">
-    <p class="muted">No enrolments or progress yet.</p>
+    <p class="panel__foot">{{ row.completed }} of {{ row.total }} modules complete ({{ row.width }}%) · {{ row.watched_seconds|runtime }} watched.</p>
   </section>
 {% endfor %}
 

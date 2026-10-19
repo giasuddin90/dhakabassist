@@ -13,7 +13,8 @@ from pathlib import Path
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator, MinValueValidator
-from django.db import models
+from django.db import models, transaction
+from django.db.models import F
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -32,6 +33,12 @@ def validate_trailer_url(value):
             _("Paste a YouTube or Cloudflare Stream link to the video."),
             code="invalid_trailer",
         )
+
+
+def format_runtime(seconds):
+    """Seconds as a human string, e.g. "2 hr 20 min" or "45 min"."""
+    hours, minutes = divmod(round(seconds / 60), 60)
+    return f"{hours} hr {minutes} min" if hours else f"{minutes} min"
 
 
 # No SVG: the photo is served publicly, and an SVG can carry script.
@@ -248,10 +255,7 @@ class Course(TimeStampedModel):
     def total_runtime(self):
         """Sum of module video durations as a human string, e.g. "2 hr 20 min"."""
         seconds = sum(m.video_duration_seconds for m in self.module_list)
-        if not seconds:
-            return ""
-        hours, minutes = divmod(round(seconds / 60), 60)
-        return f"{hours} hr {minutes} min" if hours else f"{minutes} min"
+        return format_runtime(seconds) if seconds else ""
 
     @property
     def iso_duration(self):
@@ -834,6 +838,10 @@ class Enrollment(TimeStampedModel):
 
 
 class ModuleProgress(TimeStampedModel):
+    """How far one student has got with one module: video, quiz, completion."""
+
+    MAX_WATCHED_PER_REPORT = 60
+
     student = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("student"),
@@ -846,6 +854,9 @@ class ModuleProgress(TimeStampedModel):
     video_position_seconds = models.PositiveIntegerField(
         _("video position (seconds)"), default=0, validators=[MinValueValidator(0)]
     )
+    # Time spent playing the video, rewatches included. Unlike the position
+    # it only grows, so staff can see how long a student has studied.
+    watched_seconds = models.PositiveIntegerField(_("watched (seconds)"), default=0)
     quiz_passed_at = models.DateTimeField(_("quiz passed at"), null=True, blank=True)
     completed_at = models.DateTimeField(_("completed at"), null=True, blank=True)
     last_seen_at = models.DateTimeField(_("last seen at"), default=timezone.now)
@@ -866,6 +877,26 @@ class ModuleProgress(TimeStampedModel):
     @property
     def is_complete(self):
         return self.completed_at is not None
+
+    @classmethod
+    def record_playback(cls, student, module, position, watched):
+        """Save the resume point and add the seconds played since the last report.
+
+        `watched` comes from the browser, so it is capped: the player
+        reports at least every 15 seconds while playing, and a larger
+        claim would only inflate the figure staff read.
+        """
+        watched = min(max(0, watched), cls.MAX_WATCHED_PER_REPORT)
+        with transaction.atomic():
+            progress, _ = cls.objects.get_or_create(student=student, module=module)
+            now = timezone.now()
+            # F() so two overlapping reports (a pause and a beacon) both count.
+            cls.objects.filter(pk=progress.pk).update(
+                video_position_seconds=max(0, position),
+                watched_seconds=F("watched_seconds") + watched,
+                last_seen_at=now,
+                updated_at=now,
+            )
 
     def mark_complete(self):
         now = timezone.now()

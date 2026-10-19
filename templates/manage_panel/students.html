@@ -90,7 +90,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="course" value="{{ course.slug }}">
                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <button class="btn-link btn-link--sm" type="submit">Grant access</button>
+                    <button class="btn-link btn-link--sm" type="submit">Assign course</button>
                   </form>
                 {% endif %}
               </span>

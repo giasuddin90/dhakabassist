@@ -1,0 +1,12 @@
+{% comment %}How a student holds a course. Expects `row` from manage_panel.views.course_progress.{% endcomment %}
+{% if row.enrollment and row.enrollment.is_active %}
+  {% if row.enrollment.granted_manually %}
+    <span class="badge badge--status badge--current">Assigned {{ row.enrollment.created_at|date:"j M Y" }}</span>
+  {% else %}
+    <span class="badge badge--status badge--ok">Enrolled {{ row.enrollment.created_at|date:"j M Y" }}</span>
+  {% endif %}
+{% elif row.enrollment %}
+  <span class="badge badge--status badge--neutral">Enrolment inactive</span>
+{% else %}
+  <span class="badge badge--status badge--locked">Free modules only</span>
+{% endif %}

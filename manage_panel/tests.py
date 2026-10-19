@@ -504,6 +504,38 @@ class StudentManagementTests(TestCase):
         # Already enrolled in the first course, so only the other can be granted.
         self.assertEqual(list(response.context["grantable"]), [self.other])
 
+    def test_the_student_page_sums_watch_time_and_completion_per_course(self):
+        ModuleProgress.objects.create(
+            student=self.paid,
+            module=self.modules[0],
+            completed_at=timezone.now(),
+            watched_seconds=600,
+        )
+        ModuleProgress.objects.create(
+            student=self.paid, module=self.modules[1], watched_seconds=150
+        )
+        response = self.client.get(
+            reverse("manage:student_detail", kwargs={"pk": self.paid.pk})
+        )
+        row = response.context["courses"][0]
+        self.assertEqual((row["completed"], row["total"], row["width"]), (1, 3, 33))
+        self.assertEqual(row["watched_seconds"], 750)
+        self.assertContains(response, "12 min watched")
+
+    def test_a_new_course_can_be_assigned_from_the_student_page(self):
+        url = reverse("manage:student_detail", kwargs={"pk": self.paid.pk})
+        response = self.client.post(
+            reverse("manage:student_grant", kwargs={"pk": self.paid.pk}),
+            {"course": self.other.slug, "next": url},
+        )
+        self.assertRedirects(response, url)
+        enrollment = Enrollment.objects.get(student=self.paid, course=self.other)
+        self.assertTrue(enrollment.is_active)
+        self.assertTrue(enrollment.granted_manually)
+        response = self.client.get(url)
+        self.assertEqual(len(response.context["courses"]), 2)
+        self.assertContains(response, "Enrolled in every course.")
+
     def test_staff_have_no_student_page(self):
         response = self.client.get(
             reverse("manage:student_detail", kwargs={"pk": self.staff.pk})

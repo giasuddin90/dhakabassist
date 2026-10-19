@@ -149,16 +149,22 @@
 
   /* -- Video position --------------------------------------------------- */
 
-  // Saves where the student paused, so "Resume" is accurate. Throttled to
-  // one write per 15 seconds, plus one on leaving the page.
+  // Saves where the student paused, so "Resume" is accurate, and how many
+  // seconds were played since the last save, for staff to see study time.
+  // Throttled to one write per 15 seconds, plus one on leaving the page.
   var video = document.querySelector("video[data-position-url]");
   if (video) {
     var lastSent = 0;
+    var lastTime = video.currentTime || 0;
+    var played = 0;
     var send = function (useBeacon) {
       var seconds = Math.floor(video.currentTime || 0);
       if (!seconds) return;
+      var watched = Math.floor(played);
+      played -= watched;
       var body = new FormData();
       body.append("seconds", String(seconds));
+      body.append("watched", String(watched));
       body.append("csrfmiddlewaretoken", video.dataset.csrf);
       if (useBeacon && navigator.sendBeacon) {
         navigator.sendBeacon(video.dataset.positionUrl, body);
@@ -173,6 +179,10 @@
     };
 
     video.addEventListener("timeupdate", function () {
+      // Small forward steps are playback; anything bigger is a seek.
+      var step = video.currentTime - lastTime;
+      lastTime = video.currentTime;
+      if (step > 0 && step < 2) played += step / (video.playbackRate || 1);
       var now = Date.now();
       if (now - lastSent < 15000) return;
       lastSent = now;

@@ -826,7 +826,8 @@ def course_progress(course, enrollment, progress):
         {"module": module, "progress": progress.get(module.pk)}
         for module in course.published_modules
     ]
-    completed = sum(1 for row in modules if row["progress"] and row["progress"].is_complete)
+    started = [row["progress"] for row in modules if row["progress"]]
+    completed = sum(1 for p in started if p.is_complete)
     return {
         "course": course,
         "enrollment": enrollment,
@@ -834,6 +835,8 @@ def course_progress(course, enrollment, progress):
         "completed": completed,
         "total": len(modules),
         "width": round(completed / len(modules) * 100) if modules else 0,
+        "watched_seconds": sum(p.watched_seconds for p in started),
+        "last_seen": max((p.last_seen_at for p in started), default=None),
     }
 
 
