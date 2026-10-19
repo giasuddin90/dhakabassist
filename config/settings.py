@@ -14,7 +14,7 @@ load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = env_str("DJANGO_SECRET_KEY", "dev-only-insecure-key-change-me")
 DEBUG = env_bool("DJANGO_DEBUG", True)
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", ["localhost", "0.0.0.0", "[::1]"])
+ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", [])
 
 INSTALLED_APPS = [
