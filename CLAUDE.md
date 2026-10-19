@@ -65,6 +65,42 @@ media/             # uploads
 - JS is split into native ES modules under `static/js/`: `main.js` (entry, loaded with `<script type="module">`), `modules/` (one feature per file, e.g. `modal.js`, `form-validate.js`) and `utils/` (shared helpers like `api.js`, `dom.js`). Each module exports functions and imports what it needs. No copy-pasted snippets between files.
 - JavaScript is for enhancement only. Forms must work without it. No jQuery, no inline `<script>` or `onclick`.
 
+## Brand
+
+Source: `Brand Assets/Brand Guideline.pdf` (originals, Fraunces font files). The web-ready copies live in `static/img/` and `static/fonts/`. Don't link to `Brand Assets/` from templates.
+
+**Colours** (tokens in the `:root` block):
+
+| Role | Hex | Token | Use |
+|---|---|---|---|
+| Primary: Parchment | `#F1E9D2` | `--parchment` | Page background, text on dark |
+| Secondary: Gray | `#211F1D` | `--ink` / `--text` | Text, logo, buttons, strong lines |
+
+- Everything else (`--cream`, `--panel`, `--line*`, `--highlight*`) is a tint between these two. Keep new colours warm and in this range. Don't add saturated brand colours.
+- The only other hues are for feedback: `--ok` (green) and `--err` (red).
+- Contrast on parchment: `--text` 13.5:1, `--text-muted` 5.7:1, `--ok`/`--err` above 5:1, `--text-faint` **2.3:1**. Use `--text-faint` only for placeholders, dividers and decoration, never for text people need to read.
+- The guideline says "black" for body text. In this project that means `--text` (`#211F1D`), not `#000`.
+
+**Typography**
+
+- Display and headings: **Fraunces** (`--font-display`), self-hosted variable font `static/fonts/fraunces-var.woff2` (axes: wght, opsz, SOFT, WONK). The logo uses Fraunces Bold.
+- Body: **Atkinson Hyperlegible** (`--font-body`), 400/700 and 400 italic, latin and latin-ext subsets.
+- Only the upright Fraunces is shipped. Before using italic display text, add `Fraunces-Italic[...].woff2` from `Brand Assets/` to `static/fonts/` with its own `@font-face`. Otherwise the browser fakes the slant.
+
+**Logos** (`static/img/`, all SVG, from `Brand Assets/`)
+
+| File | Guideline name | When to use |
+|---|---|---|
+| `logo-text.svg` | Typography logo | The default. Use it in most places. |
+| `logo-text-light.svg` | (derived) | The same, parchment fill, for dark (`--ink`) backgrounds, e.g. the footer |
+| `logo-mark.svg` | Small logo | Tight spaces: favicon, small headers, avatars, the admin panel |
+| `logo-full.svg` | Full logo | Only where there's a lot of space (hero, splash, social images). It has its own parchment box with a border. |
+
+- The mark is an ink circle with a parchment bass clef. Show it on parchment or light backgrounds only.
+- Don't recolour, stretch, outline or re-typeset the logo. Scale it with `width`/`height` and keep the aspect ratio.
+- Give logo `<img>` a real `alt` (`{{ site.name }}`). Use `alt=""` only when the name sits right next to it, as in the masthead.
+- When you replace a logo file, export it from `Brand Assets/`, strip the Inkscape metadata (`sodipodi:`, `inkscape:`), and keep the file name so templates don't change.
+
 ## Mobile-first (required)
 
 - Design for 360px first, then add `@media (min-width: …)` using Bootstrap breakpoints (576, 768, 992, 1200).

@@ -769,7 +769,7 @@ body.manage {
 }
 
 .answer-edit input[type="text"] {
-  flex: 1 1 12rem;
+  flex: 1 1 8rem;
   min-width: 0;
   border: 0;
   background: transparent;
