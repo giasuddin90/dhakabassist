@@ -66,11 +66,35 @@ class AccessTests(TestCase):
         )
         self.student = User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
 
-    def test_an_anonymous_visitor_is_refused(self):
+    def test_an_anonymous_visitor_is_sent_to_login_and_back(self):
         for name in self.PATHS:
             with self.subTest(page=name):
-                response = self.client.get(reverse(f"manage:{name}"))
-                self.assertIn(response.status_code, (302, 403))
+                url = reverse(f"manage:{name}")
+                response = self.client.get(url)
+                self.assertRedirects(
+                    response,
+                    f"{reverse('accounts:login')}?next={url}",
+                    fetch_redirect_response=False,
+                )
+
+    def test_staff_return_to_the_page_they_asked_for_after_login(self):
+        url = reverse("manage:orders")
+        response = self.client.post(
+            reverse("accounts:login"),
+            {"username": self.staff.email, "password": PASSWORD, "next": url},
+        )
+        self.assertRedirects(response, url)
+
+    def test_an_anonymous_post_to_an_action_is_sent_to_login_then_overview(self):
+        response = self.client.post(
+            reverse("manage:student_access", kwargs={"pk": self.student.pk})
+        )
+        login = reverse("accounts:login")
+        self.assertRedirects(
+            response, f"{login}?next={reverse('manage:overview')}", fetch_redirect_response=False
+        )
+        self.student.refresh_from_db()
+        self.assertTrue(self.student.access_enabled)
 
     def test_a_student_is_refused(self):
         self.client.force_login(self.student)

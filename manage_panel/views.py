@@ -12,6 +12,7 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.auth.views import redirect_to_login
 from django.core.management import call_command
 from django.core.paginator import Paginator
 from django.db.models import Count, Max, Prefetch, Q, Sum
@@ -58,9 +59,12 @@ RECENT_DAYS = 30
 
 
 class StaffOnlyMixin(UserPassesTestMixin):
-    """Staff only, and never a redirect loop for a signed-in non-staff user."""
+    """Staff only.
 
-    raise_exception = True
+    An anonymous visitor is sent to the login page and brought back here
+    afterwards. A signed-in non-staff user gets 403, never a redirect loop:
+    `UserPassesTestMixin` only redirects users who are not authenticated.
+    """
 
     def test_func(self):
         return self.request.user.is_active and self.request.user.is_staff
@@ -71,7 +75,13 @@ def staff_required(view):
 
     def wrapper(request, *args, **kwargs):
         user = request.user
-        if not (user.is_authenticated and user.is_active and user.is_staff):
+        if not user.is_authenticated:
+            # A POST-only action can't be replayed after login, so a lapsed
+            # session posting a form lands on the overview instead of a 405.
+            if request.method == "GET":
+                return redirect_to_login(request.get_full_path())
+            return redirect_to_login(reverse("manage:overview"))
+        if not (user.is_active and user.is_staff):
             raise Http404()
         return view(request, *args, **kwargs)
 

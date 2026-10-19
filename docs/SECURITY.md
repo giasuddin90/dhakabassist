@@ -38,8 +38,10 @@ course media stream and the quiz all ask it, so they cannot disagree.
 | Staff | Everything, plus `/manage/` |
 
 `/manage/` refuses anyone who is not active staff, and does so on every view,
-not just the navigation. A signed-in student receives 403, never a redirect
-loop. Tests assert this for every page in the panel.
+not just the navigation. An anonymous visitor is redirected to the login page
+and returned to the page they asked for once signed in. A signed-in student
+receives 403 (404 on actions), never a redirect loop. Tests assert this for
+every page in the panel.
 
 ## Student data
 
