@@ -27,7 +27,6 @@ from courses.models import (
     Course,
     Enrollment,
     LibraryFile,
-    MediaAsset,
     Module,
     ModuleProgress,
     Question,
@@ -38,7 +37,6 @@ from pages.models import ContactMessage, Faq, LegalPage
 from pages.seo import noindex
 
 from .forms import (
-    AssetForm,
     ChoiceFormSet,
     CourseForm,
     FaqForm,
@@ -284,15 +282,16 @@ def course_edit(request, slug=None):
 
 @staff_required
 def module_edit(request, slug, module_slug=None):
-    """The module editor: metadata, video, notes and the media panels."""
+    """The module editor: details, notes, video, and files from the library."""
     course = get_object_or_404(Course, slug=slug)
     module = (
-        get_object_or_404(course.modules, slug=module_slug)
+        get_object_or_404(
+            course.modules.prefetch_related("quiz__questions__choices"), slug=module_slug
+        )
         if module_slug
         else Module(course=course)
     )
     form = ModuleForm(request.POST or None, instance=module)
-    asset_form = AssetForm(prefix="asset")
 
     if request.method == "POST" and form.is_valid():
         module = form.save(commit=False)
@@ -305,40 +304,19 @@ def module_edit(request, slug, module_slug=None):
             reverse("manage:module_edit", kwargs={"slug": course.slug, "module_slug": module.slug})
         )
 
-    groups = []
-    if module.pk:
-        groups = [
-            {
-                "title": "Audio (MP3)",
-                "kind": MediaAsset.Kind.AUDIO,
-                "drop": "Drop MP3 files here",
-                "items": module.audio_assets,
-            },
-            {
-                "title": "Notation and diagrams (SVG)",
-                "kind": MediaAsset.Kind.NOTATION,
-                "drop": "Drop SVG or PNG files here",
-                "items": module.notation_assets,
-            },
-            {
-                "title": "Downloads",
-                "kind": MediaAsset.Kind.DOWNLOAD,
-                "drop": "Drop PDF files here",
-                "items": module.download_assets,
-            },
-        ]
-
+    library = list(LibraryFile.objects.all())
     return render(
         request,
         "manage_panel/module_form.html",
         {
             "form": form,
-            "asset_form": asset_form,
             "course": course,
             "module": module,
-            "media_groups": groups,
+            "library": library,
+            "library_purposes": library_purposes(library),
+            "linked_files": linked_library_files(module, library),
             "quiz": getattr(module, "quiz", None) if module.pk else None,
-            "md_tools": ["H2", "B", "I", "List", "Link", "Image", "Audio"],
+            "md_tools": ["H2", "B", "I", "List", "Link"],
             "section": "courses",
             "counts": nav_counts(),
             "seo": noindex(module.title or "New module"),
@@ -346,38 +324,24 @@ def module_edit(request, slug, module_slug=None):
     )
 
 
-@staff_required
-@require_POST
-def asset_upload(request, slug, module_slug):
-    module = get_object_or_404(Module, course__slug=slug, slug=module_slug)
-    form = AssetForm(request.POST, request.FILES, prefix="asset")
-    if form.is_valid():
-        asset = form.save(commit=False)
-        asset.module = module
-        asset.position = module.assets.filter(kind=asset.kind).count()
-        asset.save()
-        messages.success(request, f"“{asset.title}” has been uploaded.")
-    else:
-        for errors in form.errors.values():
-            for error in errors:
-                messages.error(request, error)
-    return redirect(
-        reverse("manage:module_edit", kwargs={"slug": slug, "module_slug": module_slug})
-    )
+def library_purposes(files):
+    """Each library material with how many of `files` it holds, for the filter."""
+    return [
+        {
+            "value": value,
+            "label": label,
+            "total": sum(1 for item in files if item.purpose == value),
+        }
+        for value, label in LibraryFile.Purpose.choices
+    ]
 
 
-@staff_required
-@require_POST
-def asset_delete(request, pk):
-    asset = get_object_or_404(MediaAsset.objects.select_related("module__course"), pk=pk)
-    module, course = asset.module, asset.module.course
-    title = asset.title
-    asset.file.delete(save=False)
-    asset.delete()
-    messages.success(request, f"“{title}” has been removed.")
-    return redirect(
-        reverse("manage:module_edit", kwargs={"slug": course.slug, "module_slug": module.slug})
-    )
+def linked_library_files(module, files):
+    """The library files the module's saved notes or quiz link to."""
+    if not module.pk:
+        return []
+    text = module.linkable_text
+    return [item for item in files if item.link_prefix in text]
 
 
 @staff_required

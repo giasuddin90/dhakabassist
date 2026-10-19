@@ -1,0 +1,2 @@
+{% comment %}A library file's type as a small tag. Pass `item` (a LibraryFile).{% endcomment %}
+<span class="file-tag{% if item.is_audio %} file-tag--audio{% elif item.is_image %} file-tag--image{% endif %}" aria-hidden="true">{{ item.extension|upper|truncatechars:5 }}</span>

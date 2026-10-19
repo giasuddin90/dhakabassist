@@ -1,0 +1,84 @@
+{% comment %}
+Pick media library files for a Markdown field. Pass `files` (library files),
+`purposes` (from `manage_panel.views.library_purposes`), `linked` (the files
+the saved text already links to) and `target` (the textarea's id).
+
+Without script every file shows its Markdown to copy by hand; with it, Insert
+puts that Markdown at the cursor and the search and material filter appear.
+{% endcomment %}
+<section class="panel library-picker" aria-labelledby="picker-title" data-library-picker data-target="{{ target }}">
+  <div class="panel__head">
+    <h2 class="panel__title" id="picker-title">Library files</h2>
+    <a class="btn-link btn-link--sm" href="{% url 'manage:library_upload' %}" target="_blank" rel="noopener">Upload new ↗</a>
+  </div>
+
+  <div class="library-picker__part">
+    <h3 class="library-picker__label">Linked in this module</h3>
+    {% if linked %}
+      <ul class="pick-list">
+        {% for item in linked %}
+          <li class="pick-row">
+            {% include "includes/file_tag.html" %}
+            <span class="pick-row__name">
+              <span class="pick-row__title">{{ item.title }}</span>
+              <span class="pick-row__meta">{{ item.get_purpose_display }}</span>
+            </span>
+            <button type="button" class="btn-link btn-link--sm pick-row__action" data-find="{{ item.link_prefix }}" hidden>Show</button>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="u-fs-14 muted">None yet. Insert a file below, then save the module.</p>
+    {% endif %}
+  </div>
+
+  <div class="library-picker__part stack u-gap-10">
+    <h3 class="library-picker__label">Add from the library</h3>
+    {% if files %}
+      <div class="library-picker__tools stack u-gap-10" data-picker-tools hidden>
+        <label class="visually-hidden" for="picker-q">Search the library</label>
+        <input class="library-picker__search" type="search" id="picker-q" placeholder="Search title, folder or file" autocomplete="off" data-picker-search>
+        <div class="cluster library-picker__purposes" role="group" aria-label="Material">
+          <button type="button" class="pill" aria-pressed="true" data-picker-purpose="">All<span class="pill__count">{{ files|length }}</span></button>
+          {% for row in purposes %}
+            {% if row.total %}
+              <button type="button" class="pill" aria-pressed="false" data-picker-purpose="{{ row.value }}">{{ row.label|cut:" material" }}<span class="pill__count">{{ row.total }}</span></button>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <p class="u-fs-14 muted">The library is empty.
+        <a href="{% url 'manage:library_upload' %}" target="_blank" rel="noopener">Upload files</a> first.</p>
+    {% endif %}
+  </div>
+
+  {% if files %}
+    <ul class="pick-list pick-list--scroll" data-picker-list>
+      {% for item in files %}
+        <li class="pick-row" data-picker-item data-purpose="{{ item.purpose }}"
+            data-search="{{ item.title|lower }} {{ item.folder|lower }} {{ item.filename|lower }}">
+          {% include "includes/file_tag.html" %}
+          <span class="pick-row__name">
+            <span class="pick-row__title">{{ item.title }}</span>
+            <span class="pick-row__meta">{{ item.get_purpose_display|cut:" material" }} · {{ item.folder }}</span>
+          </span>
+          <button type="button" class="btn btn--sm btn--outline pick-row__action" data-insert="{{ item.markdown }}"
+                  aria-label="Insert {{ item.title }}" hidden>Insert</button>
+          <details class="pick-row__more" data-picker-fallback>
+            <summary>Markdown</summary>
+            <div class="copy-field">
+              <label class="visually-hidden" for="pick-md-{{ item.pk }}">Markdown for {{ item.title }}</label>
+              <input type="text" readonly id="pick-md-{{ item.pk }}" value="{{ item.markdown }}" class="u-mono" data-copy-source>
+              <button type="button" class="btn btn--sm" data-copy hidden>Copy</button>
+            </div>
+          </details>
+        </li>
+      {% endfor %}
+    </ul>
+    <p class="library-picker__empty u-fs-14 muted" data-picker-empty hidden>No files match. Try another word or material.</p>
+  {% endif %}
+
+  <p class="panel__foot">Audio becomes a player and images a figure. Download material, documents,
+    scores and ZIPs become a download link.</p>
+</section>

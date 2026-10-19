@@ -18,12 +18,6 @@ urlpatterns = [
         views.module_edit,
         name="module_edit",
     ),
-    path(
-        "courses/<slug:slug>/modules/<slug:module_slug>/assets/",
-        views.asset_upload,
-        name="asset_upload",
-    ),
-    path("assets/<int:pk>/delete/", views.asset_delete, name="asset_delete"),
     # Media library
     path("library/", views.LibraryView.as_view(), name="library"),
     path("library/upload/", views.library_upload, name="library_upload"),

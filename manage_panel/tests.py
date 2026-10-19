@@ -14,7 +14,6 @@ from courses.models import (
     Course,
     Enrollment,
     LibraryFile,
-    MediaAsset,
     Module,
     Question,
     Quiz,
@@ -373,16 +372,19 @@ class StaffPanelTests(TestCase):
 
 
 @override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))
-class AssetUploadTests(TestCase):
+class ModuleEditorLibraryTests(TestCase):
+    """The module editor takes its files from the media library, not uploads."""
+
     def setUp(self):
         self.course, self.modules = make_course()
         self.staff = User.objects.create_user(
             email="tanveer@example.com", password=PASSWORD, is_staff=True
         )
         self.client.force_login(self.staff)
+        self.module = self.modules[1]
         self.url = reverse(
-            "manage:asset_upload",
-            kwargs={"slug": self.course.slug, "module_slug": self.modules[0].slug},
+            "manage:module_edit",
+            kwargs={"slug": self.course.slug, "module_slug": self.module.slug},
         )
 
     def tearDown(self):
@@ -390,57 +392,43 @@ class AssetUploadTests(TestCase):
 
         shutil.rmtree(settings.PROTECTED_MEDIA_ROOT, ignore_errors=True)
 
-    def test_an_audio_file_can_be_uploaded(self):
-        self.client.post(
-            self.url,
-            {
-                "asset-kind": MediaAsset.Kind.AUDIO,
-                "asset-title": "Example 4.1",
-                "asset-file": SimpleUploadedFile("example.mp3", b"ID3 fake"),
-                "asset-duration_seconds": "45",
-            },
-        )
-        asset = MediaAsset.objects.get()
-        self.assertEqual(asset.kind, MediaAsset.Kind.AUDIO)
-        self.assertEqual(asset.duration_seconds, 45)
+    def test_the_editor_has_no_file_uploads(self):
+        response = self.client.get(self.url)
+        self.assertNotContains(response, 'type="file"')
+        self.assertNotContains(response, "multipart/form-data")
 
-    def test_a_notation_image_without_alt_text_is_refused(self):
-        response = self.client.post(
-            self.url,
-            {
-                "asset-kind": MediaAsset.Kind.NOTATION,
-                "asset-title": "Figure 4.1",
-                "asset-file": SimpleUploadedFile("figure.svg", b"<svg></svg>"),
-                "asset-alt_text": "",
-            },
-            follow=True,
+    def test_library_files_are_offered_with_their_markdown(self):
+        item = LibraryFile.objects.create(
+            title="Worksheet 1",
+            purpose=LibraryFile.Purpose.DOWNLOAD,
+            file=SimpleUploadedFile("worksheet-1.pdf", b"%PDF"),
         )
-        self.assertEqual(MediaAsset.objects.count(), 0)
-        self.assertContains(response, "need alt text")
+        response = self.client.get(self.url)
+        self.assertContains(response, f'data-insert="{item.markdown}"')
+        self.assertContains(response, 'data-picker-purpose="download"')
 
-    def test_an_asset_can_be_deleted(self):
-        asset = MediaAsset.objects.create(
-            module=self.modules[0],
-            kind=MediaAsset.Kind.DOWNLOAD,
-            title="Worksheet",
-            file=SimpleUploadedFile("w.pdf", b"%PDF"),
+    def test_files_linked_from_the_notes_or_quiz_are_listed(self):
+        in_notes = LibraryFile.objects.create(
+            title="Scale", file=SimpleUploadedFile("scale.mp3", b"ID3")
         )
-        self.client.post(reverse("manage:asset_delete", kwargs={"pk": asset.pk}))
-        self.assertEqual(MediaAsset.objects.count(), 0)
+        in_quiz = LibraryFile.objects.create(
+            title="Clip", file=SimpleUploadedFile("clip.mp3", b"ID3")
+        )
+        LibraryFile.objects.create(title="Unused", file=SimpleUploadedFile("u.mp3", b"ID3"))
+        self.module.notes_markdown = f"Listen.\n\n{in_notes.markdown}"
+        self.module.save(update_fields=["notes_markdown"])
+        quiz = Quiz.objects.create(module=self.module)
+        Question.objects.create(quiz=quiz, text=f"Which? {in_quiz.markdown}")
 
-    def test_a_student_cannot_upload(self):
-        student = User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
-        self.client.force_login(student)
-        response = self.client.post(
-            self.url,
-            {
-                "asset-kind": MediaAsset.Kind.AUDIO,
-                "asset-title": "Sneaky",
-                "asset-file": SimpleUploadedFile("x.mp3", b"ID3"),
-            },
-        )
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(MediaAsset.objects.count(), 0)
+        response = self.client.get(self.url)
+        linked = [item.title for item in response.context["linked_files"]]
+        self.assertEqual(sorted(linked), ["Clip", "Scale"])
+
+    def test_a_new_module_lists_no_linked_files(self):
+        LibraryFile.objects.create(title="Scale", file=SimpleUploadedFile("s.mp3", b"ID3"))
+        response = self.client.get(reverse("manage:module_new", kwargs={"slug": self.course.slug}))
+        self.assertEqual(response.context["linked_files"], [])
+        self.assertContains(response, "Scale")
 
 
 @override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))

@@ -155,8 +155,15 @@ body.manage {
   align-items: start;
 }
 
+/* One column until there is room for the notes beside the library picker. */
 .manage-grid--editor {
-  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 1200px) {
+  .manage-grid--editor {
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  }
 }
 
 .manage-grid--quiz {
@@ -296,6 +303,7 @@ body.manage {
 .manage-main .field input,
 .manage-main .field textarea,
 .manage-main .field select {
+  min-height: 44px;
   background: var(--cream);
   border-color: var(--line-muted);
   padding: 10px 12px;
@@ -361,14 +369,233 @@ body.manage {
   transition: background var(--fast) var(--ease);
 }
 
-.dropzone {
-  margin: 12px 18px 16px;
-  border: 1.5px dashed var(--line-muted);
+/* ---------------------------------------------------------- module editor */
+
+.manage-main .panel__body {
+  padding: 20px;
+}
+
+.editor-status {
+  --cluster-gap: 8px;
+}
+
+.editor-head__actions {
+  --cluster-gap: 10px;
+}
+
+.editor-dirty {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--err);
+}
+
+/* Number above title on a phone; beside it, in a narrow column, from 576px. */
+.editor-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 576px) {
+  .editor-fields {
+    grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
+  }
+}
+
+.editor-check {
+  min-height: 44px;
+  align-self: end;
+}
+
+.manage-main .md-tools button {
+  min-width: 44px;
+  height: 44px;
+}
+
+/* The second Save sits under the last panel and stays in reach while the
+   administrator scrolls a long form on a phone. */
+.editor-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 12px 0;
+  background: var(--cream);
+  border-top: 1px solid var(--line);
+}
+
+.editor-head__actions .btn,
+.editor-actions .btn,
+.editor-side__btn {
+  min-height: 44px;
+}
+
+.editor-side__btn {
+  align-self: flex-start;
+}
+
+/* ------------------------------------------------------- library picker */
+
+.library-picker__part {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.library-picker__label {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.library-picker__part .pick-list {
+  margin: 0 -20px -16px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.library-picker__search {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--cream);
+  border: 1px solid var(--line-field);
   border-radius: var(--radius-sm);
-  padding: 14px;
-  text-align: center;
+  transition: border-color var(--fast) var(--ease);
+}
+
+.library-picker__search:hover,
+.library-picker__search:focus {
+  border-color: var(--ink);
+}
+
+.library-picker__purposes {
+  --cluster-gap: 6px;
+}
+
+.library-picker__purposes .pill {
+  min-height: 44px;
+  padding: 7px 12px;
+}
+
+.library-picker__tools[hidden],
+.library-picker__empty[hidden],
+.pick-row[hidden],
+.pick-row__action[hidden] {
+  display: none;
+}
+
+.library-picker__empty {
+  padding: 16px 20px;
+}
+
+.pick-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Tall enough for a few files; the rest scroll inside the panel, so the
+   quiz card stays close by. */
+.pick-list--scroll {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.pick-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.pick-row:last-child {
+  border-bottom: 0;
+}
+
+.pick-row:hover {
+  background: var(--highlight-strong);
+}
+
+.pick-row__name {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.pick-row__title {
+  font-size: 15px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pick-row__meta {
   font-size: 13px;
   color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pick-row__action {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.pick-row__more {
+  grid-column: 1 / -1;
+  font-size: 13px;
+}
+
+.pick-row__more summary {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.pick-row__more[hidden] {
+  display: none;
+}
+
+.file-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 32px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--panel);
+  border: 1px solid var(--line-muted);
+  border-radius: var(--radius-xs);
+}
+
+.file-tag--audio {
+  color: var(--ok);
+  background: var(--ok-bg);
+  border-color: var(--ok);
+}
+
+.file-tag--image {
+  color: var(--ink);
+  background: var(--highlight);
+  border-color: var(--line-field);
 }
 
 .asset-row {

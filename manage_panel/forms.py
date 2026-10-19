@@ -127,20 +127,6 @@ ChoiceFormSet = inlineformset_factory(
 )
 
 
-class AssetForm(forms.ModelForm):
-    class Meta:
-        model = MediaAsset
-        fields = ("kind", "title", "file", "alt_text", "duration_seconds")
-
-    def clean(self):
-        data = super().clean()
-        if data.get("kind") == MediaAsset.Kind.NOTATION and not data.get("alt_text"):
-            self.add_error(
-                "alt_text", "Notation images need alt text so the notes stay readable."
-            )
-        return data
-
-
 class MultipleFileInput(forms.ClearableFileInput):
     """A file input that lets the browser pick several files."""
 

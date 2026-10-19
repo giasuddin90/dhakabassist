@@ -48,8 +48,6 @@
     I: ["*", "*"],
     List: ["- ", ""],
     Link: ["[", "](https://)"],
-    Image: ["![", "](notation/figure.svg)"],
-    Audio: ["<audio controls src=\"", "\"></audio>"],
   };
 
   document.querySelectorAll("[data-md-tool]").forEach(function (button) {
@@ -65,6 +63,7 @@
       if (!selected) {
         area.selectionStart = area.selectionEnd = start + pair[0].length;
       }
+      area.dispatchEvent(new Event("input", { bubbles: true }));
       area.focus();
     });
   });
@@ -133,6 +132,116 @@
   document.querySelectorAll("form[data-confirm]").forEach(function (form) {
     form.addEventListener("submit", function (event) {
       if (!window.confirm(form.dataset.confirm)) event.preventDefault();
+    });
+  });
+
+  /* -- Library picker ---------------------------------------------------- */
+
+  // Without script each file shows its Markdown to copy; with it, Insert puts
+  // that Markdown into the notes and the list can be searched and filtered.
+  document.querySelectorAll("[data-library-picker]").forEach(function (picker) {
+    var area = document.getElementById(picker.dataset.target);
+    if (!area) return;
+
+    // Until the administrator has clicked into the notes the cursor sits at
+    // the very start, so an insert then goes to the end instead.
+    var placed = false;
+    area.addEventListener("focus", function () { placed = true; }, { once: true });
+
+    picker.querySelectorAll("[data-picker-tools], [data-insert]").forEach(function (el) {
+      el.hidden = false;
+    });
+    picker.querySelectorAll("[data-picker-fallback]").forEach(function (el) {
+      el.hidden = true;
+    });
+
+    picker.querySelectorAll("[data-insert]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var start = placed ? area.selectionStart : area.value.length;
+        var end = placed ? area.selectionEnd : area.value.length;
+        var before = area.value.slice(0, start);
+        var after = area.value.slice(end);
+        // Its own paragraph, so a player or figure is not run into a sentence.
+        var text = button.dataset.insert;
+        if (before && !/\n\n$/.test(before)) text = (/\n$/.test(before) ? "\n" : "\n\n") + text;
+        if (after && !/^\n\n/.test(after)) text += /^\n/.test(after) ? "\n" : "\n\n";
+        area.setRangeText(text, start, end, "end");
+        placed = true;
+        area.dispatchEvent(new Event("input", { bubbles: true }));
+        area.focus();
+
+        var label = button.textContent;
+        button.textContent = "Inserted";
+        window.setTimeout(function () { button.textContent = label; }, 1500);
+      });
+    });
+
+    // "Show" selects the line that links to a file, so it is easy to find,
+    // move or delete. Hidden for files linked only from the quiz.
+    picker.querySelectorAll("[data-find]").forEach(function (button) {
+      var prefix = button.dataset.find;
+      button.hidden = area.value.indexOf(prefix) === -1;
+      button.addEventListener("click", function () {
+        var at = area.value.indexOf(prefix);
+        if (at === -1) return;
+        var lineStart = area.value.lastIndexOf("\n", at) + 1;
+        var lineEnd = area.value.indexOf("\n", at);
+        area.focus();
+        area.setSelectionRange(lineStart, lineEnd === -1 ? area.value.length : lineEnd);
+        placed = true;
+      });
+    });
+
+    var search = picker.querySelector("[data-picker-search]");
+    var purposes = picker.querySelectorAll("[data-picker-purpose]");
+    var items = picker.querySelectorAll("[data-picker-item]");
+    var empty = picker.querySelector("[data-picker-empty]");
+    var purpose = "";
+
+    var apply = function () {
+      var words = search ? search.value.toLowerCase().split(/\s+/).filter(Boolean) : [];
+      var shown = 0;
+      items.forEach(function (item) {
+        var match = (!purpose || item.dataset.purpose === purpose) &&
+          words.every(function (word) { return item.dataset.search.indexOf(word) !== -1; });
+        item.hidden = !match;
+        if (match) shown += 1;
+      });
+      if (empty) empty.hidden = shown > 0;
+    };
+
+    if (search) search.addEventListener("input", apply);
+    purposes.forEach(function (button) {
+      button.addEventListener("click", function () {
+        purpose = button.dataset.pickerPurpose;
+        purposes.forEach(function (other) {
+          other.setAttribute("aria-pressed", String(other === button));
+        });
+        apply();
+      });
+    });
+  });
+
+  /* -- Unsaved changes --------------------------------------------------- */
+
+  // Long editors warn before leaving with edits not yet saved, and say so
+  // beside the Save button.
+  document.querySelectorAll("form[data-dirty-guard]").forEach(function (form) {
+    var note = document.querySelector("[data-dirty-note]");
+    var dirty = false;
+    var warn = function (event) {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    form.addEventListener("input", function (event) {
+      // The picker's search box is not part of the module.
+      if (dirty || event.target.matches("[data-picker-search]")) return;
+      dirty = true;
+      if (note) note.hidden = false;
+      window.addEventListener("beforeunload", warn);
+    });
+    form.addEventListener("submit", function () {
+      window.removeEventListener("beforeunload", warn);
     });
   });
 
