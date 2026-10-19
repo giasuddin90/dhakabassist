@@ -24,6 +24,10 @@ urlpatterns = [
         name="asset_upload",
     ),
     path("assets/<int:pk>/delete/", views.asset_delete, name="asset_delete"),
+    # Media library
+    path("library/", views.LibraryView.as_view(), name="library"),
+    path("library/upload/", views.library_upload, name="library_upload"),
+    path("library/<int:pk>/delete/", views.library_delete, name="library_delete"),
     # Quizzes
     path("quizzes/", views.QuizIndexView.as_view(), name="quizzes"),
     path(

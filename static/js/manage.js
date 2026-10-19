@@ -69,6 +69,38 @@
     });
   });
 
+  /* -- Media library ----------------------------------------------------- */
+
+  // The Markdown sits in a read-only field the administrator can select by
+  // hand; the Copy button is a shortcut, so it stays hidden without script.
+  document.querySelectorAll("[data-copy]").forEach(function (button) {
+    var source = button.parentElement.querySelector("[data-copy-source]");
+    if (!source) return;
+    button.hidden = false;
+    button.addEventListener("click", function () {
+      source.select();
+      var done = function () {
+        button.textContent = "Copied";
+        window.setTimeout(function () { button.textContent = "Copy"; }, 1500);
+      };
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(source.value).then(done, function () {
+          document.execCommand("copy");
+          done();
+        });
+      } else {
+        document.execCommand("copy");
+        done();
+      }
+    });
+  });
+
+  document.querySelectorAll("form[data-confirm]").forEach(function (form) {
+    form.addEventListener("submit", function (event) {
+      if (!window.confirm(form.dataset.confirm)) event.preventDefault();
+    });
+  });
+
   /* -- Question picker --------------------------------------------------- */
 
   // The quiz editor saves one question at a time, so switching away from

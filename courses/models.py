@@ -5,8 +5,11 @@ A module is reachable when it is the free preview, or when the student is
 enrolled and has passed every earlier module's quiz.
 """
 
+import secrets
+from pathlib import Path
+
 from django.conf import settings
-from django.core.validators import MinValueValidator
+from django.core.validators import FileExtensionValidator, MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -351,6 +354,100 @@ class MediaAsset(TimeStampedModel):
     def detail_line(self):
         bits = [b for b in (self.duration_display, self.size_display) if b]
         return " · ".join(bits)
+
+
+def library_upload_to(instance, filename):
+    """Group stored files by folder, so the disk mirrors the library."""
+    return f"library/{slugify(instance.folder) or 'unsorted'}/{filename}"
+
+
+def new_library_key():
+    """A random URL key; the default for `LibraryFile.key`."""
+    return secrets.token_urlsafe(12)
+
+
+class LibraryFile(TimeStampedModel):
+    """A file in the shared media library, linked from lesson notes by URL.
+
+    The administrator uploads audio, diagrams and handouts once, copies the
+    link, and pastes it into any module's Markdown. Nothing ties a file to a
+    module in the database: `courses.views.library_file` works out who may
+    fetch it from which notes link to it, so the paywall still applies.
+    """
+
+    AUDIO_EXTENSIONS = ("mp3", "m4a", "ogg", "wav")
+    IMAGE_EXTENSIONS = ("svg", "png", "jpg", "jpeg", "webp", "gif")
+    DOCUMENT_EXTENSIONS = ("pdf",)
+    EXTENSIONS = AUDIO_EXTENSIONS + IMAGE_EXTENSIONS + DOCUMENT_EXTENSIONS
+
+    folder = models.CharField(
+        _("folder"),
+        max_length=80,
+        default="Lesson material",
+        db_index=True,
+        help_text=_("Group related files, e.g. “Lesson material” or “Module 3”."),
+    )
+    title = models.CharField(_("title"), max_length=200)
+    file = models.FileField(
+        _("file"),
+        upload_to=library_upload_to,
+        max_length=255,
+        storage=protected_storage,
+        validators=[FileExtensionValidator(EXTENSIONS)],
+    )
+    # Random, so the URLs pasted into notes cannot be guessed by counting.
+    key = models.CharField(
+        _("key"), max_length=24, unique=True, default=new_library_key, editable=False
+    )
+
+    class Meta:
+        verbose_name = _("library file")
+        verbose_name_plural = _("library files")
+        ordering = ("folder", "title", "id")
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def filename(self):
+        """The stored file's name, without its folder."""
+        return Path(self.file.name).name
+
+    @property
+    def extension(self):
+        """Lower-case extension without the dot, e.g. "mp3"."""
+        return Path(self.file.name).suffix.lstrip(".").lower()
+
+    @property
+    def is_audio(self):
+        """True for files that play in an audio player."""
+        return self.extension in self.AUDIO_EXTENSIONS
+
+    @property
+    def is_image(self):
+        """True for files that show as a figure."""
+        return self.extension in self.IMAGE_EXTENSIONS
+
+    @property
+    def link_prefix(self):
+        """The part of the URL that identifies this file inside notes."""
+        return self.get_absolute_url().rsplit("/", 1)[0] + "/"
+
+    def get_absolute_url(self):
+        """The link the administrator pastes into notes."""
+        return reverse("courses:library_file", kwargs={"key": self.key, "name": self.filename})
+
+    @property
+    def markdown(self):
+        """What the administrator pastes into the notes.
+
+        Audio uses image syntax too: `render_notes` turns an "image" that
+        points at an audio file into a player, so there is one thing to learn.
+        """
+        url = self.get_absolute_url()
+        if self.is_audio or self.is_image:
+            return f"![{self.title}]({url})"
+        return f"[{self.title}]({url})"
 
 
 class Quiz(TimeStampedModel):

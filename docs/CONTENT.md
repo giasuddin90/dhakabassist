@@ -9,6 +9,7 @@ developer is needed for any of it.
 | --- | --- |
 | Overview | Paying students, free accounts, revenue, how far students get, recent orders |
 | Courses | Create and edit courses; add, reorder and edit modules |
+| Media library | Upload audio, diagrams and handouts once; copy their links into lesson notes |
 | Quizzes | Every module's quiz, with question counts |
 | Students | Search, see progress, suspend or restore access, grant access |
 | Orders | Every order, filtered by status |
@@ -61,6 +62,27 @@ a title, choose the file, press Upload.
 
 Uploaded files are stored privately. They are only ever served to a student
 who has access to that module, so a worksheet link cannot be passed around.
+
+## The media library
+
+The library is one place for all lesson files: MP3, M4A, OGG and WAV audio;
+SVG, PNG, JPG, WEBP and GIF images; and PDF handouts.
+
+1. **Media library → Upload files.** Choose a folder (such as "Lesson
+   material" or "Module 3"), or type a new name to start one, then pick as
+   many files as you like.
+2. Press **Copy** beside a file's Markdown.
+3. Paste it into any module's lesson notes and save.
+
+The Markdown looks like `![C major scale](/library/…/c-major-scale.mp3)`.
+Audio becomes a player and images become figures. PDFs become a download
+link. The words in square brackets are what a screen reader announces, so for
+a diagram write what it shows.
+
+Each file lists the modules that use it. A file only opens for a student who
+can open one of those modules, so paid material stays paid. A file that no
+lesson links to yet is visible only to staff. A file linked from a published
+course description is public, because that page is public.
 
 ## Editing a quiz
 

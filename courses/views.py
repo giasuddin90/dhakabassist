@@ -14,9 +14,16 @@ from django.views.generic import DetailView, ListView, TemplateView
 from pages import seo
 
 from . import video
-from .access import CourseAccess, course_queryset
+from .access import CourseAccess, can_fetch_library_file, course_queryset
 from .markup import render_notes
-from .models import Course, MediaAsset, Module, ModuleProgress, QuizAttempt
+from .models import (
+    Course,
+    LibraryFile,
+    MediaAsset,
+    Module,
+    ModuleProgress,
+    QuizAttempt,
+)
 
 INCLUDES = (
     "All 9 modules with video lessons",
@@ -463,6 +470,7 @@ def _serve_protected(path, download_name="", as_attachment=False):
         response["Content-Type"] = ""
         response["Cache-Control"] = "private, max-age=0, no-store"
         response["X-Robots-Tag"] = "noindex, nofollow"
+        _sandbox_svg(response, target)
         if as_attachment:
             name = download_name or target.name
             response["Content-Disposition"] = f'attachment; filename="{name}"'
@@ -477,7 +485,21 @@ def _serve_protected(path, download_name="", as_attachment=False):
     )
     response["Cache-Control"] = "private, max-age=0, no-store"
     response["X-Robots-Tag"] = "noindex, nofollow"
+    _sandbox_svg(response, target)
     return response
+
+
+def _sandbox_svg(response, target):
+    """Stop an SVG opened on its own from running script on our origin.
+
+    An SVG is a document and may carry <script>. Inside an <img> it cannot
+    run, but a student could open the file URL directly; the sandbox keeps a
+    hostile upload from acting as the signed-in student.
+    """
+    if target.suffix.lower() == ".svg":
+        response["Content-Security-Policy"] = (
+            "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+        )
 
 
 @login_required
@@ -499,4 +521,20 @@ def protected_asset(request, pk):
         asset.file.name,
         download_name=Path(asset.file.name).name,
         as_attachment=asset.kind == MediaAsset.Kind.DOWNLOAD,
+    )
+
+
+def library_file(request, key, name):
+    """A shared media library file, served when a page the user may see links to it.
+
+    Not `login_required`: a diagram linked from a public course description
+    must load for anonymous visitors. `can_fetch_library_file` decides.
+    """
+    item = get_object_or_404(LibraryFile, key=key)
+    if name != item.filename or not can_fetch_library_file(request.user, item):
+        raise Http404("No such file.")
+    return _serve_protected(
+        item.file.name,
+        download_name=item.filename,
+        as_attachment=not (item.is_audio or item.is_image),
     )

@@ -5,10 +5,21 @@ changes never need a developer. Deeper structural edits stay in the Django
 admin at /django-admin/.
 """
 
+from pathlib import Path
+
 from django import forms
+from django.core.validators import FileExtensionValidator
 from django.forms import inlineformset_factory
 
-from courses.models import Choice, Course, MediaAsset, Module, Question, Quiz
+from courses.models import (
+    Choice,
+    Course,
+    LibraryFile,
+    MediaAsset,
+    Module,
+    Question,
+    Quiz,
+)
 from pages.models import Faq, LegalPage
 
 
@@ -127,6 +138,72 @@ class AssetForm(forms.ModelForm):
                 "alt_text", "Notation images need alt text so the notes stay readable."
             )
         return data
+
+
+class MultipleFileInput(forms.ClearableFileInput):
+    """A file input that lets the browser pick several files."""
+
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    """A file field that accepts several files and cleans each one."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        clean_one = super().clean
+        if isinstance(data, (list, tuple)):
+            return [clean_one(item, initial) for item in data]
+        return [clean_one(data, initial)]
+
+
+class LibraryUploadForm(forms.Form):
+    """Upload any number of files into one media library folder."""
+
+    MAX_BYTES = 50 * 1024 * 1024
+
+    folder = forms.CharField(
+        max_length=80,
+        initial="Lesson material",
+        help_text="Pick a folder, or type a new name to start one.",
+        widget=forms.TextInput(attrs={"list": "library-folders"}),
+    )
+    files = MultipleFileField(
+        validators=[FileExtensionValidator(LibraryFile.EXTENSIONS)],
+        help_text="MP3, M4A, OGG, WAV, SVG, PNG, JPG, WEBP, GIF or PDF. "
+        "Pick several at once.",
+    )
+
+    def clean_folder(self):
+        """Collapse stray spaces so "Module  3" and "Module 3" are one folder."""
+        return " ".join(self.cleaned_data["folder"].split())
+
+    def clean_files(self):
+        """Refuse oversized files with their name, so the admin knows which."""
+        files = self.cleaned_data["files"]
+        for upload in files:
+            if upload.size > self.MAX_BYTES:
+                raise forms.ValidationError(f"“{upload.name}” is larger than 50 MB.")
+        return files
+
+    def save(self):
+        """Create one library file per upload and return them."""
+        folder = self.cleaned_data["folder"]
+        return [
+            LibraryFile.objects.create(
+                folder=folder, title=title_from_filename(upload.name), file=upload
+            )
+            for upload in self.cleaned_data["files"]
+        ]
+
+
+def title_from_filename(name):
+    """"c-major_scale.mp3" -> "C major scale", a readable default title."""
+    text = " ".join(Path(name).stem.replace("-", " ").replace("_", " ").split())
+    return (text[:1].upper() + text[1:])[:200] or name[:200]
 
 
 class StudentFilterForm(forms.Form):

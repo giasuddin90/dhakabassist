@@ -33,6 +33,13 @@ ALLOWED_ATTRIBUTES = {
 
 ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
 
+# `![Scale in C](/library/…/scale.mp3)` is how an administrator embeds audio
+# from the media library: one syntax for every file, so Markdown's image tag
+# is swapped for a player when its source is an audio file.
+AUDIO_IMAGE = re.compile(
+    r'<img\b[^>]*?\bsrc="([^"]+\.(?:mp3|m4a|ogg|wav))"[^>]*>', re.IGNORECASE
+)
+
 _renderer = markdown.Markdown(
     extensions=["extra", "sane_lists", "smarty"], output_format="html"
 )
@@ -52,6 +59,7 @@ def render_notes(text):
         filters=[],
     )
     html = cleaner.clean(html)
+    html = AUDIO_IMAGE.sub(r'<audio src="\1"></audio>', html)
     # Defaults the editor should not have to repeat in every note.
     html = html.replace("<img ", '<img loading="lazy" decoding="async" ')
     html = html.replace("<audio ", '<audio controls preload="none" ')

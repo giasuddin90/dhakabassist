@@ -6,7 +6,7 @@ the lesson page, the quiz and the protected media stream can never disagree.
 
 from dataclasses import dataclass
 
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 
 from .models import Course, Enrollment, Module, ModuleProgress
 
@@ -153,3 +153,36 @@ def course_queryset():
             ),
         )
     )
+
+
+def can_fetch_library_file(user, library_file):
+    """Whether `user` may download a shared media library file.
+
+    Library files belong to no module, so access follows the links instead:
+    a file is public when a published course description links to it, and
+    otherwise reachable by anyone who may open a module whose notes link to
+    it. A file nobody links to is for staff only.
+    """
+    if user.is_authenticated and user.is_active and user.is_staff:
+        return True
+    prefix = library_file.link_prefix
+    linking = Course.published.filter(
+        Q(description__contains=prefix)
+        | Q(
+            modules__notes_markdown__contains=prefix,
+            modules__status=Module.Status.PUBLISHED,
+        )
+    ).values("pk")
+    for course in course_queryset().filter(pk__in=linking):
+        if prefix in course.description:
+            return True
+        if not user.is_authenticated:
+            continue
+        unlocked = {
+            s.module.id for s in CourseAccess(user, course).module_states() if s.is_unlocked
+        }
+        if any(
+            m.id in unlocked and prefix in m.notes_markdown for m in course.module_list
+        ):
+            return True
+    return False

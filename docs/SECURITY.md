@@ -99,6 +99,14 @@ enrolment first and then streams the file with `Cache-Control: no-store` and
 and are still resolved and bounds-checked before opening, so a crafted path
 cannot escape the directory.
 
+Shared media library files (`courses.LibraryFile`) are stored the same way
+but belong to no module. `courses.access.can_fetch_library_file` decides
+access from the links: a student may fetch a file only when a module they
+have unlocked links to it in its notes. A published course description that
+links to a file makes it public. Library URLs carry a random key, so they
+cannot be found by counting. SVG files are served with a sandboxing
+Content-Security-Policy, so an SVG opened on its own cannot run script.
+
 With Cloudflare Stream configured, playback uses a token signed per request
 that expires (two hours by default), so a copied URL stops working. If signing
 is not configured the code deliberately falls back to the protected stream

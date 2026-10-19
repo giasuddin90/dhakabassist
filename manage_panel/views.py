@@ -7,6 +7,7 @@ stay in the Django admin.
 """
 
 from io import StringIO
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -15,6 +16,7 @@ from django.core.management import call_command
 from django.db.models import Count, Q, Sum
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.defaultfilters import pluralize
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -23,6 +25,7 @@ from django.views.generic import TemplateView
 from courses.models import (
     Course,
     Enrollment,
+    LibraryFile,
     MediaAsset,
     Module,
     ModuleProgress,
@@ -39,6 +42,7 @@ from .forms import (
     CourseForm,
     FaqForm,
     LegalPageForm,
+    LibraryUploadForm,
     ModuleForm,
     QuestionForm,
     QuizForm,
@@ -76,6 +80,7 @@ def nav_counts():
     """Badge numbers beside the sidebar links."""
     return {
         "courses": Course.objects.count(),
+        "library": LibraryFile.objects.count(),
         "students": User.objects.filter(is_staff=False).count(),
         "orders": Order.objects.filter(status=Order.Status.PENDING).count(),
         "messages": ContactMessage.objects.filter(is_handled=False).count(),
@@ -391,6 +396,99 @@ def module_reorder(request, slug):
     if request.headers.get("X-Requested-With") == "fetch":
         return JsonResponse({"saved": len(changed)})
     return redirect(f"{reverse('manage:courses')}?course={course.slug}")
+
+
+# -- Media library ----------------------------------------------------------
+
+
+class LibraryView(ManageBase):
+    """Every shared media file, with the Markdown to paste into lesson notes."""
+
+    template_name = "manage_panel/library.html"
+    section = "library"
+    heading = "Media library"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        folder = self.request.GET.get("folder", "")
+        query = self.request.GET.get("q", "").strip()
+
+        files = LibraryFile.objects.all()
+        if folder:
+            files = files.filter(folder=folder)
+        if query:
+            files = files.filter(Q(title__icontains=query) | Q(file__icontains=query))
+
+        context.update(
+            rows=library_rows(files),
+            folders=LibraryFile.objects.values("folder")
+            .annotate(total=Count("id"))
+            .order_by("folder"),
+            chosen=folder,
+            query=query,
+            form=LibraryUploadForm(initial={"folder": folder or "Lesson material"}),
+        )
+        return context
+
+
+def library_rows(files):
+    """Each file with the modules and courses whose text links to it.
+
+    Shown so the administrator sees what would break before removing a file.
+    The course has a handful of modules, so matching in Python is cheaper
+    than one query per file.
+    """
+    modules = list(Module.objects.select_related("course").only(
+        "number", "title", "slug", "notes_markdown", "course__slug", "course__title"
+    ))
+    courses = list(Course.objects.only("title", "slug", "description"))
+    rows = []
+    for item in files:
+        prefix = item.link_prefix
+        rows.append(
+            {
+                "file": item,
+                "modules": [m for m in modules if prefix in m.notes_markdown],
+                "courses": [c for c in courses if prefix in c.description],
+            }
+        )
+    return rows
+
+
+def library_redirect(request):
+    """Back to the library, on the folder the administrator was viewing."""
+    folder = request.POST.get("next_folder", "")
+    url = reverse("manage:library")
+    return redirect(f"{url}?{urlencode({'folder': folder})}" if folder else url)
+
+
+@staff_required
+@require_POST
+def library_upload(request):
+    """Add one or more files to a library folder."""
+    form = LibraryUploadForm(request.POST, request.FILES)
+    if form.is_valid():
+        saved = form.save()
+        messages.success(
+            request, f"{len(saved)} file{pluralize(len(saved))} added to “{saved[0].folder}”."
+        )
+        return redirect(f"{reverse('manage:library')}?{urlencode({'folder': saved[0].folder})}")
+    for errors in form.errors.values():
+        for error in errors:
+            messages.error(request, error)
+    return library_redirect(request)
+
+
+@staff_required
+@require_POST
+def library_delete(request, pk):
+    """Remove a library file and its stored bytes."""
+    item = get_object_or_404(LibraryFile, pk=pk)
+    title = item.title
+    item.file.delete(save=False)
+    item.delete()
+    messages.success(request, f"“{title}” has been removed.")
+    return library_redirect(request)
 
 
 # -- Quizzes ----------------------------------------------------------------

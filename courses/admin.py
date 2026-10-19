@@ -5,6 +5,7 @@ from .models import (
     Course,
     Enrollment,
     Lesson,
+    LibraryFile,
     MediaAsset,
     Module,
     ModuleProgress,
@@ -106,3 +107,12 @@ class QuizAttemptAdmin(admin.ModelAdmin):
     list_filter = ("quiz__module__course",)
     search_fields = ("student__email",)
     autocomplete_fields = ("student",)
+
+
+@admin.register(LibraryFile)
+class LibraryFileAdmin(admin.ModelAdmin):
+    """Fallback editing for the shared media library; /manage/library/ is the main page."""
+
+    list_display = ("title", "folder", "file", "created_at")
+    list_filter = ("folder",)
+    search_fields = ("title", "file")

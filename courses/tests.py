@@ -12,6 +12,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from courses.access import CourseAccess
 from courses.markup import render_notes
@@ -19,6 +20,7 @@ from courses.models import (
     Choice,
     Course,
     Enrollment,
+    LibraryFile,
     MediaAsset,
     Module,
     ModuleProgress,
@@ -386,6 +388,16 @@ class MarkupTests(TestCase):
         html = render_notes("![Figure 4.1](figure.svg)")
         self.assertIn('loading="lazy"', html)
 
+    def test_an_image_link_to_audio_becomes_a_player(self):
+        html = render_notes("![C major scale](/library/abc/c-major.mp3)")
+        self.assertIn('<audio controls preload="none" src="/library/abc/c-major.mp3">', html)
+        self.assertNotIn("<img", html)
+
+    def test_an_image_link_to_svg_stays_an_image(self):
+        html = render_notes("![The stave](/library/abc/stave.svg)")
+        self.assertIn('src="/library/abc/stave.svg"', html)
+        self.assertIn("<img", html)
+
     def test_empty_notes_render_as_nothing(self):
         self.assertEqual(render_notes(""), "")
 
@@ -546,3 +558,106 @@ class NoJavaScriptTests(TestCase):
         body = self.client.get(self.course.get_absolute_url()).content.decode()
         self.assertIn("<details", body)
         self.assertIn("<summary", body)
+
+
+@override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))
+class LibraryFileTests(TestCase):
+    """Shared library files follow the paywall of whatever links to them."""
+
+    def setUp(self):
+        self.course, self.modules = make_course()
+        self.student = User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
+        self.staff = User.objects.create_user(
+            email="tanveer@example.com", password=PASSWORD, is_staff=True
+        )
+        self.audio = LibraryFile.objects.create(
+            title="C major scale", file=SimpleUploadedFile("c-major.mp3", b"ID3")
+        )
+        self.diagram = LibraryFile.objects.create(
+            title="The stave", file=SimpleUploadedFile("stave.svg", b"<svg></svg>")
+        )
+
+    def tearDown(self):
+        from django.conf import settings
+
+        shutil.rmtree(settings.PROTECTED_MEDIA_ROOT, ignore_errors=True)
+
+    def link(self, module, item):
+        module.notes_markdown += f"\n\n{item.markdown}\n"
+        module.save(update_fields=["notes_markdown"])
+
+    def test_markdown_uses_image_syntax_for_audio_and_images(self):
+        self.assertEqual(
+            self.audio.markdown, f"![C major scale]({self.audio.get_absolute_url()})"
+        )
+        pdf = LibraryFile(title="Worksheet", file="library/x/sheet.pdf")
+        self.assertTrue(pdf.markdown.startswith("[Worksheet]("))
+
+    def test_keys_are_random_not_sequential(self):
+        self.assertNotEqual(self.audio.key, self.diagram.key)
+        self.assertGreaterEqual(len(self.audio.key), 16)
+
+    def test_staff_can_fetch_an_unlinked_file(self):
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get(self.audio.get_absolute_url()).status_code, 200)
+
+    def test_an_unlinked_file_is_hidden_from_students(self):
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.get(self.audio.get_absolute_url()).status_code, 404)
+
+    def test_a_file_linked_from_the_free_module_is_served(self):
+        self.link(self.modules[0], self.audio)
+        self.client.force_login(self.student)
+        response = self.client.get(self.audio.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["X-Robots-Tag"], "noindex, nofollow")
+
+    def test_a_file_linked_only_from_a_locked_module_is_not_served(self):
+        self.link(self.modules[1], self.audio)
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.get(self.audio.get_absolute_url()).status_code, 404)
+
+    def test_an_enrolled_student_gets_files_from_unlocked_paid_modules(self):
+        self.link(self.modules[1], self.audio)
+        Enrollment.objects.create(student=self.student, course=self.course)
+        ModuleProgress.objects.create(
+            student=self.student, module=self.modules[0], completed_at=timezone.now()
+        )
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.get(self.audio.get_absolute_url()).status_code, 200)
+
+    def test_a_draft_module_link_does_not_open_the_file(self):
+        self.link(self.modules[0], self.audio)
+        self.modules[0].status = Module.Status.DRAFT
+        self.modules[0].save(update_fields=["status"])
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.get(self.audio.get_absolute_url()).status_code, 404)
+
+    def test_anonymous_visitors_get_nothing_from_lesson_notes(self):
+        self.link(self.modules[0], self.audio)
+        self.assertEqual(self.client.get(self.audio.get_absolute_url()).status_code, 404)
+
+    def test_a_file_in_a_published_course_description_is_public(self):
+        self.course.description += f"\n\n{self.diagram.markdown}"
+        self.course.save(update_fields=["description"])
+        self.assertEqual(self.client.get(self.diagram.get_absolute_url()).status_code, 200)
+
+    def test_a_wrong_file_name_is_not_found(self):
+        self.client.force_login(self.staff)
+        url = reverse(
+            "courses:library_file", kwargs={"key": self.audio.key, "name": "other.mp3"}
+        )
+        self.assertEqual(self.client.get(url).status_code, 404)
+
+    def test_svg_is_sandboxed_when_opened_directly(self):
+        self.client.force_login(self.staff)
+        response = self.client.get(self.diagram.get_absolute_url())
+        self.assertIn("sandbox", response["Content-Security-Policy"])
+
+    def test_the_lesson_page_renders_library_audio_as_a_player(self):
+        self.link(self.modules[0], self.audio)
+        self.client.force_login(self.student)
+        response = self.client.get(self.modules[0].get_absolute_url())
+        self.assertContains(
+            response, f'<audio controls preload="none" src="{self.audio.get_absolute_url()}">'
+        )

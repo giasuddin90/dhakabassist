@@ -13,6 +13,7 @@ from courses.models import (
     Choice,
     Course,
     Enrollment,
+    LibraryFile,
     MediaAsset,
     Module,
     Question,
@@ -52,7 +53,7 @@ def make_course():
 class AccessTests(TestCase):
     """Nothing under /manage/ may be reachable without staff rights."""
 
-    PATHS = ("overview", "courses", "quizzes", "students", "orders", "content")
+    PATHS = ("overview", "courses", "library", "quizzes", "students", "orders", "content")
 
     def setUp(self):
         self.staff = User.objects.create_user(
@@ -440,3 +441,81 @@ class AssetUploadTests(TestCase):
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(MediaAsset.objects.count(), 0)
+
+
+@override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))
+class LibraryTests(TestCase):
+    def setUp(self):
+        self.course, self.modules = make_course()
+        self.staff = User.objects.create_user(
+            email="tanveer@example.com", password=PASSWORD, is_staff=True
+        )
+        self.client.force_login(self.staff)
+        self.url = reverse("manage:library_upload")
+
+    def tearDown(self):
+        from django.conf import settings
+
+        shutil.rmtree(settings.PROTECTED_MEDIA_ROOT, ignore_errors=True)
+
+    def test_several_files_upload_into_one_folder(self):
+        response = self.client.post(
+            self.url,
+            {
+                "folder": "  Lesson   material ",
+                "files": [
+                    SimpleUploadedFile("c-major_scale.mp3", b"ID3"),
+                    SimpleUploadedFile("treble-clef.svg", b"<svg></svg>"),
+                ],
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            sorted(LibraryFile.objects.values_list("title", "folder")),
+            [("C major scale", "Lesson material"), ("Treble clef", "Lesson material")],
+        )
+
+    def test_an_unsupported_file_type_is_refused(self):
+        self.client.post(
+            self.url,
+            {"folder": "Lesson material", "files": [SimpleUploadedFile("run.exe", b"MZ")]},
+        )
+        self.assertEqual(LibraryFile.objects.count(), 0)
+
+    def test_the_page_shows_the_markdown_and_where_a_file_is_used(self):
+        item = LibraryFile.objects.create(
+            title="Stave", file=SimpleUploadedFile("stave.svg", b"<svg></svg>")
+        )
+        self.modules[0].notes_markdown = item.markdown
+        self.modules[0].save(update_fields=["notes_markdown"])
+        response = self.client.get(reverse("manage:library"))
+        self.assertContains(response, item.get_absolute_url())
+        self.assertContains(response, "Module 01")
+
+    def test_a_folder_filter_narrows_the_list(self):
+        LibraryFile.objects.create(
+            title="Kept", folder="Module 3", file=SimpleUploadedFile("a.mp3", b"ID3")
+        )
+        LibraryFile.objects.create(
+            title="Hidden", folder="Module 4", file=SimpleUploadedFile("b.mp3", b"ID3")
+        )
+        response = self.client.get(reverse("manage:library"), {"folder": "Module 3"})
+        self.assertContains(response, "Kept")
+        self.assertNotContains(response, "Hidden")
+
+    def test_a_file_can_be_removed(self):
+        item = LibraryFile.objects.create(
+            title="Old", file=SimpleUploadedFile("old.mp3", b"ID3")
+        )
+        self.client.post(reverse("manage:library_delete", kwargs={"pk": item.pk}))
+        self.assertEqual(LibraryFile.objects.count(), 0)
+
+    def test_a_student_cannot_upload(self):
+        student = User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
+        self.client.force_login(student)
+        response = self.client.post(
+            self.url,
+            {"folder": "x", "files": [SimpleUploadedFile("x.mp3", b"ID3")]},
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(LibraryFile.objects.count(), 0)

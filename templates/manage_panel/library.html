@@ -1,0 +1,129 @@
+{% extends "manage_panel/base.html" %}
+{% load static %}
+
+{% block extra_js %}<script src="{% static 'js/manage.js' %}" defer></script>{% endblock %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <h1>Media library</h1>
+  <form method="get" class="cluster library-search">
+    {% if chosen %}<input type="hidden" name="folder" value="{{ chosen }}">{% endif %}
+    <label class="visually-hidden" for="library-q">Search files</label>
+    <input type="search" name="q" id="library-q" value="{{ query }}" placeholder="Search title or file name">
+    <button class="btn btn--sm btn--outline" type="submit">Search</button>
+    {% if query %}<a class="btn-link btn-link--sm" href="{% url 'manage:library' %}{% if chosen %}?folder={{ chosen|urlencode }}{% endif %}">Clear</a>{% endif %}
+  </form>
+</header>
+
+<div class="manage-grid manage-grid--library">
+
+  {# ------------------------------------------------------------ the files #}
+  <div class="stack u-gap-20">
+    <nav class="cluster library-folders" aria-label="Folders">
+      <a class="pill{% if not chosen %} is-active{% endif %}" href="{% url 'manage:library' %}"
+         {% if not chosen %}aria-current="page"{% endif %}>All files</a>
+      {% for row in folders %}
+        <a class="pill{% if row.folder == chosen %} is-active{% endif %}"
+           href="?folder={{ row.folder|urlencode }}"
+           {% if row.folder == chosen %}aria-current="page"{% endif %}>{{ row.folder }} · {{ row.total }}</a>
+      {% endfor %}
+    </nav>
+
+    <section class="panel" aria-label="Files">
+      {% for row in rows %}
+        {% with item=row.file %}
+          <article class="library-item">
+            <div class="library-item__preview">
+              {% if item.is_image %}
+                <img src="{{ item.get_absolute_url }}" alt="" loading="lazy" class="img-fluid">
+              {% elif item.is_audio %}
+                <audio controls preload="none" src="{{ item.get_absolute_url }}"></audio>
+              {% else %}
+                <span class="library-item__ext">{{ item.extension|upper }}</span>
+              {% endif %}
+            </div>
+
+            <div class="stack u-gap-8 library-item__body">
+              <div>
+                <span class="dtable__name">{{ item.title }}</span>
+                <span class="dtable__sub">{{ item.folder }} · {{ item.filename }}</span>
+              </div>
+
+              <div class="stack u-gap-6">
+                <label class="u-fs-13 muted" for="md-{{ item.pk }}">Markdown, ready to paste</label>
+                <div class="copy-field">
+                  <input type="text" readonly id="md-{{ item.pk }}" value="{{ item.markdown }}" class="u-mono" data-copy-source>
+                  <button type="button" class="btn btn--sm btn--outline" data-copy hidden>Copy</button>
+                </div>
+              </div>
+              <div class="stack u-gap-6">
+                <label class="u-fs-13 muted" for="link-{{ item.pk }}">Link only</label>
+                <div class="copy-field">
+                  <input type="text" readonly id="link-{{ item.pk }}" value="{{ item.get_absolute_url }}" class="u-mono" data-copy-source>
+                  <button type="button" class="btn btn--sm btn--outline" data-copy hidden>Copy</button>
+                </div>
+              </div>
+
+              <p class="u-fs-13 muted">
+                {% if row.modules or row.courses %}
+                  Used in
+                  {% for module in row.modules %}<a href="{% url 'manage:module_edit' module.course.slug module.slug %}">Module {{ module.number }}</a>{% if not forloop.last or row.courses %}, {% endif %}{% endfor %}
+                  {% for course in row.courses %}<a href="{% url 'manage:course_edit' course.slug %}">{{ course.title }} description</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+                {% else %}
+                  Not linked from any lesson yet. Students cannot open it until a lesson links to it.
+                {% endif %}
+              </p>
+            </div>
+
+            <form method="post" action="{% url 'manage:library_delete' item.pk %}" class="library-item__remove"
+                  {% if row.modules or row.courses %}data-confirm="This file is used in a lesson. Remove it anyway?"{% endif %}>
+              {% csrf_token %}
+              <input type="hidden" name="next_folder" value="{{ chosen }}">
+              <button class="btn-link btn-link--sm" type="submit">Remove</button>
+            </form>
+          </article>
+        {% endwith %}
+      {% empty %}
+        <p class="asset-row muted">
+          {% if query or chosen %}No files match.{% else %}No files yet. Upload some on the right.{% endif %}
+        </p>
+      {% endfor %}
+    </section>
+  </div>
+
+  {# --------------------------------------------------------------- upload #}
+  <div class="stack u-gap-20">
+    <section class="panel" aria-labelledby="upload-title">
+      <div class="panel__head">
+        <h2 class="panel__title" id="upload-title">Upload files</h2>
+      </div>
+      <form method="post" enctype="multipart/form-data" action="{% url 'manage:library_upload' %}"
+            class="stack u-gap-12 panel--padded">
+        {% csrf_token %}
+        <input type="hidden" name="next_folder" value="{{ chosen }}">
+        {% include "includes/field.html" with field=form.folder %}
+        <datalist id="library-folders">
+          {% for row in folders %}<option value="{{ row.folder }}">{% endfor %}
+        </datalist>
+        {% include "includes/field.html" with field=form.files %}
+        <button class="btn btn--sm" type="submit">Upload</button>
+      </form>
+    </section>
+
+    <section class="panel panel--padded stack u-gap-10" aria-labelledby="how-title">
+      <h2 class="panel__title" id="how-title">Using a file in a lesson</h2>
+      <ol class="u-fs-14 library-steps">
+        <li>Upload the file here.</li>
+        <li>Press <strong>Copy</strong> beside its Markdown. (Writing the Markdown yourself? Copy the
+          link and use <code>![description](link)</code> for audio and images.)</li>
+        <li>Paste into the module's lesson notes and save.</li>
+      </ol>
+      <p class="u-fs-14 muted">Audio becomes a player and SVG or images show as figures. The text
+        in square brackets is the description screen readers announce, so make it say what the
+        figure shows.</p>
+      <p class="u-fs-14 muted">Files are private. A student can only open a file that is linked
+        from a module they have unlocked.</p>
+    </section>
+  </div>
+</div>
+{% endblock %}
