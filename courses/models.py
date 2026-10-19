@@ -187,6 +187,14 @@ class Module(TimeStampedModel):
         _("video duration (seconds)"), default=0
     )
     video_has_subtitles = models.BooleanField(_("English subtitles"), default=False)
+    # Handouts picked from the media library and listed under the module's
+    # Downloads tab, free to anyone who may open the module.
+    downloads = models.ManyToManyField(
+        "LibraryFile",
+        verbose_name=_("downloads"),
+        blank=True,
+        related_name="download_modules",
+    )
 
     class Meta:
         verbose_name = _("module")
@@ -247,6 +255,13 @@ class Module(TimeStampedModel):
     @cached_property
     def download_assets(self):
         return [a for a in self.assets.all() if a.kind == MediaAsset.Kind.DOWNLOAD]
+
+    @cached_property
+    def download_files(self):
+        """Everything under the Downloads tab: older per-module uploads, then
+        the files picked from the media library. Prefetch `assets` and
+        `downloads` first."""
+        return self.download_assets + list(self.downloads.all())
 
     @cached_property
     def notation_assets(self):
@@ -355,20 +370,25 @@ class MediaAsset(TimeStampedModel):
 
     @property
     def size_display(self):
-        try:
-            size = self.file.size
-        except (OSError, ValueError):
-            return ""
-        for unit in ("B", "KB", "MB", "GB"):
-            if size < 1024 or unit == "GB":
-                return f"{size:.0f} {unit}" if unit == "B" else f"{size:.1f} {unit}"
-            size /= 1024
-        return ""
+        return file_size_display(self.file)
 
     @property
     def detail_line(self):
         bits = [b for b in (self.duration_display, self.size_display) if b]
         return " · ".join(bits)
+
+
+def file_size_display(file):
+    """A stored file's size as "1.2 MB", or "" when the file is missing."""
+    try:
+        size = file.size
+    except (OSError, ValueError):
+        return ""
+    for unit in ("B", "KB", "MB", "GB"):
+        if size < 1024 or unit == "GB":
+            return f"{size:.0f} {unit}" if unit == "B" else f"{size:.1f} {unit}"
+        size /= 1024
+    return ""
 
 
 def library_upload_to(instance, filename):
@@ -385,9 +405,10 @@ class LibraryFile(TimeStampedModel):
     """A file in the shared media library, linked from lesson notes by URL.
 
     The administrator uploads audio, diagrams and handouts once, copies the
-    link, and pastes it into any module's Markdown. Nothing ties a file to a
-    module in the database: `courses.views.library_file` works out who may
-    fetch it from which notes link to it, so the paywall still applies.
+    link, and pastes it into any module's Markdown or picks it as one of a
+    module's `downloads`. `courses.views.library_file` works out who may
+    fetch it from which modules link to it or offer it, so the paywall
+    still applies.
     """
 
     class Purpose(models.TextChoices):
@@ -472,6 +493,12 @@ class LibraryFile(TimeStampedModel):
     def is_download(self):
         """True when students should save the file rather than view it."""
         return self.purpose == self.Purpose.DOWNLOAD or not (self.is_audio or self.is_image)
+
+    @property
+    def detail_line(self):
+        """File type and size for the Downloads tab, e.g. "PDF · 1.2 MB"."""
+        bits = [b for b in (self.extension.upper(), file_size_display(self.file)) if b]
+        return " · ".join(bits)
 
     @property
     def link_prefix(self):

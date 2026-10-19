@@ -282,7 +282,7 @@ def course_edit(request, slug=None):
 
 @staff_required
 def module_edit(request, slug, module_slug=None):
-    """The module editor: details, notes, video, and files from the library."""
+    """The module editor: details, notes, video, downloads and files from the library."""
     course = get_object_or_404(Course, slug=slug)
     module = (
         get_object_or_404(
@@ -299,6 +299,7 @@ def module_edit(request, slug, module_slug=None):
         if not module.position:
             module.position = course.modules.count()
         module.save()
+        form.save_m2m()
         messages.success(request, f"Module {module.number} has been saved.")
         return redirect(
             reverse("manage:module_edit", kwargs={"slug": course.slug, "module_slug": module.slug})
@@ -315,6 +316,7 @@ def module_edit(request, slug, module_slug=None):
             "library": library,
             "library_purposes": library_purposes(library),
             "linked_files": linked_library_files(module, library),
+            "download_upload_url": library_upload_url(LibraryFile.Purpose.DOWNLOAD, ""),
             "quiz": getattr(module, "quiz", None) if module.pk else None,
             "md_tools": ["H2", "B", "I", "List", "Link"],
             "section": "courses",
@@ -412,14 +414,16 @@ class LibraryView(ManageBase):
 
 
 def library_rows(files):
-    """Each file with the modules (notes or quiz) and courses that link to it.
+    """Each file with the modules (notes, quiz or downloads) and courses that use it.
 
     Shown so the administrator sees what would break before removing a file.
     The course has a handful of modules, so matching in Python is cheaper
     than one query per file.
     """
     modules = list(
-        Module.objects.select_related("course").prefetch_related("quiz__questions__choices")
+        Module.objects.select_related("course").prefetch_related(
+            "quiz__questions__choices", "downloads"
+        )
     )
     courses = list(Course.objects.only("title", "slug", "description"))
     rows = []
@@ -428,7 +432,11 @@ def library_rows(files):
         rows.append(
             {
                 "file": item,
-                "modules": [m for m in modules if prefix in m.linkable_text],
+                "modules": [
+                    m
+                    for m in modules
+                    if prefix in m.linkable_text or item in m.downloads.all()
+                ],
                 "courses": [c for c in courses if prefix in c.description],
             }
         )

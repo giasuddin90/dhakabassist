@@ -710,6 +710,56 @@ class LibraryFileTests(TestCase):
 
 
 @override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))
+class ModuleDownloadTests(TestCase):
+    """Library files picked as a module's downloads, free with the module."""
+
+    def setUp(self):
+        self.course, self.modules = make_course()
+        self.student = User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
+        self.sheet = LibraryFile.objects.create(
+            title="Worksheet 1",
+            purpose=LibraryFile.Purpose.DOWNLOAD,
+            file=SimpleUploadedFile("worksheet-1.pdf", b"%PDF"),
+        )
+        self.client.force_login(self.student)
+
+    def tearDown(self):
+        from django.conf import settings
+
+        shutil.rmtree(settings.PROTECTED_MEDIA_ROOT, ignore_errors=True)
+
+    def test_the_lesson_lists_the_module_downloads(self):
+        self.modules[0].downloads.add(self.sheet)
+        response = self.client.get(self.modules[0].get_absolute_url())
+        self.assertContains(response, 'id="tab-files"')
+        self.assertContains(response, "Worksheet 1")
+        self.assertContains(response, "PDF · 4 B")
+        self.assertContains(response, f'href="{self.sheet.get_absolute_url()}" download')
+
+    def test_a_module_without_downloads_has_no_downloads_tab(self):
+        response = self.client.get(self.modules[0].get_absolute_url())
+        self.assertNotContains(response, 'id="tab-files"')
+
+    def test_a_download_on_the_free_module_is_served_as_an_attachment(self):
+        self.modules[0].downloads.add(self.sheet)
+        response = self.client.get(self.sheet.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("attachment", response["Content-Disposition"])
+
+    def test_a_download_on_a_locked_module_is_not_served(self):
+        self.modules[1].downloads.add(self.sheet)
+        self.assertEqual(self.client.get(self.sheet.get_absolute_url()).status_code, 404)
+
+    def test_an_enrolled_student_gets_downloads_from_unlocked_paid_modules(self):
+        self.modules[1].downloads.add(self.sheet)
+        Enrollment.objects.create(student=self.student, course=self.course)
+        ModuleProgress.objects.create(
+            student=self.student, module=self.modules[0], completed_at=timezone.now()
+        )
+        self.assertEqual(self.client.get(self.sheet.get_absolute_url()).status_code, 200)
+
+
+@override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))
 class QuizLibraryMediaTests(TestCase):
     """Library audio and diagrams pasted anywhere into a quiz."""
 

@@ -95,6 +95,41 @@
           signed per request, and a protected file is streamed only after the enrolment check.</p>
       </section>
 
+      <section class="panel" aria-labelledby="downloads-title">
+        <div class="panel__head">
+          <h2 class="panel__title" id="downloads-title">Downloads</h2>
+          <a class="btn-link btn-link--sm" href="{{ download_upload_url }}" target="_blank" rel="noopener">Upload new ↗</a>
+        </div>
+        {% if form.downloads.field.queryset %}
+          <fieldset class="pick-fieldset">
+            <legend class="visually-hidden">Files students can download with this module</legend>
+            <ul class="pick-list pick-list--scroll">
+              {% for choice in form.downloads %}
+                {% with item=choice.data.value.instance %}
+                  <li>
+                    <label class="pick-row pick-row--check" for="{{ choice.id_for_label }}">
+                      {{ choice.tag }}
+                      {% include "includes/file_tag.html" %}
+                      <span class="pick-row__name">
+                        <span class="pick-row__title">{{ item.title }}</span>
+                        <span class="pick-row__meta">{{ item.folder }} · {{ item.filename }}</span>
+                      </span>
+                    </label>
+                  </li>
+                {% endwith %}
+              {% endfor %}
+            </ul>
+          </fieldset>
+          {% for error in form.downloads.errors %}<p class="field__error panel__body">{{ error }}</p>{% endfor %}
+        {% else %}
+          <p class="panel__body u-fs-14 muted">No handouts in the library yet.
+            <a href="{{ download_upload_url }}" target="_blank" rel="noopener">Upload download material</a>,
+            then reload this page.</p>
+        {% endif %}
+        <p class="panel__foot">Ticked files appear under the module's <strong>Downloads</strong> tab,
+          free to every student who can open this module. Lists download material, documents, scores and ZIPs.</p>
+      </section>
+
       <div class="editor-actions">
         <button class="btn btn--sm" type="submit">
           {% if module.pk %}Save changes{% else %}Create module{% endif %}

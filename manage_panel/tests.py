@@ -424,6 +424,38 @@ class ModuleEditorLibraryTests(TestCase):
         linked = [item.title for item in response.context["linked_files"]]
         self.assertEqual(sorted(linked), ["Clip", "Scale"])
 
+    def test_downloads_offer_handouts_but_not_lesson_audio(self):
+        sheet = LibraryFile.objects.create(
+            title="Worksheet 1", file=SimpleUploadedFile("worksheet-1.pdf", b"%PDF")
+        )
+        LibraryFile.objects.create(title="Scale", file=SimpleUploadedFile("s.mp3", b"ID3"))
+        response = self.client.get(self.url)
+        offered = list(response.context["form"].fields["downloads"].queryset)
+        self.assertEqual(offered, [sheet])
+
+    def test_picked_downloads_are_saved_with_the_module(self):
+        sheet = LibraryFile.objects.create(
+            title="Worksheet 1",
+            purpose=LibraryFile.Purpose.DOWNLOAD,
+            file=SimpleUploadedFile("worksheet-1.pdf", b"%PDF"),
+        )
+        data = {
+            "number": self.module.number,
+            "title": self.module.title,
+            "slug": self.module.slug,
+            "access": self.module.access,
+            "status": self.module.status,
+            "video_duration_seconds": 0,
+            "downloads": [sheet.pk],
+        }
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(list(self.module.downloads.all()), [sheet])
+
+        del data["downloads"]
+        self.client.post(self.url, data)
+        self.assertFalse(self.module.downloads.exists())
+
     def test_a_new_module_lists_no_linked_files(self):
         LibraryFile.objects.create(title="Scale", file=SimpleUploadedFile("s.mp3", b"ID3"))
         response = self.client.get(reverse("manage:module_new", kwargs={"slug": self.course.slug}))

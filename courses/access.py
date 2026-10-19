@@ -149,7 +149,7 @@ def course_queryset():
         Prefetch(
             "modules",
             queryset=Module.objects.prefetch_related(
-                "lessons", "assets", "quiz__questions__choices"
+                "lessons", "assets", "downloads", "quiz__questions__choices"
             ),
         )
     )
@@ -161,7 +161,8 @@ def can_fetch_library_file(user, library_file):
     Library files belong to no module, so access follows the links instead:
     a file is public when a published course description links to it, and
     otherwise reachable by anyone who may open a module whose notes or quiz
-    link to it. A file nobody links to is for staff only.
+    link to it, or that offers it as a download. A file nobody links to is
+    for staff only.
     """
     if user.is_authenticated and user.is_active and user.is_staff:
         return True
@@ -174,6 +175,7 @@ def can_fetch_library_file(user, library_file):
                 quiz__questions__text__contains=prefix,
                 quiz__questions__explanation__contains=prefix,
                 quiz__questions__choices__text__contains=prefix,
+                downloads=library_file,
                 _connector=Q.OR,
             ),
             status=Module.Status.PUBLISHED,

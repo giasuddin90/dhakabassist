@@ -53,12 +53,36 @@ class ModuleForm(forms.ModelForm):
         fields = (
             "number", "title", "title_bn", "slug", "summary", "notes_markdown",
             "access", "status", "video_provider", "video_uid",
-            "video_duration_seconds", "video_has_subtitles",
+            "video_duration_seconds", "video_has_subtitles", "downloads",
         )
         widgets = {
             "summary": forms.Textarea(attrs={"rows": 3}),
             "notes_markdown": forms.Textarea(attrs={"rows": 14, "class": "editor-area"}),
+            "downloads": forms.CheckboxSelectMultiple,
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["downloads"].queryset = downloadable_files(self.instance)
+
+
+def downloadable_files(module):
+    """Library files a module may offer under Downloads.
+
+    Download material, plus any document, score or ZIP whatever its
+    material, so a handout filed as lesson material can still be offered.
+    Files already picked stay listed so saving never drops them silently.
+    """
+    wanted = Q(purpose=LibraryFile.Purpose.DOWNLOAD)
+    for extension in (
+        LibraryFile.DOCUMENT_EXTENSIONS
+        + LibraryFile.SCORE_EXTENSIONS
+        + LibraryFile.ARCHIVE_EXTENSIONS
+    ):
+        wanted |= Q(file__iendswith=f".{extension}")
+    if module.pk:
+        wanted |= Q(download_modules=module)
+    return LibraryFile.objects.filter(wanted).distinct().order_by("folder", "title", "id")
 
 
 class QuizForm(forms.ModelForm):

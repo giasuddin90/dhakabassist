@@ -85,7 +85,7 @@
         <button type="button" role="tab" id="tab-audio" data-tab="audio"
                 aria-controls="panel-audio" aria-selected="false" tabindex="-1">Audio</button>
       {% endif %}
-      {% if module.download_assets %}
+      {% if module.download_files %}
         <button type="button" role="tab" id="tab-files" data-tab="files"
                 aria-controls="panel-files" aria-selected="false" tabindex="-1">Downloads</button>
       {% endif %}
@@ -114,9 +114,9 @@
       </section>
     {% endif %}
 
-    {% if module.download_assets %}
+    {% if module.download_files %}
       <section id="panel-files" role="tabpanel" aria-labelledby="tab-files" class="ruled" style="max-width:700px">
-        {% for asset in module.download_assets %}
+        {% for asset in module.download_files %}
           <div class="split" style="padding:16px 0;align-items:center">
             <span class="stack u-gap-6">
               <span class="u-fs-16 u-bold">{{ asset.title }}</span>
