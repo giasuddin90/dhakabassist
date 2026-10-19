@@ -29,7 +29,7 @@ and, optionally, `chosen` (the folder being viewed, kept after a removal).
           {% for module in row.modules %}<a href="{% url 'manage:module_edit' module.course.slug module.slug %}">Module {{ module.number }}</a>{% if not forloop.last or row.courses %}, {% endif %}{% endfor %}
           {% for course in row.courses %}<a href="{% url 'manage:course_edit' course.slug %}">{{ course.title }} description</a>{% if not forloop.last %}, {% endif %}{% endfor %}
         {% else %}
-          Not linked from any lesson or quiz yet. Students cannot open it until one links to it.
+          Not linked from any lesson, quiz or module downloads yet. Students cannot open it until one links to it.
         {% endif %}
       </p>
 

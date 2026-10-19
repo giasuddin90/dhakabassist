@@ -553,32 +553,6 @@ body.manage {
   min-height: 44px;
   min-width: 44px;
 }
-
-/* A whole row is the tap target for its checkbox (module downloads). */
-.pick-fieldset {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  min-width: 0;
-}
-
-.pick-row--check {
-  grid-template-columns: auto auto minmax(0, 1fr);
-  min-height: 56px;
-  cursor: pointer;
-}
-
-.pick-row--check input {
-  width: 20px;
-  height: 20px;
-  margin: 0;
-  accent-color: var(--ink);
-}
-
-.pick-list li:last-child .pick-row--check {
-  border-bottom: 0;
-}
-
 .pick-row__more {
   grid-column: 1 / -1;
   font-size: 13px;

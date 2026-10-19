@@ -48,41 +48,59 @@ class CourseForm(forms.ModelForm):
 
 
 class ModuleForm(forms.ModelForm):
+    download_links = forms.CharField(
+        label="Download links",
+        required=False,
+        widget=forms.Textarea(
+            attrs={"rows": 4, "class": "u-mono", "placeholder": "/library/…/worksheet-1.pdf"}
+        ),
+        help_text="Paste a media library link on each line. "
+        "The Markdown from the library works too.",
+    )
+
     class Meta:
         model = Module
         fields = (
             "number", "title", "title_bn", "slug", "summary", "notes_markdown",
             "access", "status", "video_provider", "video_uid",
-            "video_duration_seconds", "video_has_subtitles", "downloads",
+            "video_duration_seconds", "video_has_subtitles",
         )
         widgets = {
             "summary": forms.Textarea(attrs={"rows": 3}),
             "notes_markdown": forms.Textarea(attrs={"rows": 14, "class": "editor-area"}),
-            "downloads": forms.CheckboxSelectMultiple,
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["downloads"].queryset = downloadable_files(self.instance)
+        if self.instance.pk:
+            self.initial.setdefault(
+                "download_links",
+                "\n".join(item.get_absolute_url() for item in self.instance.downloads.all()),
+            )
 
+    def clean_download_links(self):
+        """Each pasted line as a library file, refusing any that is not one."""
+        files, bad = [], []
+        for line in self.cleaned_data["download_links"].splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            item = LibraryFile.from_link(line)
+            if item is None:
+                bad.append(line)
+            elif item not in files:
+                files.append(item)
+        if bad:
+            raise forms.ValidationError(
+                [f"“{line}” is not a media library link." for line in bad]
+            )
+        return files
 
-def downloadable_files(module):
-    """Library files a module may offer under Downloads.
-
-    Download material, plus any document, score or ZIP whatever its
-    material, so a handout filed as lesson material can still be offered.
-    Files already picked stay listed so saving never drops them silently.
-    """
-    wanted = Q(purpose=LibraryFile.Purpose.DOWNLOAD)
-    for extension in (
-        LibraryFile.DOCUMENT_EXTENSIONS
-        + LibraryFile.SCORE_EXTENSIONS
-        + LibraryFile.ARCHIVE_EXTENSIONS
-    ):
-        wanted |= Q(file__iendswith=f".{extension}")
-    if module.pk:
-        wanted |= Q(download_modules=module)
-    return LibraryFile.objects.filter(wanted).distinct().order_by("folder", "title", "id")
+    def _save_m2m(self):
+        # Runs on save(), or on save_m2m() after save(commit=False), once the
+        # module has a primary key to link the files to.
+        super()._save_m2m()
+        self.instance.downloads.set(self.cleaned_data["download_links"])
 
 
 class QuizForm(forms.ModelForm):

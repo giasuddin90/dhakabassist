@@ -424,37 +424,57 @@ class ModuleEditorLibraryTests(TestCase):
         linked = [item.title for item in response.context["linked_files"]]
         self.assertEqual(sorted(linked), ["Clip", "Scale"])
 
-    def test_downloads_offer_handouts_but_not_lesson_audio(self):
-        sheet = LibraryFile.objects.create(
-            title="Worksheet 1", file=SimpleUploadedFile("worksheet-1.pdf", b"%PDF")
+    def post_download_links(self, links):
+        return self.client.post(
+            self.url,
+            {
+                "number": self.module.number,
+                "title": self.module.title,
+                "slug": self.module.slug,
+                "access": self.module.access,
+                "status": self.module.status,
+                "video_duration_seconds": 0,
+                "download_links": links,
+            },
         )
-        LibraryFile.objects.create(title="Scale", file=SimpleUploadedFile("s.mp3", b"ID3"))
-        response = self.client.get(self.url)
-        offered = list(response.context["form"].fields["downloads"].queryset)
-        self.assertEqual(offered, [sheet])
 
-    def test_picked_downloads_are_saved_with_the_module(self):
-        sheet = LibraryFile.objects.create(
+    def make_sheet(self, name="worksheet-1.pdf"):
+        return LibraryFile.objects.create(
             title="Worksheet 1",
             purpose=LibraryFile.Purpose.DOWNLOAD,
-            file=SimpleUploadedFile("worksheet-1.pdf", b"%PDF"),
+            file=SimpleUploadedFile(name, b"%PDF"),
         )
-        data = {
-            "number": self.module.number,
-            "title": self.module.title,
-            "slug": self.module.slug,
-            "access": self.module.access,
-            "status": self.module.status,
-            "video_duration_seconds": 0,
-            "downloads": [sheet.pk],
-        }
-        response = self.client.post(self.url, data)
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(list(self.module.downloads.all()), [sheet])
 
-        del data["downloads"]
-        self.client.post(self.url, data)
+    def test_pasted_library_links_become_module_downloads(self):
+        sheet, chart = self.make_sheet(), self.make_sheet("chart.pdf")
+        links = f"https://dhakabassist.com{sheet.get_absolute_url()}\n\n{chart.markdown}\n"
+        response = self.post_download_links(links)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(set(self.module.downloads.all()), {sheet, chart})
+
+    def test_saved_downloads_show_as_links_and_clear_when_removed(self):
+        sheet = self.make_sheet()
+        self.module.downloads.add(sheet)
+        response = self.client.get(self.url)
+        self.assertEqual(
+            response.context["form"]["download_links"].value(), sheet.get_absolute_url()
+        )
+        self.post_download_links("")
         self.assertFalse(self.module.downloads.exists())
+
+    def test_a_link_outside_the_library_is_refused(self):
+        sheet = self.make_sheet()
+        response = self.post_download_links(
+            f"{sheet.get_absolute_url()}\nhttps://drive.google.com/file/abc"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "is not a media library link")
+        self.assertFalse(self.module.downloads.exists())
+
+    def test_a_library_link_with_the_wrong_file_name_is_refused(self):
+        sheet = self.make_sheet()
+        response = self.post_download_links(f"/library/{sheet.key}/other.pdf")
+        self.assertContains(response, "is not a media library link")
 
     def test_a_new_module_lists_no_linked_files(self):
         LibraryFile.objects.create(title="Scale", file=SimpleUploadedFile("s.mp3", b"ID3"))

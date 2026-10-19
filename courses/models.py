@@ -5,6 +5,7 @@ A module is reachable when it is the free preview, or when the student is
 enrolled and has passed every earlier module's quiz.
 """
 
+import re
 import secrets
 from pathlib import Path
 
@@ -187,7 +188,7 @@ class Module(TimeStampedModel):
         _("video duration (seconds)"), default=0
     )
     video_has_subtitles = models.BooleanField(_("English subtitles"), default=False)
-    # Handouts picked from the media library and listed under the module's
+    # Handouts linked from the media library and listed under the module's
     # Downloads tab, free to anyone who may open the module.
     downloads = models.ManyToManyField(
         "LibraryFile",
@@ -391,6 +392,10 @@ def file_size_display(file):
     return ""
 
 
+# The path of `courses:library_file`, found inside a pasted URL or Markdown.
+LIBRARY_LINK_PATH = re.compile(r"/library/(?P<key>[\w-]+)/(?P<name>[^\s/()\[\]]+)")
+
+
 def library_upload_to(instance, filename):
     """Group stored files by folder, so the disk mirrors the library."""
     return f"library/{slugify(instance.folder) or 'unsorted'}/{filename}"
@@ -468,6 +473,19 @@ class LibraryFile(TimeStampedModel):
 
     def __str__(self):
         return self.title
+
+    @classmethod
+    def from_link(cls, text):
+        """The library file a pasted link points at, or None.
+
+        Takes the "Link only" URL (with or without the site address) or the
+        Markdown the library offers to copy, so either paste works.
+        """
+        match = LIBRARY_LINK_PATH.search(text)
+        if not match:
+            return None
+        item = cls.objects.filter(key=match["key"]).first()
+        return item if item and item.filename == match["name"] else None
 
     @property
     def filename(self):

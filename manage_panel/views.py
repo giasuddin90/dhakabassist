@@ -316,7 +316,10 @@ def module_edit(request, slug, module_slug=None):
             "library": library,
             "library_purposes": library_purposes(library),
             "linked_files": linked_library_files(module, library),
-            "download_upload_url": library_upload_url(LibraryFile.Purpose.DOWNLOAD, ""),
+            "saved_downloads": list(module.downloads.all()) if module.pk else [],
+            "download_library_url": (
+                f"{reverse('manage:library')}?purpose={LibraryFile.Purpose.DOWNLOAD}"
+            ),
             "quiz": getattr(module, "quiz", None) if module.pk else None,
             "md_tools": ["H2", "B", "I", "List", "Link"],
             "section": "courses",
