@@ -431,6 +431,12 @@ select {
   width: 100%;
 }
 
+/* A link to a media library file downloads it; the arrow says so up front. */
+.prose .file-link::before {
+  content: "↓ ";
+  font-weight: 700;
+}
+
 .prose code {
   font-family: var(--font-mono);
   font-size: 0.9em;
@@ -1604,6 +1610,66 @@ select {
    and a child cannot opt out of an ancestor's decoration. */
 .answer.is-wrong .answer__text {
   text-decoration: line-through;
+}
+
+/* Quiz text is Markdown, so it can carry audio and diagrams from the
+   media library wherever the administrator links them. */
+.quiz-count {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.quiz-question {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 2.6vw, 34px);
+  line-height: 1.2;
+  text-wrap: pretty;
+}
+
+.quiz-question > * + *,
+.quiz-feedback > * + * {
+  margin-top: 16px;
+}
+
+.quiz-question img {
+  display: block;
+  width: 100%;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.quiz-question audio,
+.quiz-feedback audio,
+.answer-option audio {
+  display: block;
+  width: 100%;
+}
+
+/* The explanation shares a row with the Next button, so a diagram here
+   stays small rather than pushing the button off screen. */
+.quiz-feedback img {
+  display: block;
+  max-width: 100%;
+  max-height: 200px;
+  width: auto;
+  border-radius: var(--radius-sm);
+}
+
+.answer-option {
+  display: grid;
+  gap: 8px;
+}
+
+.answer__text img {
+  display: inline-block;
+  max-height: 96px;
+  max-width: 100%;
+  vertical-align: middle;
 }
 
 .quiz-score {

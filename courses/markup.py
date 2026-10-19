@@ -40,6 +40,10 @@ AUDIO_IMAGE = re.compile(
     r'<img\b[^>]*?\bsrc="([^"]+\.(?:mp3|m4a|ogg|wav))"[^>]*>', re.IGNORECASE
 )
 
+# A text link to a media library file is a download (the server sends it as an
+# attachment), so it gets a class that marks it as one for the student.
+LIBRARY_LINK = re.compile(r'<a href="(/library/[^"]+)"')
+
 _renderer = markdown.Markdown(
     extensions=["extra", "sane_lists", "smarty"], output_format="html"
 )
@@ -60,7 +64,37 @@ def render_notes(text):
     )
     html = cleaner.clean(html)
     html = AUDIO_IMAGE.sub(r'<audio src="\1"></audio>', html)
+    html = LIBRARY_LINK.sub(r'<a class="file-link" href="\1"', html)
     # Defaults the editor should not have to repeat in every note.
     html = html.replace("<img ", '<img loading="lazy" decoding="async" ')
     html = html.replace("<audio ", '<audio controls preload="none" ')
     return mark_safe(html)  # noqa: S308 - sanitised by bleach immediately above
+
+
+# One paragraph and nothing else: what a quiz title or answer option renders to.
+SINGLE_PARAGRAPH = re.compile(r"\A<p>((?:(?!</?p>).)*)</p>\Z", re.DOTALL)
+AUDIO_PLAYER = re.compile(r"<audio\b[^>]*>.*?</audio>", re.DOTALL)
+
+
+def render_inline(text):
+    """Markdown for one-line fields, without the paragraph around it.
+
+    Quiz titles and answer options sit inside a heading or a button, where a
+    <p> is not allowed. Longer text keeps its paragraphs.
+    """
+    html = render_notes(text)
+    match = SINGLE_PARAGRAPH.match(html)
+    # Both branches are output of `render_notes`, already sanitised by bleach.
+    return mark_safe(match.group(1)) if match else html
+
+
+def split_audio(html):
+    """Separate audio players from the rest of some rendered HTML.
+
+    A player inside an answer button would submit the answer when pressed,
+    so the quiz shows an option's audio beside its button instead.
+    """
+    players = "".join(AUDIO_PLAYER.findall(html))
+    rest = AUDIO_PLAYER.sub("", html).strip()
+    # Pieces of `render_notes` output, already sanitised by bleach.
+    return mark_safe(rest), mark_safe(players)

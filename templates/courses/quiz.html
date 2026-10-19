@@ -6,7 +6,7 @@
 
     <div class="split" style="align-items:center">
       <a class="btn-link btn-link--sm" href="{{ module.get_absolute_url }}">Back to lesson</a>
-      <p class="u-fs-15 muted">{{ quiz.display_title }}</p>
+      <p class="u-fs-15 muted">{{ quiz.title_html }}</p>
     </div>
 
     {% if finished %}
@@ -46,8 +46,9 @@
         {% for dot in dots %}<span class="is-{{ dot.state }}"></span>{% endfor %}
       </div>
 
-      <p class="u-fs-14 muted">Question {{ question_number }} of {{ question_total }}</p>
-      <h1 class="display-4" style="font-size:34px;line-height:1.2;text-wrap:pretty">{{ question.text }}</h1>
+      <h1 class="quiz-count">Question {{ question_number }} of {{ question_total }}</h1>
+      {# Markdown, so audio and diagrams from the media library show where they are linked. #}
+      <div class="quiz-question">{{ question.text_html }}</div>
 
       {% if question.notation %}
         <figure style="margin:0">
@@ -70,6 +71,8 @@
 
       <div class="stack u-gap-12">
         {% for choice in question.choices.all %}
+          <div class="answer-option">
+          {% if choice.audio_html %}{{ choice.audio_html }}{% endif %}
           <form method="post" action="{% url 'courses:quiz_answer' course.slug module.slug %}" data-answer-form>
               {% csrf_token %}
               <input type="hidden" name="question" value="{{ question.id }}">
@@ -78,22 +81,23 @@
                       type="submit"
                       {% if solved or choice.id in picks %}disabled{% endif %}>
                 <span class="answer__letter" aria-hidden="true">{{ choice.letter }}</span>
-                <span class="answer__text">{{ choice.text }}</span>
+                <span class="answer__text">{{ choice.text_html|default:"Pick this one" }}</span>
                 <span class="answer__note" data-answer-note>
                   {% if choice.id in picks %}{% if choice.is_correct %}Correct{% else %}Try again{% endif %}{% endif %}
                 </span>
               </button>
             </form>
+          </div>
         {% endfor %}
       </div>
 
       <div class="split" style="align-items:center;min-height:52px">
-        <p class="u-fs-16" data-quiz-feedback aria-live="polite"
+        <div class="u-fs-16 quiz-feedback" data-quiz-feedback aria-live="polite"
            style="color:{% if solved %}var(--ok){% elif picks %}var(--err){% else %}var(--text-muted){% endif %}">
-          {% if solved %}{{ question.explanation|default:"Correct." }}
+          {% if solved %}{{ question.explanation_html|default:"Correct." }}
           {% elif picks %}Not quite. Try another answer.
           {% else %}Choose one answer.{% endif %}
-        </p>
+        </div>
         <form method="post" action="{% url 'courses:quiz_advance' course.slug module.slug %}"
               data-quiz-next{% if not solved %} hidden{% endif %}>
           {% csrf_token %}

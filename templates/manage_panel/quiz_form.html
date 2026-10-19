@@ -73,6 +73,9 @@
     </div>
     <p class="u-fs-13 muted">Notation and audio come from this module's media panels.
       <a href="{% url 'manage:module_edit' course.slug module.slug %}">Upload more</a>.</p>
+    <p class="u-fs-13 muted">The question, answer options, explanation and quiz title accept Markdown.
+      Copy audio and diagram Markdown from the <a href="{% url 'manage:library' %}" target="_blank" rel="noopener">Media library</a> (opens in a new tab)
+      and paste it into any of them.</p>
 
     {# ------------------------------------------------------ answer options #}
     <div class="stack u-gap-10">

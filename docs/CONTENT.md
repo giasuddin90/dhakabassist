@@ -9,7 +9,7 @@ developer is needed for any of it.
 | --- | --- |
 | Overview | Paying students, free accounts, revenue, how far students get, recent orders |
 | Courses | Create and edit courses; add, reorder and edit modules |
-| Media library | Upload audio, diagrams and handouts once; copy their links into lesson notes |
+| Media library | Upload audio, diagrams and handouts once; copy their links into lesson notes and quizzes |
 | Quizzes | Every module's quiz, with question counts |
 | Students | Search, see progress, suspend or restore access, grant access |
 | Orders | Every order, filtered by status |
@@ -65,23 +65,36 @@ who has access to that module, so a worksheet link cannot be passed around.
 
 ## The media library
 
-The library is one place for all lesson files: MP3, M4A, OGG and WAV audio;
-SVG, PNG, JPG, WEBP and GIF images; and PDF handouts.
+The library is one place for every course file, sorted into three kinds of
+material:
 
-1. **Media library → Upload files.** Choose a folder (such as "Lesson
-   material" or "Module 3"), or type a new name to start one, then pick as
-   many files as you like.
+- **Lesson material** — audio, diagrams and figures for the lesson notes.
+- **Quiz material** — clips and diagrams for quiz questions and answers.
+- **Download material** — worksheets, handouts, backing tracks and tabs that
+  students save. These are always a download link, even an MP3.
+
+Accepted files: MP3, M4A, OGG and WAV audio; SVG, PNG, JPG, WEBP and GIF
+images; PDF, Word, PowerPoint, Excel, OpenDocument, TXT, RTF and CSV
+documents; MIDI, MusicXML, Guitar Pro and MuseScore scores; and ZIP archives.
+Up to 50 MB each.
+
+1. **Media library → Upload files.** Choose the material, then a folder
+   (such as "Module 3"), or type a new name to start one, then pick as many
+   files as you like.
 2. Press **Copy** beside a file's Markdown.
-3. Paste it into any module's lesson notes and save.
+3. Paste it into any module's lesson notes, or anywhere in a quiz (title,
+   question, answer option or explanation), and save.
+
+The tabs at the top of the library show one kind of material at a time.
 
 The Markdown looks like `![C major scale](/library/…/c-major-scale.mp3)`.
-Audio becomes a player and images become figures. PDFs become a download
-link. The words in square brackets are what a screen reader announces, so for
+Audio becomes a player and images become figures. Download material and
+every document, score or ZIP becomes a download link. The words in square brackets are what a screen reader announces, so for
 a diagram write what it shows.
 
 Each file lists the modules that use it. A file only opens for a student who
-can open one of those modules, so paid material stays paid. A file that no
-lesson links to yet is visible only to staff. A file linked from a published
+can open one of those modules, so paid material stays paid. A link in a
+quiz counts as a link from its module. A file that no lesson or quiz links to yet is visible only to staff. A file linked from a published
 course description is public, because that page is public.
 
 ## Editing a quiz
@@ -92,6 +105,13 @@ Questions are edited one at a time; pick one from the list on the left. Each
 question has four options, and you mark the correct one with the radio button
 beside it. The explanation is optional and is shown once the student picks
 correctly.
+
+The quiz title, questions, answer options and explanations all accept
+Markdown, so audio and diagrams from the media library can go anywhere in a
+quiz. Paste the file's Markdown where it should appear: in a question it shows
+where you put it; in an answer option the image appears inside the option and
+an audio player sits just above it (a player inside the option would choose
+that answer when pressed).
 
 **Rules** control the quiz as a whole:
 

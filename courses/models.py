@@ -14,9 +14,11 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.html import strip_tags
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
+from .markup import render_inline, render_notes, split_audio
 from .storage import protected_storage
 
 
@@ -250,6 +252,19 @@ class Module(TimeStampedModel):
     def notation_assets(self):
         return [a for a in self.assets.all() if a.kind == MediaAsset.Kind.NOTATION]
 
+    @cached_property
+    def linkable_text(self):
+        """The notes plus every word of the quiz: all the text that may link
+        to media library files. Prefetch `quiz__questions__choices` first."""
+        parts = [self.notes_markdown]
+        quiz = getattr(self, "quiz", None)
+        if quiz:
+            parts.append(quiz.title)
+            for question in quiz.questions.all():
+                parts += [question.text, question.explanation]
+                parts += [choice.text for choice in question.choices.all()]
+        return "\n".join(parts)
+
     @property
     def meta_line(self):
         bits = []
@@ -375,17 +390,42 @@ class LibraryFile(TimeStampedModel):
     fetch it from which notes link to it, so the paywall still applies.
     """
 
+    class Purpose(models.TextChoices):
+        LESSON = "lesson", _("Lesson material")
+        QUIZ = "quiz", _("Quiz material")
+        DOWNLOAD = "download", _("Download material")
+
     AUDIO_EXTENSIONS = ("mp3", "m4a", "ogg", "wav")
     IMAGE_EXTENSIONS = ("svg", "png", "jpg", "jpeg", "webp", "gif")
-    DOCUMENT_EXTENSIONS = ("pdf",)
-    EXTENSIONS = AUDIO_EXTENSIONS + IMAGE_EXTENSIONS + DOCUMENT_EXTENSIONS
+    DOCUMENT_EXTENSIONS = (
+        "pdf", "doc", "docx", "odt", "rtf", "txt",
+        "ppt", "pptx", "odp", "xls", "xlsx", "ods", "csv",
+    )
+    # Sheet music and bass tab: MIDI, MusicXML, Guitar Pro and MuseScore.
+    SCORE_EXTENSIONS = ("mid", "midi", "musicxml", "mxl", "gp", "gp5", "gpx", "mscz")
+    ARCHIVE_EXTENSIONS = ("zip",)
+    EXTENSIONS = (
+        AUDIO_EXTENSIONS
+        + IMAGE_EXTENSIONS
+        + DOCUMENT_EXTENSIONS
+        + SCORE_EXTENSIONS
+        + ARCHIVE_EXTENSIONS
+    )
 
+    purpose = models.CharField(
+        _("material"),
+        max_length=10,
+        choices=Purpose.choices,
+        default=Purpose.LESSON,
+        db_index=True,
+        help_text=_("What the file is for. Download material is always offered as a download."),
+    )
     folder = models.CharField(
         _("folder"),
         max_length=80,
-        default="Lesson material",
+        default="General",
         db_index=True,
-        help_text=_("Group related files, e.g. “Lesson material” or “Module 3”."),
+        help_text=_("Group related files, e.g. “Module 3” or “Scales”."),
     )
     title = models.CharField(_("title"), max_length=200)
     file = models.FileField(
@@ -429,6 +469,11 @@ class LibraryFile(TimeStampedModel):
         return self.extension in self.IMAGE_EXTENSIONS
 
     @property
+    def is_download(self):
+        """True when students should save the file rather than view it."""
+        return self.purpose == self.Purpose.DOWNLOAD or not (self.is_audio or self.is_image)
+
+    @property
     def link_prefix(self):
         """The part of the URL that identifies this file inside notes."""
         return self.get_absolute_url().rsplit("/", 1)[0] + "/"
@@ -443,11 +488,13 @@ class LibraryFile(TimeStampedModel):
 
         Audio uses image syntax too: `render_notes` turns an "image" that
         points at an audio file into a player, so there is one thing to learn.
+        Download material is a plain link, even for audio, so a backing track
+        meant to be saved is not embedded as a player.
         """
         url = self.get_absolute_url()
-        if self.is_audio or self.is_image:
-            return f"![{self.title}]({url})"
-        return f"[{self.title}]({url})"
+        if self.is_download:
+            return f"[{self.title}]({url})"
+        return f"![{self.title}]({url})"
 
 
 class Quiz(TimeStampedModel):
@@ -472,6 +519,16 @@ class Quiz(TimeStampedModel):
     @property
     def display_title(self):
         return self.title or f"Module {self.module.number.lstrip('0') or '0'} quiz"
+
+    @cached_property
+    def title_html(self):
+        """The title with any Markdown (and library media) rendered."""
+        return render_inline(self.display_title)
+
+    @property
+    def plain_title(self):
+        """The title as text, for the browser tab where markup cannot show."""
+        return strip_tags(self.title_html).strip() or self.display_title
 
 
 class Question(TimeStampedModel):
@@ -516,6 +573,16 @@ class Question(TimeStampedModel):
     def correct_choice(self):
         return next((c for c in self.choices.all() if c.is_correct), None)
 
+    @cached_property
+    def text_html(self):
+        """The question as Markdown, so library audio and diagrams show inline."""
+        return render_notes(self.text)
+
+    @cached_property
+    def explanation_html(self):
+        """The explanation as Markdown, shown once the right answer is picked."""
+        return render_notes(self.explanation)
+
 
 class Choice(models.Model):
     question = models.ForeignKey(
@@ -539,6 +606,20 @@ class Choice(models.Model):
     @property
     def letter(self):
         return "ABCDEFGH"[self.position] if self.position < 8 else "?"
+
+    @cached_property
+    def _rendered(self):
+        return split_audio(render_inline(self.text))
+
+    @property
+    def text_html(self):
+        """The option's text and images, which fit inside the answer button."""
+        return self._rendered[0]
+
+    @property
+    def audio_html(self):
+        """The option's audio players, shown beside the button, not in it."""
+        return self._rendered[1]
 
 
 class Enrollment(TimeStampedModel):

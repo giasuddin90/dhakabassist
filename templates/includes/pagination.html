@@ -1,0 +1,35 @@
+{% comment %}
+Page links for a paginated list. Pass `page` (a Paginator page) and
+`page_range` (from `get_elided_page_range`). Links keep the query string, so
+search and filters survive a page change.
+{% endcomment %}
+{% load manage_tags %}
+{% if page.has_other_pages %}
+  <nav class="pager" aria-label="Pages">
+    {% if page.has_previous %}
+      <a class="pager__step" href="{% querystring page=page.previous_page_number %}" rel="prev">← Previous</a>
+    {% else %}
+      <span class="pager__step is-disabled" aria-hidden="true">← Previous</span>
+    {% endif %}
+
+    <ol class="pager__pages">
+      {% for number in page_range %}
+        <li>
+          {% if number == page.paginator.ELLIPSIS %}
+            <span class="pager__gap">…</span>
+          {% elif number == page.number %}
+            <span class="pager__page is-current" aria-current="page">{{ number }}</span>
+          {% else %}
+            <a class="pager__page" href="{% querystring page=number %}" aria-label="Page {{ number }}">{{ number }}</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+
+    {% if page.has_next %}
+      <a class="pager__step" href="{% querystring page=page.next_page_number %}" rel="next">Next →</a>
+    {% else %}
+      <span class="pager__step is-disabled" aria-hidden="true">Next →</span>
+    {% endif %}
+  </nav>
+{% endif %}

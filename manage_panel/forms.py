@@ -9,6 +9,7 @@ from pathlib import Path
 
 from django import forms
 from django.core.validators import FileExtensionValidator
+from django.db.models import Q
 from django.forms import inlineformset_factory
 
 from courses.models import (
@@ -165,16 +166,23 @@ class LibraryUploadForm(forms.Form):
 
     MAX_BYTES = 50 * 1024 * 1024
 
+    purpose = forms.ChoiceField(
+        label="Material",
+        choices=LibraryFile.Purpose.choices,
+        initial=LibraryFile.Purpose.LESSON,
+        widget=forms.RadioSelect,
+    )
     folder = forms.CharField(
         max_length=80,
-        initial="Lesson material",
+        initial="General",
         help_text="Pick a folder, or type a new name to start one.",
         widget=forms.TextInput(attrs={"list": "library-folders"}),
     )
     files = MultipleFileField(
         validators=[FileExtensionValidator(LibraryFile.EXTENSIONS)],
-        help_text="MP3, M4A, OGG, WAV, SVG, PNG, JPG, WEBP, GIF or PDF. "
-        "Pick several at once.",
+        help_text="Audio (MP3, M4A, OGG, WAV), images (SVG, PNG, JPG, WEBP, GIF), "
+        "documents (PDF, Word, PowerPoint, Excel, TXT, CSV), scores and tabs "
+        "(MIDI, MusicXML, Guitar Pro, MuseScore) or ZIP. Pick several at once.",
     )
 
     def clean_folder(self):
@@ -191,10 +199,14 @@ class LibraryUploadForm(forms.Form):
 
     def save(self):
         """Create one library file per upload and return them."""
+        purpose = self.cleaned_data["purpose"]
         folder = self.cleaned_data["folder"]
         return [
             LibraryFile.objects.create(
-                folder=folder, title=title_from_filename(upload.name), file=upload
+                purpose=purpose,
+                folder=folder,
+                title=title_from_filename(upload.name),
+                file=upload,
             )
             for upload in self.cleaned_data["files"]
         ]
@@ -204,6 +216,88 @@ def title_from_filename(name):
     """"c-major_scale.mp3" -> "C major scale", a readable default title."""
     text = " ".join(Path(name).stem.replace("-", " ").replace("_", " ").split())
     return (text[:1].upper() + text[1:])[:200] or name[:200]
+
+
+# Extensions behind each "Type" choice, and the ordering behind each "Sort".
+LIBRARY_KINDS = {
+    "audio": LibraryFile.AUDIO_EXTENSIONS,
+    "image": LibraryFile.IMAGE_EXTENSIONS,
+    "document": LibraryFile.DOCUMENT_EXTENSIONS,
+    "score": LibraryFile.SCORE_EXTENSIONS,
+    "archive": LibraryFile.ARCHIVE_EXTENSIONS,
+}
+LIBRARY_SORTS = {
+    "folder": ("folder", "title", "id"),
+    "newest": ("-created_at", "-id"),
+    "oldest": ("created_at", "id"),
+    "title": ("title", "id"),
+}
+
+
+class LibraryFilterForm(forms.Form):
+    """Search, narrow and sort the media library. Every field is optional."""
+
+    q = forms.CharField(required=False, max_length=200, label="Search")
+    purpose = forms.ChoiceField(
+        required=False, choices=[("", "All material"), *LibraryFile.Purpose.choices]
+    )
+    folder = forms.CharField(required=False, max_length=80)
+    kind = forms.ChoiceField(
+        required=False,
+        label="Type",
+        choices=[
+            ("", "All types"),
+            ("audio", "Audio"),
+            ("image", "Images"),
+            ("document", "Documents"),
+            ("score", "Scores and tabs"),
+            ("archive", "ZIP archives"),
+        ],
+    )
+    usage = forms.ChoiceField(
+        required=False,
+        label="Status",
+        choices=[("", "Any status"), ("used", "Used in a lesson"), ("unused", "Not linked yet")],
+    )
+    sort = forms.ChoiceField(
+        required=False,
+        label="Sort",
+        choices=[
+            ("folder", "Folder, A–Z"),
+            ("newest", "Newest first"),
+            ("oldest", "Oldest first"),
+            ("title", "Title, A–Z"),
+        ],
+    )
+
+    def clean_q(self):
+        """Collapse stray spaces, so "C  major" finds "C major"."""
+        return " ".join(self.cleaned_data["q"].split())
+
+    def filter(self, files):
+        """The files matching the search, folder and type, in the chosen order.
+
+        Usage is left to the caller: it depends on lesson text, not a column.
+        """
+        data = self.cleaned_data if self.is_valid() else {}
+        if data.get("purpose"):
+            files = files.filter(purpose=data["purpose"])
+        if data.get("folder"):
+            files = files.filter(folder=data["folder"])
+        if data.get("q"):
+            files = files.filter(Q(title__icontains=data["q"]) | Q(file__icontains=data["q"]))
+        if data.get("kind"):
+            by_extension = Q()
+            for extension in LIBRARY_KINDS[data["kind"]]:
+                by_extension |= Q(file__iendswith=f".{extension}")
+            files = files.filter(by_extension)
+        return files.order_by(*LIBRARY_SORTS[data.get("sort") or "folder"])
+
+    @property
+    def is_narrowed(self):
+        """True when anything but the sort order limits the list."""
+        data = self.cleaned_data if self.is_valid() else {}
+        return any(data.get(name) for name in ("q", "purpose", "folder", "kind", "usage"))
 
 
 class StudentFilterForm(forms.Form):

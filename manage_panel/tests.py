@@ -462,6 +462,7 @@ class LibraryTests(TestCase):
         response = self.client.post(
             self.url,
             {
+                "purpose": LibraryFile.Purpose.LESSON,
                 "folder": "  Lesson   material ",
                 "files": [
                     SimpleUploadedFile("c-major_scale.mp3", b"ID3"),
@@ -474,6 +475,49 @@ class LibraryTests(TestCase):
             sorted(LibraryFile.objects.values_list("title", "folder")),
             [("C major scale", "Lesson material"), ("Treble clef", "Lesson material")],
         )
+
+    def test_uploads_are_filed_under_the_chosen_material(self):
+        self.client.post(
+            self.url,
+            {
+                "purpose": LibraryFile.Purpose.DOWNLOAD,
+                "folder": "Module 3",
+                "files": [
+                    SimpleUploadedFile("worksheet.pdf", b"%PDF"),
+                    SimpleUploadedFile("groove.gp5", b"FICHIER"),
+                    SimpleUploadedFile("notes.docx", b"PK"),
+                ],
+            },
+        )
+        self.assertEqual(
+            sorted(LibraryFile.objects.values_list("purpose", flat=True)),
+            [LibraryFile.Purpose.DOWNLOAD] * 3,
+        )
+
+    def test_a_material_must_be_chosen(self):
+        self.client.post(
+            self.url,
+            {"folder": "Module 3", "files": [SimpleUploadedFile("a.pdf", b"%PDF")]},
+        )
+        self.assertEqual(LibraryFile.objects.count(), 0)
+
+    def test_a_material_tab_narrows_the_list(self):
+        LibraryFile.objects.create(
+            title="Quiz clip",
+            purpose=LibraryFile.Purpose.QUIZ,
+            file=SimpleUploadedFile("a.mp3", b"ID3"),
+        )
+        LibraryFile.objects.create(
+            title="Lesson clip", file=SimpleUploadedFile("b.mp3", b"ID3")
+        )
+        response = self.client.get(reverse("manage:library"), {"purpose": "quiz"})
+        self.assertContains(response, "Quiz clip")
+        self.assertNotContains(response, "Lesson clip")
+        self.assertContains(response, f"{self.url}?purpose=quiz")
+
+    def test_the_upload_page_starts_on_the_material_being_viewed(self):
+        response = self.client.get(self.url, {"purpose": "download"})
+        self.assertContains(response, 'value="download" id="id_purpose_2" required checked')
 
     def test_an_unsupported_file_type_is_refused(self):
         self.client.post(
@@ -491,6 +535,16 @@ class LibraryTests(TestCase):
         response = self.client.get(reverse("manage:library"))
         self.assertContains(response, item.get_absolute_url())
         self.assertContains(response, "Module 01")
+
+    def test_a_file_used_only_in_a_quiz_lists_its_module(self):
+        item = LibraryFile.objects.create(
+            title="Clip", file=SimpleUploadedFile("clip.mp3", b"ID3")
+        )
+        quiz = Quiz.objects.create(module=self.modules[1])
+        Question.objects.create(quiz=quiz, text=f"Listen. {item.markdown}")
+        response = self.client.get(reverse("manage:library"))
+        self.assertContains(response, "Module 02")
+        self.assertNotContains(response, "Not linked from any lesson or quiz yet")
 
     def test_a_folder_filter_narrows_the_list(self):
         LibraryFile.objects.create(
@@ -515,7 +569,53 @@ class LibraryTests(TestCase):
         self.client.force_login(student)
         response = self.client.post(
             self.url,
-            {"folder": "x", "files": [SimpleUploadedFile("x.mp3", b"ID3")]},
+            {"purpose": "lesson", "folder": "x", "files": [SimpleUploadedFile("x.mp3", b"ID3")]},
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(LibraryFile.objects.count(), 0)
+
+    def test_the_upload_page_has_its_own_form(self):
+        response = self.client.get(self.url, {"folder": "Module 3"})
+        self.assertContains(response, 'enctype="multipart/form-data"')
+        self.assertContains(response, 'value="Module 3"')
+
+    def test_a_refused_upload_stays_on_the_form_with_the_error(self):
+        response = self.client.post(
+            self.url,
+            {"folder": "Lesson material", "files": [SimpleUploadedFile("run.exe", b"MZ")]},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "manage_panel/library_upload.html")
+        self.assertContains(response, "field__error")
+
+    def test_a_type_filter_shows_only_that_kind(self):
+        LibraryFile.objects.create(title="Scale clip", file=SimpleUploadedFile("a.mp3", b"ID3"))
+        LibraryFile.objects.create(title="Stave chart", file=SimpleUploadedFile("b.svg", b"<svg/>"))
+        response = self.client.get(reverse("manage:library"), {"kind": "audio"})
+        self.assertContains(response, "Scale clip")
+        self.assertNotContains(response, "Stave chart")
+
+    def test_a_status_filter_shows_only_unlinked_files(self):
+        used = LibraryFile.objects.create(
+            title="Linked clip", file=SimpleUploadedFile("a.mp3", b"ID3")
+        )
+        LibraryFile.objects.create(title="Spare clip", file=SimpleUploadedFile("b.mp3", b"ID3"))
+        self.modules[0].notes_markdown = used.markdown
+        self.modules[0].save(update_fields=["notes_markdown"])
+        response = self.client.get(reverse("manage:library"), {"usage": "unused"})
+        self.assertContains(response, "Spare clip")
+        self.assertNotContains(response, "Linked clip")
+
+    def test_the_list_is_paginated_and_page_links_keep_the_filters(self):
+        for number in range(14):
+            LibraryFile.objects.create(
+                title=f"Clip {number:02}", file=SimpleUploadedFile(f"c{number}.mp3", b"ID3")
+            )
+        url = reverse("manage:library")
+        first = self.client.get(url, {"kind": "audio", "sort": "title"})
+        self.assertContains(first, "Clip 11")
+        self.assertNotContains(first, "Clip 12")
+        self.assertContains(first, "?kind=audio&amp;sort=title&amp;page=2")
+        second = self.client.get(url, {"kind": "audio", "sort": "title", "page": 2})
+        self.assertContains(second, "Clip 13")
+        self.assertNotContains(second, "Clip 11")

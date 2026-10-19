@@ -1,0 +1,46 @@
+{% extends "manage_panel/base.html" %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <p class="manage-head__crumbs"><a href="{% url 'manage:library' %}">← Media library</a></p>
+    <h1>Upload files</h1>
+  </div>
+</header>
+
+<div class="library-upload-layout">
+  <section class="panel" aria-labelledby="upload-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="upload-title">Choose the material, folder and files</h2>
+    </div>
+    <form method="post" enctype="multipart/form-data" action="{% url 'manage:library_upload' %}"
+          class="stack u-gap-18 panel--padded library-upload">
+      {% csrf_token %}
+      {% include "includes/form_errors.html" %}
+      <fieldset class="field material-choice{% if form.purpose.errors %} field--invalid{% endif %}">
+        <legend>{{ form.purpose.label }}</legend>
+        <div class="material-choice__options">
+          {% for radio in form.purpose %}
+            <label class="material-choice__option" for="{{ radio.id_for_label }}">
+              {{ radio.tag }}<span>{{ radio.choice_label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+        <span class="field__help">Lesson material goes in lesson notes, quiz material in questions and answers. Download material is always offered to students as a file to save, never played or shown inline.</span>
+        {% for error in form.purpose.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
+      </fieldset>
+      {% include "includes/field.html" with field=form.folder %}
+      <datalist id="library-folders">
+        {% for folder in folders %}<option value="{{ folder }}">{% endfor %}
+      </datalist>
+      {% include "includes/field.html" with field=form.files %}
+      <div class="cluster">
+        <button class="btn btn--sm" type="submit">Upload</button>
+        <a class="btn-link btn-link--sm" href="{% url 'manage:library' %}">Cancel</a>
+      </div>
+    </form>
+  </section>
+
+  {% include "includes/library_help.html" with open=True %}
+</div>
+{% endblock %}

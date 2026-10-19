@@ -15,7 +15,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from courses.access import CourseAccess
-from courses.markup import render_notes
+from courses.markup import render_inline, render_notes, split_audio
 from courses.models import (
     Choice,
     Course,
@@ -246,7 +246,7 @@ class QuizTests(TestCase):
         )
         data = response.json()
         self.assertTrue(data["correct"])
-        self.assertEqual(data["explanation"], "Four.")
+        self.assertEqual(data["explanation"], "<p>Four.</p>")
 
     def test_repeating_the_same_wrong_pick_is_not_counted_twice(self):
         wrong = self.question.choices.get(position=0)
@@ -400,6 +400,17 @@ class MarkupTests(TestCase):
 
     def test_empty_notes_render_as_nothing(self):
         self.assertEqual(render_notes(""), "")
+
+    def test_inline_markdown_drops_the_paragraph(self):
+        self.assertEqual(render_inline("A **major** third"), "A <strong>major</strong> third")
+
+    def test_inline_markdown_keeps_several_paragraphs(self):
+        self.assertIn("<p>two</p>", render_inline("one\n\ntwo"))
+
+    def test_audio_players_split_from_the_text(self):
+        text, audio = split_audio(render_inline("Listen ![Clip](/library/a/clip.mp3)"))
+        self.assertEqual(text, "Listen")
+        self.assertIn('<audio controls preload="none" src="/library/a/clip.mp3">', audio)
 
 
 class CoursePageTests(TestCase):
@@ -593,6 +604,41 @@ class LibraryFileTests(TestCase):
         pdf = LibraryFile(title="Worksheet", file="library/x/sheet.pdf")
         self.assertTrue(pdf.markdown.startswith("[Worksheet]("))
 
+    def test_download_material_is_a_plain_link_even_for_audio(self):
+        track = LibraryFile(
+            title="Backing track",
+            purpose=LibraryFile.Purpose.DOWNLOAD,
+            file="library/x/groove.mp3",
+        )
+        self.assertTrue(track.is_download)
+        self.assertTrue(track.markdown.startswith("[Backing track]("))
+
+    def test_download_material_is_sent_as_an_attachment(self):
+        track = LibraryFile.objects.create(
+            title="Backing track",
+            purpose=LibraryFile.Purpose.DOWNLOAD,
+            file=SimpleUploadedFile("groove.mp3", b"ID3"),
+        )
+        self.client.force_login(self.staff)
+        response = self.client.get(track.get_absolute_url())
+        self.assertIn("attachment", response["Content-Disposition"])
+
+    def test_lesson_audio_plays_inline(self):
+        self.client.force_login(self.staff)
+        response = self.client.get(self.audio.get_absolute_url())
+        self.assertNotIn("attachment", response.get("Content-Disposition", ""))
+
+    def test_a_link_to_a_library_file_is_marked_as_a_download(self):
+        sheet = LibraryFile.objects.create(
+            title="Worksheet", file=SimpleUploadedFile("sheet.pdf", b"%PDF")
+        )
+        self.link(self.modules[0], sheet)
+        self.client.force_login(self.student)
+        response = self.client.get(self.modules[0].get_absolute_url())
+        self.assertContains(
+            response, f'<a class="file-link" href="{sheet.get_absolute_url()}">Worksheet</a>'
+        )
+
     def test_keys_are_random_not_sequential(self):
         self.assertNotEqual(self.audio.key, self.diagram.key)
         self.assertGreaterEqual(len(self.audio.key), 16)
@@ -661,3 +707,93 @@ class LibraryFileTests(TestCase):
         self.assertContains(
             response, f'<audio controls preload="none" src="{self.audio.get_absolute_url()}">'
         )
+
+
+@override_settings(PROTECTED_MEDIA_ROOT=Path(tempfile.mkdtemp()))
+class QuizLibraryMediaTests(TestCase):
+    """Library audio and diagrams pasted anywhere into a quiz."""
+
+    def setUp(self):
+        self.course, self.modules = make_course()
+        self.student = User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
+        self.audio = LibraryFile.objects.create(
+            title="Interval", file=SimpleUploadedFile("interval.mp3", b"ID3")
+        )
+        self.diagram = LibraryFile.objects.create(
+            title="Stave", file=SimpleUploadedFile("stave.svg", b"<svg></svg>")
+        )
+        self.quiz, self.question = make_quiz(self.modules[0])
+        self.client.force_login(self.student)
+
+    @property
+    def quiz_url(self):
+        return reverse(
+            "courses:quiz",
+            kwargs={"slug": self.course.slug, "module_slug": self.modules[0].slug},
+        )
+
+    def tearDown(self):
+        from django.conf import settings
+
+        shutil.rmtree(settings.PROTECTED_MEDIA_ROOT, ignore_errors=True)
+
+    def test_question_markdown_renders_audio_and_diagrams(self):
+        self.question.text = (
+            f"Name this interval.\n\n{self.audio.markdown}\n\n{self.diagram.markdown}"
+        )
+        self.question.save(update_fields=["text"])
+        response = self.client.get(self.quiz_url)
+        self.assertContains(
+            response, f'<audio controls preload="none" src="{self.audio.get_absolute_url()}">'
+        )
+        self.assertContains(response, f'src="{self.diagram.get_absolute_url()}"')
+
+    def test_option_audio_sits_outside_the_answer_button(self):
+        choice = self.question.choices.get(position=0)
+        choice.text = f"{self.audio.markdown}"
+        choice.save(update_fields=["text"])
+        html = self.client.get(self.quiz_url).content.decode()
+        player = html.index(f'src="{self.audio.get_absolute_url()}"')
+        button = html.index('class="answer', player)
+        self.assertNotIn("<button", html[html.rindex("answer-option", 0, player):player])
+        self.assertGreater(button, player)
+
+    def test_option_images_show_inside_the_button(self):
+        choice = self.question.choices.get(position=1)
+        choice.text = f"This one {self.diagram.markdown}"
+        choice.save(update_fields=["text"])
+        response = self.client.get(self.quiz_url)
+        self.assertContains(response, '<span class="answer__text">This one <img')
+
+    def test_the_explanation_arrives_rendered(self):
+        self.question.explanation = f"Four. {self.diagram.markdown}"
+        self.question.save(update_fields=["explanation"])
+        correct = self.question.choices.get(is_correct=True)
+        response = self.client.post(
+            reverse(
+                "courses:quiz_answer",
+                kwargs={"slug": self.course.slug, "module_slug": self.modules[0].slug},
+            ),
+            {"question": self.question.pk, "choice": correct.pk},
+            headers={"X-Requested-With": "fetch"},
+        )
+        self.assertIn("<img", response.json()["explanation"])
+
+    def test_markdown_in_the_title_stays_out_of_the_browser_tab(self):
+        self.quiz.title = "Rhythm **check**"
+        self.quiz.save(update_fields=["title"])
+        response = self.client.get(self.quiz_url)
+        self.assertContains(response, "Rhythm <strong>check</strong>")
+        self.assertContains(response, "<title>Rhythm check")
+
+    def test_a_file_linked_from_an_unlocked_quiz_is_served(self):
+        choice = self.question.choices.first()
+        choice.text = self.audio.markdown
+        choice.save(update_fields=["text"])
+        self.assertEqual(self.client.get(self.audio.get_absolute_url()).status_code, 200)
+
+    def test_a_file_linked_from_a_locked_quiz_is_not_served(self):
+        _, question = make_quiz(self.modules[1])
+        question.explanation = self.diagram.markdown
+        question.save(update_fields=["explanation"])
+        self.assertEqual(self.client.get(self.diagram.get_absolute_url()).status_code, 404)

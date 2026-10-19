@@ -1,0 +1,64 @@
+{% comment %}
+One media library file as a card. Pass `row` from `manage_panel.views.library_rows`
+and, optionally, `chosen` (the folder being viewed, kept after a removal).
+{% endcomment %}
+{% with item=row.file %}
+  <li class="library-card">
+    <div class="library-card__preview{% if item.is_audio %} library-card__preview--audio{% endif %}">
+      {% if item.is_image or item.is_audio %}<span class="library-card__type">{{ item.extension|upper }}</span>{% endif %}
+      {% if item.is_image %}
+        <img src="{{ item.get_absolute_url }}" alt="" loading="lazy">
+      {% elif item.is_audio %}
+        <span class="library-card__glyph" aria-hidden="true">♪</span>
+        <audio controls preload="none" src="{{ item.get_absolute_url }}"></audio>
+      {% else %}
+        <span class="library-card__glyph" aria-hidden="true">{{ item.extension|upper }}</span>
+      {% endif %}
+    </div>
+
+    <div class="stack u-gap-12 library-card__body">
+      <div class="library-card__name">
+        <span class="badge badge--status badge--neutral library-card__purpose">{{ item.get_purpose_display }}</span>
+        <h3 class="library-card__title">{{ item.title }}</h3>
+        <span class="library-card__meta" title="{{ item.filename }}">{{ item.folder }} · {{ item.filename }}</span>
+      </div>
+
+      <p class="library-card__usage{% if row.modules or row.courses %} is-used{% endif %}">
+        {% if row.modules or row.courses %}
+          Used in
+          {% for module in row.modules %}<a href="{% url 'manage:module_edit' module.course.slug module.slug %}">Module {{ module.number }}</a>{% if not forloop.last or row.courses %}, {% endif %}{% endfor %}
+          {% for course in row.courses %}<a href="{% url 'manage:course_edit' course.slug %}">{{ course.title }} description</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+        {% else %}
+          Not linked from any lesson or quiz yet. Students cannot open it until one links to it.
+        {% endif %}
+      </p>
+
+      <div class="stack u-gap-6">
+        <label class="library-card__label" for="md-{{ item.pk }}">Markdown</label>
+        <div class="copy-field">
+          <input type="text" readonly id="md-{{ item.pk }}" value="{{ item.markdown }}" class="u-mono" data-copy-source>
+          <button type="button" class="btn btn--sm" data-copy hidden>Copy</button>
+        </div>
+      </div>
+
+      <details class="library-card__more">
+        <summary>Link only</summary>
+        <div class="copy-field">
+          <label class="visually-hidden" for="link-{{ item.pk }}">Link to {{ item.title }}</label>
+          <input type="text" readonly id="link-{{ item.pk }}" value="{{ item.get_absolute_url }}" class="u-mono" data-copy-source>
+          <button type="button" class="btn btn--sm btn--outline" data-copy hidden>Copy</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="library-card__foot">
+      <span>Added {{ item.created_at|date:"j M Y" }}</span>
+      <form method="post" action="{% url 'manage:library_delete' item.pk %}"
+            {% if row.modules or row.courses %}data-confirm="This file is used in a lesson. Remove it anyway?"{% endif %}>
+        {% csrf_token %}
+        <input type="hidden" name="next_folder" value="{{ chosen }}">
+        <button class="btn-link btn-link--sm library-card__remove" type="submit">Remove</button>
+      </form>
+    </div>
+  </li>
+{% endwith %}

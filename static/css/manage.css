@@ -342,8 +342,23 @@ body.manage {
   transition: background var(--fast) var(--ease);
 }
 
-.md-tools button:hover {
+.md-tools button:hover,
+.md-tools__link:hover {
   background: var(--highlight);
+}
+
+.md-tools__link {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  transition: background var(--fast) var(--ease);
 }
 
 .dropzone {
@@ -583,57 +598,430 @@ body.manage {
 
 /* ---------------------------------------------------------- media library */
 
-.manage-grid--library {
-  grid-template-columns: minmax(0, 1fr) 320px;
+/* The upload page: form, then help; side by side from 992px. */
+.library-upload-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  max-width: 1000px;
+}
+
+.library-toolbar {
+  --stack-gap: 14px;
 }
 
 .library-search {
-  --cluster-gap: 10px;
+  display: flex;
+  gap: 8px;
 }
 
-.library-folders {
+.library-search input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--cream);
+  border: 1px solid var(--line-field);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--fast) var(--ease);
+}
+
+.library-search input:hover,
+.library-search input:focus {
+  border-color: var(--ink);
+}
+
+.library-search .btn {
+  min-height: 44px;
+}
+
+.library-search {
+  position: relative;
+}
+
+/* A reminder that "/" jumps to the search box. Hidden on touch screens,
+   which have no keyboard to press it on. */
+.library-search__key {
+  display: none;
+}
+
+@media (hover: hover) and (min-width: 576px) {
+  .library-search input {
+    padding-right: 40px;
+  }
+
+  .library-search__key {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: 98px;
+    transform: translateY(-50%);
+    padding: 1px 7px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--panel);
+    border: 1px solid var(--line-field);
+    border-radius: var(--radius-xs);
+    pointer-events: none;
+  }
+}
+
+/* Type and status share a row on a phone with sort beneath; all in one row
+   from 576px. */
+.library-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.library-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.library-filter select {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text);
+  background: var(--cream);
+  border: 1px solid var(--line-field);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.library-filter select:hover {
+  border-color: var(--ink);
+}
+
+.library-filter--wide,
+.library-filters__apply {
+  grid-column: 1 / -1;
+}
+
+.library-filters__apply {
+  min-height: 44px;
+}
+
+/* `.btn` sets display, which would otherwise beat the hidden attribute on
+   buttons that script shows or hides. */
+.library-filters__apply[hidden],
+.copy-field .btn[hidden] {
+  display: none;
+}
+
+@media (min-width: 576px) {
+  .library-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  }
+
+  .library-filter--wide,
+  .library-filters__apply {
+    grid-column: auto;
+  }
+}
+
+.library-folders,
+.library-purposes {
   --cluster-gap: 8px;
 }
 
-.library-item {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-  padding: 16px 18px;
+.library-folders .pill,
+.library-purposes .pill {
+  min-height: 44px;
+}
+
+/* Material is the first cut through the library, so it sits above the
+   search and folders and divides itself from them. */
+.library-purposes {
+  padding-bottom: 14px;
   border-bottom: 1px solid var(--line-soft);
 }
 
-.library-item:last-child {
-  border-bottom: 0;
+.library-card__purpose {
+  align-self: flex-start;
+  margin-bottom: 4px;
 }
 
-.library-item__preview {
+.pill__count {
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  text-align: center;
+  background: var(--highlight);
+  color: var(--text);
+}
+
+.pill.is-active .pill__count {
+  background: var(--parchment);
+  color: var(--ink);
+}
+
+.library-summary {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.pager__pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pager__page,
+.pager__step {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 72px;
-  background: var(--cream);
-  border: 1px solid var(--line-soft);
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  padding: 8px;
+  background: var(--panel);
+  transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease);
 }
 
-.library-item__preview img {
-  max-height: 96px;
+a.pager__page:hover,
+a.pager__step:hover {
+  border-color: var(--ink);
 }
 
-.library-item__preview audio {
+.pager__page.is-current {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--parchment);
+}
+
+.pager__step.is-disabled {
+  color: var(--text-faint);
+  border-color: var(--line-soft);
+}
+
+.pager__gap {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  color: var(--text-muted);
+}
+
+/* On a phone the page numbers drop to their own row under Previous / Next. */
+@media (max-width: 575.98px) {
+  .pager__pages {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Cards fill the column: one on a phone, two or three as room allows. */
+.library-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  gap: 16px;
+}
+
+.library-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color var(--fast) var(--ease);
+}
+
+.library-card:hover,
+.library-card:focus-within {
+  border-color: var(--line-field);
+}
+
+.library-card__preview {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 150px;
+  padding: 14px;
+  background: var(--cream);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.library-card__preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.library-card__preview--audio {
+  justify-content: flex-end;
+}
+
+.library-card__preview audio {
   width: 100%;
+  height: 40px;
 }
 
-.library-item__ext {
+.library-card__glyph {
+  font-family: var(--font-display);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--text-faint);
+}
+
+.library-card__preview--audio .library-card__glyph {
+  margin-bottom: auto;
+  margin-top: auto;
+  font-size: 44px;
+}
+
+.library-card__type {
+  position: absolute;
+  top: 10px;
+  left: 10px;
   font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--ink);
+  color: var(--parchment);
+}
+
+.library-card__body {
+  flex: 1;
+  padding: 16px;
+}
+
+.library-card__name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.library-card__title {
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.library-card__meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A dot shows at a glance whether students can reach the file. */
+.library-card__usage {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.library-card__usage::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+
+.library-card__usage.is-used {
+  color: var(--text);
+}
+
+.library-card__usage.is-used::before {
+  background: var(--ok);
+}
+
+.library-card__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.library-card__more > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.library-card__more[open] > summary {
+  margin-bottom: 6px;
+}
+
+.library-card__foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-top: 1px solid var(--line-soft);
   font-size: 13px;
   color: var(--text-muted);
 }
 
-.library-item__body {
-  min-width: 0;
+.library-card__remove {
+  min-height: 44px;
+  color: var(--text-muted);
+}
+
+.library-card__remove:hover {
+  color: var(--err);
 }
 
 .copy-field {
@@ -649,28 +1037,145 @@ body.manage {
   padding: 8px 10px;
   border: 1px solid var(--line-field);
   border-radius: var(--radius-sm);
-  background: var(--panel);
+  background: var(--cream);
   color: var(--text);
 }
 
 .copy-field .btn {
   min-height: 44px;
+  min-width: 72px;
 }
 
-.library-item__remove {
-  justify-self: start;
+/* Material: three radio buttons that read as one segmented choice. */
+.material-choice {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.material-choice legend {
+  padding: 0;
+  margin-bottom: 7px;
+}
+
+/* Side by side only where each option fits on one line. */
+.material-choice__options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+}
+
+.material-choice__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: var(--cream);
+  border: 1px solid var(--line-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--fast) var(--ease);
+}
+
+.material-choice__option:hover,
+.material-choice__option:has(input:checked) {
+  border-color: var(--ink);
+}
+
+.material-choice__option:has(input:checked) {
+  background: var(--highlight-strong);
+}
+
+.material-choice__option input {
+  accent-color: var(--ink);
+  margin: 0;
+}
+
+/* The native file picker reads as a drop zone. */
+.library-upload input[type="file"] {
+  width: 100%;
+  padding: 18px 14px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-muted);
+  background: var(--cream);
+  border: 1.5px dashed var(--line-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--fast) var(--ease);
+}
+
+.library-upload input[type="file"]:hover {
+  border-color: var(--ink);
+}
+
+.library-upload input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 14px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.library-empty {
+  padding: 40px 20px;
+  text-align: center;
+  border-style: dashed;
+}
+
+.library-help {
+  padding: 0;
+}
+
+.library-help > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 52px;
+  padding: 14px 20px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.library-help > summary::-webkit-details-marker {
+  display: none;
+}
+
+.library-help > summary::after {
+  content: "+";
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.library-help[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.library-help[open] > summary::after {
+  content: "\2212";
+}
+
+.library-help > .stack {
+  padding: 16px 20px 20px;
 }
 
 .library-steps {
   padding-left: 1.2em;
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
 
-@media (min-width: 768px) {
-  .library-item {
-    grid-template-columns: 180px minmax(0, 1fr) auto;
-    align-items: start;
+@media (min-width: 992px) {
+  .library-upload-layout {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   }
 }
 
@@ -716,8 +1221,7 @@ body.manage {
   }
 
   .manage-grid--editor,
-  .manage-grid--quiz,
-  .manage-grid--library {
+  .manage-grid--quiz {
     grid-template-columns: 1fr;
   }
 }

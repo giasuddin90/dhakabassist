@@ -13,6 +13,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.management import call_command
+from django.core.paginator import Paginator
 from django.db.models import Count, Q, Sum
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -42,6 +43,7 @@ from .forms import (
     CourseForm,
     FaqForm,
     LegalPageForm,
+    LibraryFilterForm,
     LibraryUploadForm,
     ModuleForm,
     QuestionForm,
@@ -408,39 +410,53 @@ class LibraryView(ManageBase):
     section = "library"
     heading = "Media library"
 
+    paginate_by = 12
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        folder = self.request.GET.get("folder", "")
-        query = self.request.GET.get("q", "").strip()
+        filters = LibraryFilterForm(self.request.GET)
+        rows = library_rows(filters.filter(LibraryFile.objects.all()))
+        usage = filters.cleaned_data.get("usage") if filters.is_valid() else ""
+        if usage:
+            want_used = usage == "used"
+            rows = [row for row in rows if bool(row["modules"] or row["courses"]) == want_used]
 
-        files = LibraryFile.objects.all()
-        if folder:
-            files = files.filter(folder=folder)
-        if query:
-            files = files.filter(Q(title__icontains=query) | Q(file__icontains=query))
-
+        page = Paginator(rows, self.paginate_by).get_page(self.request.GET.get("page"))
+        folder = filters.cleaned_data.get("folder", "") if filters.is_valid() else ""
+        purpose = filters.cleaned_data.get("purpose", "") if filters.is_valid() else ""
+        totals = dict(
+            LibraryFile.objects.values_list("purpose").annotate(total=Count("id"))
+        )
         context.update(
-            rows=library_rows(files),
+            purposes=[
+                {"value": value, "label": label, "total": totals.get(value, 0)}
+                for value, label in LibraryFile.Purpose.choices
+            ],
+            chosen_purpose=purpose,
+            upload_url=library_upload_url(purpose, folder),
+            page=page,
+            page_range=page.paginator.get_elided_page_range(page.number, on_each_side=1),
+            filters=filters,
             folders=LibraryFile.objects.values("folder")
             .annotate(total=Count("id"))
             .order_by("folder"),
             chosen=folder,
-            query=query,
-            form=LibraryUploadForm(initial={"folder": folder or "Lesson material"}),
+            query=filters.cleaned_data.get("q", "") if filters.is_valid() else "",
+            form=LibraryUploadForm(initial=upload_initial(self.request.GET)),
         )
         return context
 
 
 def library_rows(files):
-    """Each file with the modules and courses whose text links to it.
+    """Each file with the modules (notes or quiz) and courses that link to it.
 
     Shown so the administrator sees what would break before removing a file.
     The course has a handful of modules, so matching in Python is cheaper
     than one query per file.
     """
-    modules = list(Module.objects.select_related("course").only(
-        "number", "title", "slug", "notes_markdown", "course__slug", "course__title"
-    ))
+    modules = list(
+        Module.objects.select_related("course").prefetch_related("quiz__questions__choices")
+    )
     courses = list(Course.objects.only("title", "slug", "description"))
     rows = []
     for item in files:
@@ -448,11 +464,28 @@ def library_rows(files):
         rows.append(
             {
                 "file": item,
-                "modules": [m for m in modules if prefix in m.notes_markdown],
+                "modules": [m for m in modules if prefix in m.linkable_text],
                 "courses": [c for c in courses if prefix in c.description],
             }
         )
     return rows
+
+
+def upload_initial(params):
+    """Start an upload in the material and folder the administrator was viewing."""
+    initial = {}
+    if params.get("purpose") in LibraryFile.Purpose.values:
+        initial["purpose"] = params["purpose"]
+    if params.get("folder"):
+        initial["folder"] = params["folder"]
+    return initial
+
+
+def library_upload_url(purpose, folder):
+    """The upload page, set to the material and folder being viewed."""
+    params = {key: value for key, value in (("purpose", purpose), ("folder", folder)) if value}
+    url = reverse("manage:library_upload")
+    return f"{url}?{urlencode(params)}" if params else url
 
 
 def library_redirect(request):
@@ -462,21 +495,40 @@ def library_redirect(request):
     return redirect(f"{url}?{urlencode({'folder': folder})}" if folder else url)
 
 
-@staff_required
-@require_POST
-def library_upload(request):
-    """Add one or more files to a library folder."""
-    form = LibraryUploadForm(request.POST, request.FILES)
-    if form.is_valid():
+class LibraryUploadView(ManageBase):
+    """Its own page, so the list keeps the full width for finding files."""
+
+    template_name = "manage_panel/library_upload.html"
+    section = "library"
+    heading = "Upload to the media library"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.setdefault("form", LibraryUploadForm(initial=upload_initial(self.request.GET)))
+        context["folders"] = (
+            LibraryFile.objects.values_list("folder", flat=True).distinct().order_by("folder")
+        )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Save the files and show them; on an error, keep the form with its messages."""
+        form = LibraryUploadForm(request.POST, request.FILES)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
         saved = form.save()
         messages.success(
             request, f"{len(saved)} file{pluralize(len(saved))} added to “{saved[0].folder}”."
         )
-        return redirect(f"{reverse('manage:library')}?{urlencode({'folder': saved[0].folder})}")
-    for errors in form.errors.values():
-        for error in errors:
-            messages.error(request, error)
-    return library_redirect(request)
+        # Land on the new files: their folder, newest first.
+        query = urlencode(
+            {"purpose": saved[0].purpose, "folder": saved[0].folder, "sort": "newest"}
+        )
+        return redirect(f"{reverse('manage:library')}?{query}")
+
+
+# Wrapped like the other library actions: a non-staff visitor gets a 404,
+# so the upload page is not advertised by a 403.
+library_upload = staff_required(LibraryUploadView.as_view())
 
 
 @staff_required

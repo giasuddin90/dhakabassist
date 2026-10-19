@@ -95,6 +95,41 @@
     });
   });
 
+  // Filters apply as soon as a dropdown changes; the Apply button is only
+  // needed without script.
+  document.querySelectorAll("form[data-autosubmit]").forEach(function (form) {
+    form.querySelectorAll("[data-autosubmit-hide]").forEach(function (el) {
+      el.hidden = true;
+    });
+    // Leave unset filters out of the address, so it stays short to share.
+    form.addEventListener("formdata", function (event) {
+      Array.from(event.formData.entries()).forEach(function (pair) {
+        if (!pair[1]) event.formData.delete(pair[0]);
+      });
+    });
+    form.querySelectorAll("select").forEach(function (select) {
+      select.addEventListener("change", function () {
+        // A new filter starts back on page one.
+        var page = form.querySelector("input[name='page']");
+        if (page) page.remove();
+        form.requestSubmit ? form.requestSubmit() : form.submit();
+      });
+    });
+  });
+
+  // "/" jumps to the library search, as on most sites with a search box.
+  var search = document.getElementById("library-q");
+  if (search) {
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
+      var target = event.target;
+      if (target.closest("input, textarea, select, [contenteditable='true']")) return;
+      event.preventDefault();
+      search.focus();
+      search.select();
+    });
+  }
+
   document.querySelectorAll("form[data-confirm]").forEach(function (form) {
     form.addEventListener("submit", function (event) {
       if (!window.confirm(form.dataset.confirm)) event.preventDefault();

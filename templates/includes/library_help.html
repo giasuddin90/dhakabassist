@@ -1,0 +1,22 @@
+{% comment %}
+How a library file reaches students. Shown on the library and upload pages;
+pass `open=True` to start it expanded.
+{% endcomment %}
+<details class="panel library-help"{% if open %} open{% endif %}>
+  <summary class="panel__title">Using a file in a lesson or quiz</summary>
+  <div class="stack u-gap-10">
+    <ol class="u-fs-14 library-steps">
+      <li>Upload the file to the library as lesson, quiz or download material.</li>
+      <li>Press <strong>Copy</strong> beside its Markdown. (Writing the Markdown yourself? Copy the
+        link and use <code>![description](link)</code> for audio and images.)</li>
+      <li>Paste into the module's lesson notes, or anywhere in a quiz: the title, a question, an answer option or the explanation. Then save.</li>
+    </ol>
+    <p class="u-fs-14 muted">Audio becomes a player and SVG or images show as figures. The text
+      in square brackets is the description screen readers announce, so make it say what the
+      figure shows.</p>
+    <p class="u-fs-14 muted">Download material, and any PDF, document, score or ZIP, becomes a
+      download link that saves the file instead of opening it.</p>
+    <p class="u-fs-14 muted">Files are private. A student can only open a file that is linked
+      from a module (or its quiz) they have unlocked.</p>
+  </div>
+</details>

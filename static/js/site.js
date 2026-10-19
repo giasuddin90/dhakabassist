@@ -122,8 +122,11 @@
               other.disabled = true;
             });
             if (feedback) {
-              feedback.textContent = data.explanation || "Correct.";
-              feedback.className = "u-fs-16";
+              // The server sends the explanation already rendered and
+              // sanitised, so library audio and diagrams appear here too.
+              if (data.explanation) feedback.innerHTML = data.explanation;
+              else feedback.textContent = "Correct.";
+              feedback.className = "u-fs-16 quiz-feedback";
               feedback.style.color = "var(--ok)";
             }
             if (nextForm) nextForm.hidden = false;

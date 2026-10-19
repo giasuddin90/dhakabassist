@@ -307,7 +307,7 @@ class QuizView(LoginRequiredMixin, TemplateView):
                 for i in range(len(questions))
             ],
             "seo": seo.noindex(
-                f"{quiz.display_title} · {course.title}",
+                f"{quiz.plain_title} · {course.title}",
                 canonical_path=reverse(
                     "courses:quiz",
                     kwargs={"slug": course.slug, "module_slug": module.slug},
@@ -363,7 +363,8 @@ def quiz_answer(request, slug, module_slug):
         return JsonResponse(
             {
                 "correct": correct,
-                "explanation": question.explanation if correct else "",
+                # Rendered and sanitised here, so the page can insert it as HTML.
+                "explanation": str(question.explanation_html) if correct else "",
                 "picked": picks,
             }
         )
@@ -536,5 +537,5 @@ def library_file(request, key, name):
     return _serve_protected(
         item.file.name,
         download_name=item.filename,
-        as_attachment=not (item.is_audio or item.is_image),
+        as_attachment=item.is_download,
     )

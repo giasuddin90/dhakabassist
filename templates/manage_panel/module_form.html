@@ -74,12 +74,13 @@
           {% for tool in md_tools %}
             <button type="button" data-md-tool="{{ tool }}" data-md-target="{{ form.notes_markdown.id_for_label }}">{{ tool }}</button>
           {% endfor %}
+          <a class="md-tools__link" href="{% url 'manage:library' %}" target="_blank" rel="noopener">Library ↗</a>
         </div>
       </div>
       {{ form.notes_markdown }}
       <div class="panel__foot cluster" style="--cluster-gap:16px">
         <span>Markdown</span>
-        <span>Copy audio and diagram links from the <a href="{% url 'manage:library' %}">Media library</a> and paste them here</span>
+        <span>Copy audio and diagram links from the <a href="{% url 'manage:library' %}" target="_blank" rel="noopener">Media library</a> (opens in a new tab) and paste them here</span>
       </div>
     </section>
   </form>
