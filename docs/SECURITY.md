@@ -55,6 +55,22 @@ Contact form submissions are stored for reply and can be marked handled. The
 form uses a hidden honeypot field instead of a third-party captcha, so no
 visitor data leaves the site to fight spam.
 
+### Granting, revoking and refunding
+
+An `Enrollment` row is the only thing that gives course access. Staff manage
+it from `/manage/`, never the Django admin:
+
+| Action | Where | Effect |
+| --- | --- | --- |
+| Grant a course | Student page | Active enrolment, marked as granted manually. No order. |
+| Record a payment | Student page | A paid order (`gateway="manual"`) with the bKash/Nagad TrxID, a receipt email and an active enrolment. A TrxID already on a paid or refunded order is refused. |
+| Revoke access | Student page, per course | Enrolment turned off. Orders are not touched. |
+| Refund | Orders page or student page | Paid order marked refunded and its paid enrolment turned off; a manual grant is kept. Issue the money back in the gateway first. |
+| Suspend access | Student page | Every paid course blocked; enrolments and orders kept. |
+
+A gateway payment enrols the student by itself through `Order.mark_paid`.
+A later "fail" or "cancel" callback cannot undo a paid order.
+
 ## Payment security
 
 **No card data ever reaches this application.** The student is sent to the

@@ -29,6 +29,11 @@ PAYMENT_METHOD_HINTS = {
 }
 
 
+# `Order.gateway` for a payment staff recorded by hand (bKash or Nagad Send
+# Money, cash) rather than one a gateway reported.
+MANUAL_GATEWAY = "manual"
+
+
 def generate_reference():
     """A short, non-sequential order number safe to show and quote."""
     return f"DB-{secrets.randbelow(90000) + 10000}"
@@ -119,7 +124,27 @@ class Order(TimeStampedModel):
         )
         return True
 
+    @transaction.atomic
+    def mark_refunded(self):
+        """Record a refund issued in the gateway and withdraw the paid access.
+
+        A manual grant is left alone: it was given for its own reason, not
+        bought with this order.
+        """
+        order = Order.objects.select_for_update().get(pk=self.pk)
+        if order.status != self.Status.PAID:
+            return False
+        self.status = order.status = self.Status.REFUNDED
+        order.save(update_fields=["status", "updated_at"])
+        Enrollment.objects.filter(
+            student_id=self.student_id, course_id=self.course_id, granted_manually=False
+        ).update(is_active=False)
+        return True
+
     def mark_failed(self, reason=""):
+        # A late "fail" or "cancel" callback must not undo a confirmed payment.
+        if self.status == self.Status.PAID:
+            return
         self.status = self.Status.FAILED
         self.failure_reason = reason[:200]
         self.save(update_fields=["status", "failure_reason", "updated_at"])

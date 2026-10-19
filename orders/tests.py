@@ -236,6 +236,36 @@ class OrderModelTests(TestCase):
         order.refresh_from_db()
         self.assertEqual(order.gateway_reference, "TRX1")
 
+    def test_a_late_failure_does_not_undo_a_payment(self):
+        order = self.order()
+        order.mark_paid("TRX1")
+        order.mark_failed("Payment cancelled.")
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PAID)
+        self.assertEqual(order.failure_reason, "")
+
+    def test_a_refund_withdraws_the_paid_access(self):
+        order = self.order()
+        order.mark_paid("TRX1")
+        self.assertTrue(order.mark_refunded())
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.REFUNDED)
+        self.assertFalse(Enrollment.objects.get(student=self.student).is_active)
+
+    def test_a_refund_keeps_a_manual_grant(self):
+        order = self.order(status=Order.Status.PAID)
+        Enrollment.objects.create(
+            student=self.student, course=self.course, granted_manually=True
+        )
+        self.assertTrue(order.mark_refunded())
+        self.assertTrue(Enrollment.objects.get(student=self.student).is_active)
+
+    def test_only_a_paid_order_can_be_refunded(self):
+        order = self.order()
+        self.assertFalse(order.mark_refunded())
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PENDING)
+
     def test_an_order_stores_no_card_data(self):
         """A regression guard: no field here should ever hold card details."""
         fields = {f.name for f in Order._meta.get_fields()}

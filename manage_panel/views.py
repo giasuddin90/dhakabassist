@@ -26,7 +26,6 @@ from django.views.generic import TemplateView
 from courses.models import (
     Author,
     Course,
-    Enrollment,
     LibraryFile,
     Module,
     Question,
@@ -44,6 +43,7 @@ from .forms import (
     LegalPageForm,
     LibraryFilterForm,
     LibraryUploadForm,
+    ManualPaymentForm,
     ModuleForm,
     QuestionForm,
     QuizForm,
@@ -791,6 +791,7 @@ class StudentDetailView(ManageBase):
         student = get_object_or_404(User, pk=self.kwargs["pk"], is_staff=False)
         enrollments = {e.course_id: e for e in student.enrollments.select_related("course")}
         progress = {p.module_id: p for p in student.module_progress.all()}
+        payment_form = ManualPaymentForm(student=student)
         courses = (
             Course.objects.filter(
                 Q(enrollments__student=student) | Q(modules__progress__student=student)
@@ -811,9 +812,8 @@ class StudentDetailView(ManageBase):
             student=student,
             seo=noindex(student.get_full_name()),
             courses=[course_progress(c, enrollments.get(c.pk), progress) for c in courses],
-            grantable=Course.objects.exclude(
-                pk__in=student.enrollments.filter(is_active=True).values("course")
-            ).order_by("position", "title"),
+            grantable=payment_form.fields["course"].queryset,
+            payment_form=payment_form,
             orders=student.orders.select_related("course")[:20],
             attempts=student.quiz_attempts.select_related("quiz__module")[:10],
         )
@@ -868,23 +868,6 @@ def student_access(request, pk):
     student.save(update_fields=["access_enabled"])
     state = "restored" if student.access_enabled else "suspended"
     messages.success(request, f"Access for {student.get_full_name()} has been {state}.")
-    return redirect(request.POST.get("next") or reverse("manage:students"))
-
-
-@staff_required
-@require_POST
-def student_grant(request, pk):
-    """Grant a course without a payment — refunds, comps, support fixes."""
-    student = get_object_or_404(User, pk=pk, is_staff=False)
-    course = get_object_or_404(Course, slug=request.POST.get("course", ""))
-    Enrollment.objects.update_or_create(
-        student=student,
-        course=course,
-        defaults={"is_active": True, "granted_manually": True},
-    )
-    messages.success(
-        request, f"{student.get_full_name()} now has access to “{course.title}”."
-    )
     return redirect(request.POST.get("next") or reverse("manage:students"))
 
 

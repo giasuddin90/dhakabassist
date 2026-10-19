@@ -64,6 +64,26 @@
       {% endif %}
     </div>
   </section>
+
+  {% if grantable %}
+    <section class="panel" aria-labelledby="payment-title">
+      <div class="panel__head">
+        <h2 class="panel__title" id="payment-title">Record a payment</h2>
+      </div>
+      <form method="post" action="{% url 'manage:student_record_payment' student.pk %}" class="panel--padded stack u-gap-12">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <div class="field-grid">
+          {% include "includes/field.html" with field=payment_form.course %}
+          {% include "includes/field.html" with field=payment_form.method %}
+          {% include "includes/field.html" with field=payment_form.amount %}
+          {% include "includes/field.html" with field=payment_form.gateway_reference %}
+        </div>
+        <p class="form-note">For bKash or Nagad Send Money taken outside the gateway. Creates a paid order, emails the receipt and enrols the student.</p>
+        <div><button class="btn btn--sm" type="submit">Record payment</button></div>
+      </form>
+    </section>
+  {% endif %}
 </div>
 
 {% for row in courses %}
@@ -71,11 +91,20 @@
     <div class="panel__head">
       <h2 class="panel__title" id="course-{{ row.course.pk }}-title">{{ row.course.title }}{% if row.course.subtitle %} · {{ row.course.subtitle }}{% endif %}</h2>
       {% if row.enrollment and row.enrollment.is_active %}
-        {% if row.enrollment.granted_manually %}
-          <span class="badge badge--status badge--current">Granted {{ row.enrollment.created_at|date:"j M Y" }}</span>
-        {% else %}
-          <span class="badge badge--status badge--ok">Enrolled {{ row.enrollment.created_at|date:"j M Y" }}</span>
-        {% endif %}
+        <span class="cluster">
+          {% if row.enrollment.granted_manually %}
+            <span class="badge badge--status badge--current">Granted {{ row.enrollment.created_at|date:"j M Y" }}</span>
+          {% else %}
+            <span class="badge badge--status badge--ok">Enrolled {{ row.enrollment.created_at|date:"j M Y" }}</span>
+          {% endif %}
+          <form method="post" action="{% url 'manage:student_revoke' student.pk %}"
+                data-confirm="Remove {{ student.get_full_name }}'s access to {{ row.course.title }}? Orders are not refunded.">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <input type="hidden" name="course" value="{{ row.course.slug }}">
+            <button class="btn btn--sm btn--outline" type="submit">Revoke access</button>
+          </form>
+        </span>
       {% elif row.enrollment %}
         <span class="badge badge--status badge--neutral">Enrolment inactive</span>
       {% else %}
@@ -139,6 +168,7 @@
             <th scope="col">Amount</th>
             <th scope="col">Status</th>
             <th scope="col">Date</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
           </tr>
         </thead>
         <tbody>
@@ -155,9 +185,10 @@
                 </span>
               </td>
               <td class="muted u-nowrap">{{ order.created_at|date:"j M Y" }}</td>
+              <td>{% include "includes/refund_button.html" %}</td>
             </tr>
           {% empty %}
-            <tr><td colspan="4" class="muted">No orders.</td></tr>
+            <tr><td colspan="5" class="muted">No orders.</td></tr>
           {% endfor %}
         </tbody>
       </table>

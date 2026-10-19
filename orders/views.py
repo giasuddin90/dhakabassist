@@ -4,9 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
-from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_http_methods
@@ -15,6 +13,7 @@ from courses.access import CourseAccess, course_queryset
 from courses.models import Course
 from pages import seo
 
+from .emails import send_receipt
 from .gateways import GatewayError, get_gateway
 from .models import PAYMENT_METHOD_HINTS, Order, PaymentMethod
 
@@ -111,19 +110,6 @@ def sandbox(request, reference):
             "seo": seo.noindex("Payment"),
         },
     )
-
-
-def send_receipt(order):
-    """Email the student their receipt. Never blocks the enrolment."""
-    body = render_to_string(
-        "orders/email/receipt.txt",
-        {"order": order, "site": settings.SITE, "base_url": settings.SITE["base_url"]},
-    )
-    EmailMessage(
-        subject=f"Your {settings.SITE['name']} receipt · {order.reference}",
-        body=body,
-        to=[order.student.email],
-    ).send(fail_silently=True)
 
 
 def _finish(request, order, data):

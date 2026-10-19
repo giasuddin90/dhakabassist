@@ -8,7 +8,7 @@ admin at /django-admin/.
 from pathlib import Path
 
 from django import forms
-from django.core.validators import FileExtensionValidator
+from django.core.validators import FileExtensionValidator, MinValueValidator
 from django.db.models import Q
 from django.forms import inlineformset_factory
 
@@ -23,7 +23,7 @@ from courses.models import (
     Question,
     Quiz,
 )
-from orders.models import Order
+from orders.models import Order, PaymentMethod
 from pages.models import Faq, LegalPage
 
 
@@ -413,6 +413,60 @@ class StudentForm(AccountSettingsForm):
             "access_enabled": "Turn off to suspend paid material. Orders are kept.",
             "is_active": "Turn off to block sign-in without deleting the account.",
         }
+
+
+class ManualPaymentForm(forms.ModelForm):
+    """A payment taken outside the gateway, recorded so it enrols the student.
+
+    For bKash or Nagad Send Money and similar, until (or alongside) the
+    gateway. The order it creates is the same record a gateway payment makes,
+    so revenue, receipts and refunds treat both alike.
+    """
+
+    class Meta:
+        model = Order
+        fields = ("course", "amount", "method", "gateway_reference")
+        labels = {
+            "amount": "Amount received (BDT)",
+            "method": "Paid by",
+            "gateway_reference": "Transaction ID",
+        }
+        help_texts = {
+            "amount": "Leave blank for the course price.",
+            "gateway_reference": "The bKash or Nagad TrxID, or the bank reference.",
+        }
+
+    def __init__(self, *args, student, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.student = student
+        course = self.fields["course"]
+        course.queryset = Course.objects.exclude(
+            pk__in=student.enrollments.filter(is_active=True).values("course")
+        ).order_by("position", "title")
+        course.to_field_name = "slug"
+        course.empty_label = None
+        course.label_from_instance = lambda c: " · ".join(filter(None, (c.title, c.subtitle)))
+        self.fields["method"].choices = PaymentMethod.choices
+        self.fields["amount"].required = False
+        self.fields["amount"].validators.append(MinValueValidator(0))
+        self.fields["gateway_reference"].required = True
+
+    def clean_gateway_reference(self):
+        """One transaction can pay for one order only, even after a refund."""
+        reference = self.cleaned_data["gateway_reference"].strip()
+        if Order.objects.filter(
+            gateway_reference=reference,
+            status__in=(Order.Status.PAID, Order.Status.REFUNDED),
+        ).exists():
+            raise forms.ValidationError("Another order already uses this transaction ID.")
+        return reference
+
+    def clean(self):
+        """A blank amount means the student paid the course price."""
+        cleaned = super().clean()
+        if cleaned.get("amount") is None and cleaned.get("course"):
+            cleaned["amount"] = cleaned["course"].price
+        return cleaned
 
 
 class FaqForm(forms.ModelForm):

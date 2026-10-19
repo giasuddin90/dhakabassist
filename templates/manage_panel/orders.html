@@ -26,6 +26,7 @@
           <th scope="col">Gateway ref</th>
           <th scope="col">Status</th>
           <th scope="col">Date</th>
+          <th scope="col"><span class="visually-hidden">Actions</span></th>
         </tr>
       </thead>
       <tbody>
@@ -45,14 +46,15 @@
               </span>
             </td>
             <td class="muted u-nowrap">{{ order.created_at|date:"j M Y" }}</td>
+            <td>{% include "includes/refund_button.html" %}</td>
           </tr>
         {% empty %}
-          <tr><td colspan="7" class="muted">No orders match this filter.</td></tr>
+          <tr><td colspan="8" class="muted">No orders match this filter.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-  <p class="panel__foot">Refunds are issued in the payment gateway, then recorded here from the
-    <a href="{% url 'admin:orders_order_changelist' %}">database admin</a>.</p>
+  <p class="panel__foot">Issue the refund in the payment gateway first, then press Refund here.
+    Refunding withdraws the course access the order paid for; a manual grant is kept.</p>
 </section>
 {% endblock %}

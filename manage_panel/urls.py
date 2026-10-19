@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import enrolment_views, views
 
 app_name = "manage"
 
@@ -50,8 +50,15 @@ urlpatterns = [
     path("students/<int:pk>/", views.StudentDetailView.as_view(), name="student_detail"),
     path("students/<int:pk>/edit/", views.student_edit, name="student_edit"),
     path("students/<int:pk>/access/", views.student_access, name="student_access"),
-    path("students/<int:pk>/grant/", views.student_grant, name="student_grant"),
+    path("students/<int:pk>/grant/", enrolment_views.student_grant, name="student_grant"),
+    path("students/<int:pk>/revoke/", enrolment_views.student_revoke, name="student_revoke"),
+    path(
+        "students/<int:pk>/payment/",
+        enrolment_views.student_record_payment,
+        name="student_record_payment",
+    ),
     path("orders/", views.OrdersView.as_view(), name="orders"),
+    path("orders/<str:reference>/refund/", enrolment_views.order_refund, name="order_refund"),
     # Site content
     path("content/", views.ContentView.as_view(), name="content"),
     path("content/faqs/new/", views.faq_create, name="faq_create"),

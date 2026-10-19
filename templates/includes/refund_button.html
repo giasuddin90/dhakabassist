@@ -1,0 +1,11 @@
+{% comment %}
+Refund control for one order row. Pass `order`; only paid orders show it.
+{% endcomment %}
+{% if order.status == "paid" %}
+  <form method="post" action="{% url 'manage:order_refund' order.reference %}"
+        data-confirm="Mark {{ order.reference }} refunded and remove the course access it paid for? Issue the refund in the gateway first.">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button class="btn-link btn-link--sm" type="submit">Refund</button>
+  </form>
+{% endif %}
