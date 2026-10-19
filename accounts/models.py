@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -24,6 +25,9 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra):
         extra.setdefault("is_staff", True)
         extra.setdefault("is_superuser", True)
+        # Made from the command line by someone who owns the address, so
+        # there is nobody to send a confirmation link to.
+        extra.setdefault("email_confirmed_at", timezone.now())
         if not extra["is_staff"] or not extra["is_superuser"]:
             raise ValueError("A superuser must have is_staff and is_superuser set.")
         return self._create_user(email, password, **extra)
@@ -50,6 +54,11 @@ class User(AbstractUser):
         help_text=_("Turn off to suspend access to paid course material."),
     )
     marketing_opt_in = models.BooleanField(_("course news by email"), default=False)
+    # Empty until the student follows the link in the confirmation email (or a
+    # password-reset link, which proves the same thing). Sign-in is refused
+    # while it is empty. Kept apart from `is_active`, which staff use to block
+    # an account on purpose.
+    email_confirmed_at = models.DateTimeField(_("email confirmed"), null=True, blank=True)
     # Emails are sent outside a request (receipts from a payment callback,
     # welcomes from the staff panel), so the language has to be stored.
     language = models.CharField(
@@ -81,6 +90,16 @@ class User(AbstractUser):
 
     def get_short_name(self):
         return (self.full_name or self.email).split(" ")[0].split("@")[0]
+
+    @property
+    def email_confirmed(self):
+        return self.email_confirmed_at is not None
+
+    def confirm_email(self):
+        """Record that the student has shown they can read mail at `email`."""
+        if self.email_confirmed_at is None:
+            self.email_confirmed_at = timezone.now()
+            self.save(update_fields=["email_confirmed_at"])
 
     @property
     def initials(self):

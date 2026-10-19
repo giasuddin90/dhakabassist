@@ -1453,3 +1453,63 @@ msgstr "সংগীতের ভিত্তি কোর্সের পূর
 #, python-format
 msgid "About %(name)s"
 msgstr "%(name)s সম্পর্কে"
+
+# Signup email confirmation
+msgid "Confirm your email address before logging in. We sent you a link when you created your account."
+msgstr "লগ ইন করার আগে আপনার ইমেইল ঠিকানা নিশ্চিত করুন। অ্যাকাউন্ট খোলার সময় আমরা আপনাকে একটি লিংক পাঠিয়েছি।"
+
+#, python-format
+msgid "Confirm your %(site)s email"
+msgstr "আপনার %(site)s ইমেইল নিশ্চিত করুন"
+
+msgid "Check your email"
+msgstr "আপনার ইমেইল দেখুন"
+
+msgid "Send a new confirmation link"
+msgstr "নতুন নিশ্চিতকরণ লিংক পাঠান"
+
+msgid "Your email is confirmed. Module 1 is yours to study."
+msgstr "আপনার ইমেইল নিশ্চিত হয়েছে। মডিউল ১ এখন আপনার জন্য খোলা।"
+
+msgid "Confirm your email"
+msgstr "আপনার ইমেইল নিশ্চিত করুন"
+
+msgid "Your email is already confirmed"
+msgstr "আপনার ইমেইল আগেই নিশ্চিত করা হয়েছে"
+
+#, python-format
+msgid "We sent a link to <strong>%(email)s</strong>. Open it to confirm your address, then log in."
+msgstr "আমরা <strong>%(email)s</strong> ঠিকানায় একটি লিংক পাঠিয়েছি। ঠিকানা নিশ্চিত করতে লিংকটি খুলুন, তারপর লগ ইন করুন।"
+
+msgid "We sent you a link. Open it to confirm your address, then log in."
+msgstr "আমরা আপনাকে একটি লিংক পাঠিয়েছি। ঠিকানা নিশ্চিত করতে লিংকটি খুলুন, তারপর লগ ইন করুন।"
+
+msgid "The link is valid for a few days. Nothing arrived? Check your spam folder first."
+msgstr "লিংকটি কয়েক দিন কার্যকর থাকবে। কিছু পাননি? প্রথমে স্প্যাম ফোল্ডার দেখুন।"
+
+msgid "Enter the email address you signed up with and we will send a new link to confirm it."
+msgstr "যে ইমেইল ঠিকানা দিয়ে অ্যাকাউন্ট খুলেছেন সেটি লিখুন, আমরা নিশ্চিত করার জন্য একটি নতুন লিংক পাঠাব।"
+
+msgid "Send link"
+msgstr "লিংক পাঠান"
+
+msgid "Confirm that this is your email address to finish creating your account."
+msgstr "অ্যাকাউন্ট খোলা শেষ করতে নিশ্চিত করুন যে এটি আপনার ইমেইল ঠিকানা।"
+
+msgid "Confirm my email"
+msgstr "আমার ইমেইল নিশ্চিত করুন"
+
+msgid "This address is confirmed. Log in with your email and password."
+msgstr "এই ঠিকানা নিশ্চিত করা হয়েছে। আপনার ইমেইল ও পাসওয়ার্ড দিয়ে লগ ইন করুন।"
+
+msgid "Confirmation links expire after a few days. Request a new one to continue."
+msgstr "নিশ্চিতকরণ লিংকের মেয়াদ কয়েক দিন পর শেষ হয়ে যায়। চালিয়ে যেতে নতুন একটি লিংক চান।"
+
+msgid "Thanks for creating a DhakaBassist account. Open the link below to confirm this email address, then you can log in and start Module 1:"
+msgstr "DhakaBassist-এ অ্যাকাউন্ট খোলার জন্য ধন্যবাদ। এই ইমেইল ঠিকানা নিশ্চিত করতে নিচের লিংকটি খুলুন, তারপর লগ ইন করে মডিউল ১ শুরু করতে পারবেন:"
+
+msgid "The link expires after a few days. If you did not create an account, ignore this email and nothing will happen."
+msgstr "লিংকটির মেয়াদ কয়েক দিন পর শেষ হবে। আপনি অ্যাকাউন্ট না খুলে থাকলে এই ইমেইলটি উপেক্ষা করুন, কিছুই হবে না।"
+
+msgid "email confirmed"
+msgstr "ইমেইল নিশ্চিত"

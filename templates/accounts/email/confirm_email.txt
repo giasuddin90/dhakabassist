@@ -1,0 +1,16 @@
+{% load i18n %}{% blocktranslate with name=user.get_short_name %}Hello {{ name }},{% endblocktranslate %}
+
+{% blocktranslate trimmed %}
+Thanks for creating a DhakaBassist account. Open the link below to confirm
+this email address, then you can log in and start Module 1:
+{% endblocktranslate %}
+
+{{ base_url }}{% url 'accounts:confirm_email' uidb64=uid token=token %}
+
+{% blocktranslate trimmed %}
+The link expires after a few days. If you did not create an account, ignore
+this email and nothing will happen.
+{% endblocktranslate %}
+
+— DhakaBassist
+{% translate "Music theory courses by Tanveer Haque." %}

@@ -1,0 +1,20 @@
+{% extends "accounts/_auth_shell.html" %}
+{% load i18n %}
+
+{% block auth_body %}
+  {% if validlink %}
+    <p class="lede">{% blocktranslate trimmed %}
+      Confirm that this is your email address to finish creating your account.
+    {% endblocktranslate %}</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <button class="btn" type="submit">{% translate "Confirm my email" %}</button>
+    </form>
+  {% elif already_confirmed %}
+    <p class="lede">{% translate "This address is confirmed. Log in with your email and password." %}</p>
+    <a class="btn u-self-start" href="{% url 'accounts:login' %}">{% translate "Log in" %}</a>
+  {% else %}
+    <p class="lede">{% translate "Confirmation links expire after a few days. Request a new one to continue." %}</p>
+    <a class="btn u-self-start" href="{% url 'accounts:confirm_resend' %}">{% translate "Request a new link" %}</a>
+  {% endif %}
+{% endblock %}

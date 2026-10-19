@@ -1,0 +1,13 @@
+{% extends "accounts/_auth_shell.html" %}
+{% load i18n %}
+
+{% block auth_body %}
+  <p class="lede">{% translate "Enter the email address you signed up with and we will send a new link to confirm it." %}</p>
+  <form method="post" class="stack u-gap-16" novalidate>
+    {% csrf_token %}
+    {% include "includes/form_errors.html" %}
+    {% include "includes/field.html" with field=form.email %}
+    <button class="btn u-self-start" type="submit">{% translate "Send link" %}</button>
+  </form>
+  <p class="u-fs-15"><a href="{% url 'accounts:login' %}">{% translate "Back to log in" %}</a></p>
+{% endblock %}

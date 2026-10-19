@@ -16,7 +16,7 @@ arrangement intact: nothing under `/media/` is served directly.
 | CDN / DNS | Cloudflare | TLS, caching, rate limiting, DDoS |
 | Video | Cloudflare Stream | Signed playback, no server bandwidth |
 | Payments | SSLCommerz | bKash, Nagad, local and international cards |
-| Email | Any SMTP provider | Receipts and password resets |
+| Email | Resend (HTTP API, `core/mail.py`), or any SMTP provider | Signup confirmation, password resets, receipts |
 
 On Python 3.12, change the pin in `requirements.txt` to `Django>=5.2,<6` and
 run the test suite before deploying. The code targets both lines.
@@ -147,7 +147,9 @@ it — `curl https://your-domain/_media/anything` and
 ## Rate limiting
 
 Configure in Cloudflare rather than in the application: limit `/login/`,
-`/register/` and `/password/reset/` to roughly 10 requests per minute per IP.
+`/register/`, `/password/reset/` and `/account/confirm/resend/` (and their
+`/en/` twins) to roughly 10 requests per minute per IP. Each of the last three
+sends an email, so an unlimited form is a way to spam an inbox.
 
 ## Backups
 
@@ -185,6 +187,7 @@ to these accounts; they do not register them in their own name.
 4. Video playback confirmed for an enrolled student, and confirmed to fail
    for a signed-out visitor and an unenrolled one.
 5. `curl https://your-domain/_media/anything` and `/media/anything` return 404.
-6. Password reset email received at a real address.
+6. Signup confirmation and password reset emails received at a real address
+   (new students cannot log in without the first one).
 7. Sitemap submitted; `robots.txt` and `llms.txt` resolve.
 8. A backup taken and restored once.

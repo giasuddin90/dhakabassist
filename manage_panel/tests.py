@@ -77,6 +77,7 @@ class AccessTests(TestCase):
                 )
 
     def test_staff_return_to_the_page_they_asked_for_after_login(self):
+        self.staff.confirm_email()
         url = reverse("manage:orders")
         response = self.client.post(
             reverse("accounts:login"),

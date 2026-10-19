@@ -1785,6 +1785,11 @@ select {
   text-align: center;
 }
 
+/* Keeps a button its own width inside a column `.stack`. */
+.u-self-start {
+  align-self: flex-start;
+}
+
 .u-sticky {
   position: sticky;
   top: 96px;

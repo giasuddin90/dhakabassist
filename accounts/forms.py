@@ -1,6 +1,11 @@
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    PasswordResetForm,
+    UserCreationForm,
+)
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 
@@ -19,7 +24,23 @@ class LoginForm(AuthenticationForm):
     error_messages = {
         **AuthenticationForm.error_messages,
         "invalid_login": _("That email and password do not match an account."),
+        "unconfirmed": _(
+            "Confirm your email address before logging in. "
+            "We sent you a link when you created your account."
+        ),
     }
+
+    # Set when the password was right but the email is unconfirmed, so the
+    # page can offer to send the link again.
+    unconfirmed = False
+
+    def confirm_login_allowed(self, user):
+        super().confirm_login_allowed(user)
+        if not user.email_confirmed:
+            self.unconfirmed = True
+            raise forms.ValidationError(
+                self.error_messages["unconfirmed"], code="unconfirmed"
+            )
 
 
 class RegisterForm(UserCreationForm):
@@ -53,6 +74,40 @@ class RegisterForm(UserCreationForm):
         # Emails follow the language the student signed up in.
         self.instance.language = translation.get_language()
         return super().save(commit)
+
+
+class ResendConfirmationForm(forms.Form):
+    email = forms.EmailField(
+        label=_("Email"),
+        widget=forms.EmailInput(attrs={"autocomplete": "email", "autofocus": True}),
+    )
+
+    def get_user(self):
+        """The unconfirmed account at this address, or None.
+
+        The caller answers the same way either way, so the form never tells
+        a visitor whether an address has an account.
+        """
+        return User.objects.filter(
+            email__iexact=self.cleaned_data["email"].strip(),
+            email_confirmed_at__isnull=True,
+            is_active=True,
+        ).first()
+
+
+class StudentPasswordResetForm(PasswordResetForm):
+    """Django's reset form, with the email in the student's own language.
+
+    The link is built from `SITE_BASE_URL` rather than the request's Host
+    header, so a forged header cannot point the link at another site.
+    """
+
+    def send_mail(self, subject_template_name, email_template_name, context, *args, **kwargs):
+        context["base_url"] = settings.SITE["base_url"]
+        with translation.override(context["user"].language):
+            super().send_mail(
+                subject_template_name, email_template_name, context, *args, **kwargs
+            )
 
 
 class AccountSettingsForm(forms.ModelForm):

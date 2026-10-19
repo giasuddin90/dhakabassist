@@ -24,6 +24,9 @@
       {% csrf_token %}
       {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
       {% include "includes/form_errors.html" %}
+      {% if form.unconfirmed %}
+        <p class="u-fs-15"><a href="{% url 'accounts:confirm_resend' %}">{% translate "Send a new confirmation link" %}</a></p>
+      {% endif %}
 
       {% if mode == 'register' %}
         {% include "includes/field.html" with field=form.full_name %}

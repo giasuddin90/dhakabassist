@@ -1,0 +1,15 @@
+{% extends "accounts/_auth_shell.html" %}
+{% load i18n %}
+
+{% block auth_body %}
+  {% if email %}
+    <p class="lede">{% blocktranslate trimmed %}
+      We sent a link to <strong>{{ email }}</strong>. Open it to confirm your
+      address, then log in.
+    {% endblocktranslate %}</p>
+  {% else %}
+    <p class="lede">{% translate "We sent you a link. Open it to confirm your address, then log in." %}</p>
+  {% endif %}
+  <p class="u-fs-15 muted">{% translate "The link is valid for a few days. Nothing arrived? Check your spam folder first." %}</p>
+  <p class="u-fs-15"><a href="{% url 'accounts:confirm_resend' %}">{% translate "Send a new confirmation link" %}</a></p>
+{% endblock %}

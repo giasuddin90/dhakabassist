@@ -20,9 +20,24 @@ by timing the response.
 "Keep me logged in" is a real choice. Unticked, the session ends when the
 browser closes; ticked, it lasts two weeks.
 
+A new account cannot sign in until its email is confirmed. Signing up sends
+a link (`accounts/tokens.py`) that expires with `PASSWORD_RESET_TIMEOUT`,
+works once, and stops working if the address changes. Opening the link only
+shows a "Confirm my email" button; the POST confirms and signs the student
+in, so mail scanners that open every link cannot use it up. The "unconfirmed"
+message appears only after a correct password, and asking for a new link
+answers the same whether or not the address has an account. Confirmation is
+stored in `User.email_confirmed_at`, separate from `is_active`, so it never
+unblocks an account staff have turned off. Accounts made by
+`createsuperuser`, and every account that existed before this rule, count as
+confirmed.
+
 Password reset emails a single-use, time-limited link. Requesting a reset for
 an address that has no account produces the same page and sends nothing, so
-the form cannot be used to enumerate customers.
+the form cannot be used to enumerate customers. The link is built from
+`SITE_BASE_URL`, never the request's Host header, and setting a password
+through it also confirms the email, since only the inbox owner could open it.
+Students added from `/manage/` confirm this way.
 
 ## Authorisation
 

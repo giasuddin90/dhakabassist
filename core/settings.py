@@ -147,14 +147,24 @@ MEDIA_INTERNAL_URL = env_str("DJANGO_MEDIA_INTERNAL_URL", "")
 
 # -- Email ------------------------------------------------------------------
 
+# With a Resend API key, mail goes out through Resend's HTTP API
+# (`core/mail.py`); without one it prints to the console. Tests always use
+# Django's in-memory backend whatever this says.
+RESEND_API_KEY = env_str("RESEND_API_KEY", "")
 EMAIL_BACKEND = env_str(
-    "DJANGO_EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
+    "DJANGO_EMAIL_BACKEND",
+    "core.mail.ResendEmailBackend"
+    if RESEND_API_KEY
+    else "django.core.mail.backends.console.EmailBackend",
 )
 EMAIL_HOST = env_str("DJANGO_EMAIL_HOST", "")
 EMAIL_PORT = env_int("DJANGO_EMAIL_PORT", 587)
 EMAIL_HOST_USER = env_str("DJANGO_EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = env_str("DJANGO_EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("DJANGO_EMAIL_USE_TLS", True)
+# Signup waits on the confirmation email, so a stalled SMTP server must not
+# hold the request open indefinitely.
+EMAIL_TIMEOUT = env_int("DJANGO_EMAIL_TIMEOUT", 10)
 DEFAULT_FROM_EMAIL = env_str("DJANGO_DEFAULT_FROM_EMAIL", "hello@dhakabassist.com")
 
 # -- Messages ---------------------------------------------------------------

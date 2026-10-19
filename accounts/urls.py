@@ -4,6 +4,7 @@ from django.urls import path, reverse_lazy
 from pages.seo import noindex
 
 from . import views
+from .forms import StudentPasswordResetForm
 
 app_name = "accounts"
 
@@ -14,6 +15,17 @@ urlpatterns = [
     path("login/", views.StudentLoginView.as_view(), name="login"),
     path("register/", views.RegisterView.as_view(), name="register"),
     path("logout/", views.StudentLogoutView.as_view(), name="logout"),
+    path("account/confirm/sent/", views.ConfirmSentView.as_view(), name="confirm_sent"),
+    path(
+        "account/confirm/resend/",
+        views.ResendConfirmationView.as_view(),
+        name="confirm_resend",
+    ),
+    path(
+        "account/confirm/<uidb64>/<token>/",
+        views.ConfirmEmailView.as_view(),
+        name="confirm_email",
+    ),
     path("account/", views.AccountSettingsView.as_view(), name="settings"),
     path("account/orders/", views.OrderHistoryView.as_view(), name="orders"),
     path(
@@ -37,6 +49,7 @@ urlpatterns = [
         "password/reset/",
         auth_views.PasswordResetView.as_view(
             template_name="accounts/password_reset.html",
+            form_class=StudentPasswordResetForm,
             email_template_name="accounts/email/password_reset.txt",
             subject_template_name="accounts/email/password_reset_subject.txt",
             success_url=reverse_lazy("accounts:password_reset_done"),
@@ -54,7 +67,7 @@ urlpatterns = [
     ),
     path(
         "password/reset/<uidb64>/<token>/",
-        auth_views.PasswordResetConfirmView.as_view(
+        views.StudentPasswordResetConfirmView.as_view(
             template_name="accounts/password_reset_confirm.html",
             success_url=reverse_lazy("accounts:password_reset_complete"),
             extra_context={"seo": noindex("Choose a new password")},
