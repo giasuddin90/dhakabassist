@@ -48,7 +48,6 @@ def make_course():
             summary="Summary.",
             access=Module.Access.FREE if i == 0 else Module.Access.PAID,
             status=Module.Status.PUBLISHED,
-            position=i,
         )
         for i in range(3)
     ]
@@ -280,15 +279,41 @@ class StaffPanelTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(self.course.modules.filter(slug="meter").exists())
 
+    def test_a_module_number_sets_its_place_and_is_padded(self):
+        url = reverse("manage:module_new", kwargs={"slug": self.course.slug})
+        data = {
+            "number": "0", "title": "Intro", "title_bn": "", "slug": "intro", "summary": "",
+            "notes_markdown": "", "access": Module.Access.PAID,
+            "status": Module.Status.DRAFT, "video_provider": "", "video_uid": "",
+            "video_duration_seconds": "0",
+        }
+        self.assertEqual(self.client.post(url, data).status_code, 302)
+        self.assertEqual(self.course.modules.first().slug, "intro")
+        self.assertEqual(self.course.modules.first().number, "00")
+
+    def test_a_taken_module_number_is_refused(self):
+        response = self.client.post(
+            reverse("manage:module_new", kwargs={"slug": self.course.slug}),
+            {
+                "number": "2", "title": "Again", "title_bn": "", "slug": "again",
+                "summary": "", "notes_markdown": "", "access": Module.Access.PAID,
+                "status": Module.Status.DRAFT, "video_provider": "", "video_uid": "",
+                "video_duration_seconds": "0",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Module 02 already exists in this course.")
+        self.assertFalse(self.course.modules.filter(slug="again").exists())
+
     def test_modules_can_be_reordered(self):
         order = [self.modules[2].pk, self.modules[0].pk, self.modules[1].pk]
         self.client.post(
             reverse("manage:module_reorder", kwargs={"slug": self.course.slug}),
             {"module": [str(pk) for pk in order]},
         )
-        positions = {m.pk: m.position for m in self.course.modules.all()}
-        self.assertEqual(positions[order[0]], 0)
-        self.assertEqual(positions[order[2]], 2)
+        numbers = {m.pk: m.number for m in self.course.modules.all()}
+        self.assertEqual([numbers[pk] for pk in order], ["01", "02", "03"])
+        self.assertEqual(list(self.course.modules.values_list("pk", flat=True)), order)
 
     # -- quizzes -----------------------------------------------------------
 

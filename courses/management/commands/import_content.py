@@ -132,8 +132,9 @@ class Command(BaseCommand):
             check_keys(row, ("number", "lessons", "quiz", *MODULE_FIELDS), where)
             if not row.get("number"):
                 raise CommandError(f"{where}: number is required.")
-            module = Module.objects.filter(course=course, number=row["number"]).first() or Module(
-                course=course, number=row["number"], position=index
+            number = Module.pad_number(row["number"])
+            module = Module.objects.filter(course=course, number=number).first() or Module(
+                course=course, number=number
             )
             module.slug = module.slug or slugify(row.get("title", ""))
             save(module, row, MODULE_FIELDS, where)

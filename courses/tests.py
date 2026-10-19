@@ -63,7 +63,6 @@ def make_course():
                 notes_markdown="## Notes\n\nText.",
                 access=Module.Access.FREE if index == 0 else Module.Access.PAID,
                 status=Module.Status.PUBLISHED,
-                position=index,
                 video_duration_seconds=600,
             )
         )

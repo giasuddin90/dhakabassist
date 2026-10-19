@@ -35,7 +35,6 @@ def make_course(**extra):
         title="Sound",
         access=Module.Access.FREE,
         status=Module.Status.PUBLISHED,
-        position=0,
     )
     return course
 

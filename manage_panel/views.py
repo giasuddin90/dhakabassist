@@ -210,7 +210,7 @@ class OverviewView(ManageBase):
         rows = (
             course.modules.filter(status=Module.Status.PUBLISHED)
             .annotate(reached=Count("progress", distinct=True))
-            .order_by("position")
+            .order_by("number")
         )
         peak = max((row.reached for row in rows), default=0) or 1
         return [
@@ -249,7 +249,7 @@ class CoursesView(ManageBase):
             modules=(
                 selected.modules.annotate(questions=Count("quiz__questions"))
                 .prefetch_related("assets")
-                .order_by("position", "number")
+                .order_by("number")
                 if selected
                 else []
             ),
@@ -311,8 +311,6 @@ def module_edit(request, slug, module_slug=None):
     if request.method == "POST" and form.is_valid():
         module = form.save(commit=False)
         module.course = course
-        if not module.position:
-            module.position = course.modules.count()
         module.save()
         form.save_m2m()
         messages.success(request, f"Module {module.number} has been saved.")
@@ -362,20 +360,11 @@ def linked_library_files(module, files):
 @staff_required
 @require_POST
 def module_reorder(request, slug):
-    """Persist a drag-reordered module list."""
+    """Persist a drag-reordered module list by renumbering the modules."""
     course = get_object_or_404(Course, slug=slug)
-    order = request.POST.getlist("module")
-    lookup = {str(m.pk): m for m in course.modules.all()}
-    changed = []
-    for position, pk in enumerate(order):
-        module = lookup.get(pk)
-        if module and module.position != position:
-            module.position = position
-            changed.append(module)
-    if changed:
-        Module.objects.bulk_update(changed, ["position"])
+    changed = Module.renumber(course, request.POST.getlist("module"))
     if request.headers.get("X-Requested-With") == "fetch":
-        return JsonResponse({"saved": len(changed)})
+        return JsonResponse({"saved": changed})
     return redirect(f"{reverse('manage:courses')}?course={course.slug}")
 
 
@@ -707,7 +696,7 @@ class QuizIndexView(ManageBase):
         context["modules"] = (
             Module.objects.select_related("course")
             .annotate(questions=Count("quiz__questions"))
-            .order_by("course__position", "position")
+            .order_by("course__position", "number")
         )
         return context
 
@@ -814,7 +803,7 @@ class StudentDetailView(ManageBase):
                 Prefetch(
                     "modules",
                     queryset=Module.objects.filter(status=Module.Status.PUBLISHED).order_by(
-                        "position"
+                        "number"
                     ),
                     to_attr="published_modules",
                 )

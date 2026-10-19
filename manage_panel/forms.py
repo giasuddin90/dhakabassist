@@ -101,6 +101,20 @@ class ModuleForm(forms.ModelForm):
             "notes_markdown": forms.Textarea(attrs={"rows": 14, "class": "editor-area"}),
         }
 
+    def clean_number(self):
+        """Pad the number and refuse one the course already uses.
+
+        The form leaves out `course`, so Django skips the per-course unique
+        constraint; without this a taken number would fail at save.
+        """
+        number = Module.pad_number(self.cleaned_data["number"])
+        taken = Module.objects.filter(course=self.instance.course, number=number).exclude(
+            pk=self.instance.pk
+        )
+        if taken.exists():
+            raise forms.ValidationError(f"Module {number} already exists in this course.")
+        return number
+
 
 class QuizForm(forms.ModelForm):
     class Meta:

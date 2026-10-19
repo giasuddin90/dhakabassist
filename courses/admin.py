@@ -19,8 +19,8 @@ from .models import (
 class ModuleInline(admin.TabularInline):
     model = Module
     extra = 0
-    fields = ("position", "number", "title", "access", "status")
-    ordering = ("position",)
+    fields = ("number", "title", "access", "status")
+    ordering = ("number",)
     show_change_link = True
 
 
@@ -57,10 +57,10 @@ class MediaAssetInline(admin.TabularInline):
 
 @admin.register(Module)
 class ModuleAdmin(admin.ModelAdmin):
-    list_display = ("number", "title", "course", "access", "status", "position")
+    list_display = ("number", "title", "course", "access", "status")
     list_filter = ("course", "access", "status")
     search_fields = ("title", "summary")
-    ordering = ("course__position", "position")
+    ordering = ("course__position", "number")
     inlines = [LessonInline, MediaAssetInline]
 
 

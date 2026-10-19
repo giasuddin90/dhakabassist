@@ -32,7 +32,6 @@ class PublicPageTests(TestCase):
             access=Module.Access.FREE,
             status=Module.Status.PUBLISHED,
             video_duration_seconds=740,
-            position=0,
         )
         Module.objects.create(
             course=cls.course,
@@ -43,7 +42,6 @@ class PublicPageTests(TestCase):
             access=Module.Access.PAID,
             status=Module.Status.PUBLISHED,
             video_duration_seconds=900,
-            position=1,
         )
         Faq.objects.create(question="Do I need to read music?", answer="No.", position=0)
         LegalPage.objects.create(

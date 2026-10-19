@@ -426,7 +426,7 @@ class Command(BaseCommand):
         return course
 
     def _modules(self, course):
-        for position, row in enumerate(MODULES):
+        for row in MODULES:
             number, title, title_bn, summary, lessons, duration, access = row
             notes = {"01": MODULE_1_NOTES, "04": MODULE_4_NOTES}.get(number, "")
             module, _ = Module.objects.update_or_create(
@@ -434,7 +434,6 @@ class Command(BaseCommand):
                 number=number,
                 defaults={
                     "slug": slugify(title),
-                    "position": position,
                     "title": title,
                     "title_bn": title_bn,
                     "summary": summary,

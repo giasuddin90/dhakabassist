@@ -12,7 +12,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator, MinValueValidator
+from django.core.validators import FileExtensionValidator, MinValueValidator, RegexValidator
 from django.db import models, transaction
 from django.db.models import F
 from django.urls import reverse
@@ -279,10 +279,14 @@ class Module(TimeStampedModel):
     course = models.ForeignKey(
         Course, verbose_name=_("course"), on_delete=models.CASCADE, related_name="modules"
     )
+    # The number is also the module's place in the course: modules are listed,
+    # and unlocked, in number order. Stored zero-padded so text order matches.
     number = models.CharField(
-        _("number"), max_length=4, help_text=_('Shown in the curriculum, e.g. "04".')
+        _("number"),
+        max_length=4,
+        validators=[RegexValidator(r"^\d{1,2}$", _("Enter one or two digits, e.g. 4 or 04."))],
+        help_text=_('Sets the module\'s place in the course, e.g. "04".'),
     )
-    position = models.PositiveIntegerField(_("position"), default=0, db_index=True)
     title = models.CharField(_("title"), max_length=160)
     slug = models.SlugField(_("slug"), max_length=180)
     title_bn = models.CharField(
@@ -335,7 +339,7 @@ class Module(TimeStampedModel):
     class Meta:
         verbose_name = _("module")
         verbose_name_plural = _("modules")
-        ordering = ("position", "number")
+        ordering = ("number",)
         constraints = [
             models.UniqueConstraint(
                 fields=("course", "slug"), name="module_slug_unique_per_course"
@@ -351,7 +355,41 @@ class Module(TimeStampedModel):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)[:180]
+        self.number = self.pad_number(self.number)
         super().save(*args, **kwargs)
+
+    @staticmethod
+    def pad_number(value):
+        """Zero-pad a module number ("4" becomes "04") so text order is number order."""
+        value = str(value).strip()
+        return f"{int(value):02d}" if value.isdigit() else value
+
+    @classmethod
+    def renumber(cls, course, order):
+        """Number the course's modules 01, 02, … in the order of the pks in `order`.
+
+        Modules left out of `order` (added in another tab, say) follow the
+        listed ones in their current order. Returns how many were renumbered.
+        """
+        with transaction.atomic():
+            remaining = {str(m.pk): m for m in course.modules.select_for_update()}
+            listed = [remaining.pop(str(pk)) for pk in order if str(pk) in remaining]
+            changed = []
+            for index, module in enumerate(listed + list(remaining.values()), start=1):
+                number = cls.pad_number(index)
+                if module.number != number:
+                    module.number = number
+                    changed.append(module)
+            # Park the moved modules on placeholders first: the database checks
+            # the unique number per row, so swapping 01 and 02 in one pass fails.
+            final = [module.number for module in changed]
+            for index, module in enumerate(changed):
+                module.number = f"~{index}"
+            cls.objects.bulk_update(changed, ["number"])
+            for module, number in zip(changed, final):
+                module.number = number
+            cls.objects.bulk_update(changed, ["number"])
+        return len(changed)
 
     def clean(self):
         super().clean()
@@ -892,7 +930,7 @@ class ModuleProgress(TimeStampedModel):
     class Meta:
         verbose_name = _("module progress")
         verbose_name_plural = _("module progress")
-        ordering = ("module__position",)
+        ordering = ("module__number",)
         constraints = [
             models.UniqueConstraint(
                 fields=("student", "module"), name="one_progress_per_student_module"
