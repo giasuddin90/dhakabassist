@@ -43,6 +43,10 @@ class User(AbstractUser):
         help_text=_("Turn off to suspend access to paid course material."),
     )
     marketing_opt_in = models.BooleanField(_("course news by email"), default=False)
+    # Optional profile details the student fills in or updates from settings.
+    profession = models.CharField(_("profession"), max_length=100, blank=True)
+    education = models.CharField(_("education"), max_length=150, blank=True)
+    location = models.CharField(_("location"), max_length=100, blank=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

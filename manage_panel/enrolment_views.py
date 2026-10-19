@@ -31,11 +31,7 @@ def student_grant(request, pk):
     """Grant a course without a payment — refunds, comps, support fixes."""
     student = get_object_or_404(User, pk=pk, is_staff=False)
     course = get_object_or_404(Course, slug=request.POST.get("course", ""))
-    Enrollment.objects.update_or_create(
-        student=student,
-        course=course,
-        defaults={"is_active": True, "granted_manually": True},
-    )
+    Enrollment.grant(student, course)
     messages.success(
         request, f"{student.get_full_name()} now has access to “{course.title}”."
     )
@@ -48,7 +44,7 @@ def student_revoke(request, pk):
     """Withdraw one course. Orders stay as they are; refund those separately."""
     student = get_object_or_404(User, pk=pk, is_staff=False)
     course = get_object_or_404(Course, slug=request.POST.get("course", ""))
-    Enrollment.objects.filter(student=student, course=course).update(is_active=False)
+    Enrollment.revoke(student, [course])
     messages.success(
         request, f"{student.get_full_name()} no longer has access to “{course.title}”."
     )

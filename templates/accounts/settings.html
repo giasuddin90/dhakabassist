@@ -6,6 +6,9 @@
     {% include "includes/form_errors.html" %}
     {% include "includes/field.html" with field=form.full_name %}
     {% include "includes/field.html" with field=form.email %}
+    {% include "includes/field.html" with field=form.profession %}
+    {% include "includes/field.html" with field=form.education %}
+    {% include "includes/field.html" with field=form.location %}
     <label class="check">{{ form.marketing_opt_in }} {{ form.marketing_opt_in.label }}</label>
     <button class="btn" type="submit" style="align-self:flex-start">Save changes</button>
   </form>

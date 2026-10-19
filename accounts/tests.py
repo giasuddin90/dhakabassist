@@ -149,6 +149,30 @@ class AccountSettingsTests(TestCase):
         self.assertTrue(self.user.marketing_opt_in)
         self.assertContains(response, "have been saved")
 
+    def test_profile_details_are_optional_and_can_be_updated(self):
+        url = reverse("accounts:settings")
+        details = {
+            "full_name": "Rafiq Ahmed",
+            "email": "rafiq@example.com",
+            "profession": "Software engineer",
+            "education": "BSc, University of Dhaka",
+            "location": "Dhaka, Bangladesh",
+        }
+        self.client.post(url, details)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.profession, "Software engineer")
+        self.assertEqual(self.user.education, "BSc, University of Dhaka")
+        self.assertEqual(self.user.location, "Dhaka, Bangladesh")
+
+        # Clearing them later is allowed: every profile detail is optional.
+        cleared = {**details, "profession": "", "education": "", "location": ""}
+        response = self.client.post(url, cleared, follow=True)
+        self.assertContains(response, "have been saved")
+        self.user.refresh_from_db()
+        self.assertEqual(
+            (self.user.profession, self.user.education, self.user.location), ("", "", "")
+        )
+
     def test_taking_another_account_s_email_is_refused(self):
         User.objects.create_user(email="taken@example.com", password=PASSWORD)
         response = self.client.post(

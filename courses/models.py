@@ -836,6 +836,20 @@ class Enrollment(TimeStampedModel):
     def __str__(self):
         return f"{self.student} → {self.course}"
 
+    @classmethod
+    def grant(cls, student, course):
+        """Open a course without a payment — refunds, comps, support fixes."""
+        cls.objects.update_or_create(
+            student=student,
+            course=course,
+            defaults={"is_active": True, "granted_manually": True},
+        )
+
+    @classmethod
+    def revoke(cls, student, courses):
+        """Withdraw the given courses. Orders stay as they are."""
+        cls.objects.filter(student=student, course__in=courses).update(is_active=False)
+
 
 class ModuleProgress(TimeStampedModel):
     """How far one student has got with one module: video, quiz, completion."""

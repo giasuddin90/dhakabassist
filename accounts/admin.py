@@ -17,7 +17,14 @@ class UserAdmin(BaseUserAdmin):
 
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        (_("Personal details"), {"fields": ("full_name", "marketing_opt_in")}),
+        (
+            _("Personal details"),
+            {
+                "fields": (
+                    "full_name", "profession", "education", "location", "marketing_opt_in",
+                )
+            },
+        ),
         (
             _("Access"),
             {

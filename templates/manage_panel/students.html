@@ -86,14 +86,6 @@
               <span class="cluster">
                 <a class="btn-link btn-link--sm" href="{% url 'manage:student_detail' row.student.pk %}">View</a>
                 <a class="btn-link btn-link--sm" href="{% url 'manage:student_edit' row.student.pk %}">Edit</a>
-                {% if not row.is_enrolled and course %}
-                  <form method="post" action="{% url 'manage:student_grant' row.student.pk %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="course" value="{{ course.slug }}">
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <button class="btn-link btn-link--sm" type="submit">Assign course</button>
-                  </form>
-                {% endif %}
               </span>
             </td>
           </tr>

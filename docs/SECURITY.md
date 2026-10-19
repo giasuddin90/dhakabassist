@@ -62,9 +62,9 @@ it from `/manage/`, never the Django admin:
 
 | Action | Where | Effect |
 | --- | --- | --- |
-| Grant a course | Student page | Active enrolment, marked as granted manually. No order. |
+| Grant a course | Student page, or tick it on the edit form | Active enrolment, marked as granted manually. No order. |
 | Record a payment | Student page | A paid order (`gateway="manual"`) with the bKash/Nagad TrxID, a receipt email and an active enrolment. A TrxID already on a paid or refunded order is refused. |
-| Revoke access | Student page, per course | Enrolment turned off. Orders are not touched. |
+| Revoke access | Student page per course, or untick it on the edit form | Enrolment turned off. Orders are not touched. |
 | Refund | Orders page or student page | Paid order marked refunded and its paid enrolment turned off; a manual grant is kept. Issue the money back in the gateway first. |
 | Suspend access | Student page | Every paid course blocked; enrolments and orders kept. |
 | Add an order | Orders page | A manual order (`gateway="manual"`) for any student, paid or pending. Paid needs a TrxID, enrols and emails the receipt; pending gives no access. Refused if the student already has the course. |

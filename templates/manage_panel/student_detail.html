@@ -80,6 +80,9 @@
       <dl class="facts">
         <dt>Full name</dt><dd>{{ student.full_name|default:"—" }}</dd>
         <dt>Email</dt><dd><a href="mailto:{{ student.email }}">{{ student.email }}</a></dd>
+        <dt>Profession</dt><dd>{{ student.profession|default:"—" }}</dd>
+        <dt>Education</dt><dd>{{ student.education|default:"—" }}</dd>
+        <dt>Location</dt><dd>{{ student.location|default:"—" }}</dd>
         <dt>Joined</dt><dd>{{ student.date_joined|date:"j M Y, H:i" }}</dd>
         <dt>Last sign-in</dt><dd>{% if student.last_login %}{{ student.last_login|timesince }} ago{% else %}Never{% endif %}</dd>
         <dt>Course news</dt><dd>{{ student.marketing_opt_in|yesno:"Subscribed,Not subscribed" }}</dd>

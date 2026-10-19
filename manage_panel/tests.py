@@ -478,6 +478,13 @@ class StudentManagementTests(TestCase):
         self.assertFalse(rows["granted@example.com"]["is_paid"])
         self.assertFalse(rows["free@example.com"]["is_enrolled"])
 
+    def test_the_student_list_does_not_offer_to_assign_a_course(self):
+        response = self.client.get(reverse("manage:students"), {"course": self.course.slug})
+        self.assertNotContains(
+            response, reverse("manage:student_grant", kwargs={"pk": self.free.pk})
+        )
+        self.assertNotContains(response, "Assign course")
+
     def test_an_unknown_course_is_ignored_rather_than_an_error(self):
         self.assertEqual(len(self.listed(course="no-such-course")), 3)
 

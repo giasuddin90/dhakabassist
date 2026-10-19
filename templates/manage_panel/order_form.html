@@ -40,9 +40,16 @@
 
   <section class="panel panel--padded field-grid" aria-label="Payment">
     {% for field in form %}
-      {% include "includes/field.html" %}
+      {% if field.name != "course_access" %}{% include "includes/field.html" %}{% endif %}
     {% endfor %}
   </section>
+
+  {% if form.course_access %}
+    <section class="panel panel--padded stack u-gap-6" aria-label="Access">
+      <label class="check">{{ form.course_access }} {{ form.course_access.label }}</label>
+      <span class="form-note">{{ form.course_access.help_text }}</span>
+    </section>
+  {% endif %}
 
   {% if order %}
     <p class="form-note">Changing the status does not move money. Issue a refund in the gateway

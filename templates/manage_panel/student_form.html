@@ -24,9 +24,26 @@
     {% include "includes/field.html" with field=form.email %}
   </section>
 
+  {% if form.courses %}
+    <section class="panel panel--padded" aria-label="Courses">
+      <fieldset class="field material-choice{% if form.courses.errors %} field--invalid{% endif %}">
+        <legend>{{ form.courses.label }}</legend>
+        <div class="material-choice__options">
+          {% for box in form.courses %}
+            <label class="material-choice__option" for="{{ box.id_for_label }}">
+              {{ box.tag }}<span>{{ box.choice_label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+        <span class="field__help">{{ form.courses.help_text }}</span>
+        {% for error in form.courses.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
+      </fieldset>
+    </section>
+  {% endif %}
+
   <section class="panel panel--padded stack u-gap-14" aria-label="Account">
     {% for field in form %}
-      {% if field.field.widget.input_type == "checkbox" %}
+      {% if field.field.widget.input_type == "checkbox" and field.name != "courses" %}
         <div class="stack u-gap-6">
           <label class="check">{{ field }} {{ field.label }}</label>
           {% if field.help_text %}<span class="form-note">{{ field.help_text }}</span>{% endif %}

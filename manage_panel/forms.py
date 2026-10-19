@@ -20,6 +20,7 @@ from courses.models import (
     Author,
     Choice,
     Course,
+    Enrollment,
     LibraryFile,
     MediaAsset,
     Module,
@@ -402,10 +403,20 @@ class StudentFilterForm(forms.Form):
 
 
 class StudentForm(AccountSettingsForm):
-    """An administrator's edit of a student's details and account switches.
+    """An administrator's edit of a student's details, courses and account switches.
 
     Reuses the student's own settings form, so the email rules stay the same.
     """
+
+    courses = forms.ModelMultipleChoiceField(
+        queryset=Course.objects.order_by("position", "title"),
+        to_field_name="slug",
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Courses",
+        help_text="Tick to assign a course without a payment. Untick to remove access; "
+        "orders are not refunded.",
+    )
 
     class Meta(AccountSettingsForm.Meta):
         fields = ("full_name", "email", "marketing_opt_in", "access_enabled", "is_active")
@@ -418,6 +429,27 @@ class StudentForm(AccountSettingsForm):
             "access_enabled": "Turn off to suspend paid material. Orders are kept.",
             "is_active": "Turn off to block sign-in without deleting the account.",
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        courses = self.fields["courses"]
+        courses.label_from_instance = lambda c: " · ".join(filter(None, (c.title, c.subtitle)))
+        if self.instance.pk:
+            courses.initial = self.active_courses()
+
+    def active_courses(self):
+        return Course.objects.filter(enrollments__student=self.instance, enrollments__is_active=True)
+
+    @transaction.atomic
+    def save(self, commit=True):
+        student = super().save(commit)
+        if commit:
+            chosen = set(self.cleaned_data["courses"])
+            current = set(self.active_courses())
+            for course in chosen - current:
+                Enrollment.grant(student, course)
+            Enrollment.revoke(student, current - chosen)
+        return student
 
 
 class StudentCreateForm(AccountSettingsForm):
@@ -601,6 +633,12 @@ class OrderForm(OrderFieldsForm):
         help_text="Paid enrols the student. Refunded, failed or pending removes "
         "the access this order paid for; a manual grant is kept.",
     )
+    course_access = forms.BooleanField(
+        label="Course access",
+        required=False,
+        help_text="For a paid order: ticked opens the course for the student, "
+        "unticked withdraws it and keeps the order paid.",
+    )
 
     class Meta:
         model = Order
@@ -611,6 +649,13 @@ class OrderForm(OrderFieldsForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["status"].initial = self.instance.status
+        # Ticked by default, so setting an order to Paid enrols the student.
+        self.fields["course_access"].initial = (
+            self.instance.status != Order.Status.PAID
+            or self.instance.student.enrollments.filter(
+                course=self.instance.course, is_active=True
+            ).exists()
+        )
         self.order_fields(("status", *self.Meta.fields))
 
     @transaction.atomic
@@ -620,6 +665,7 @@ class OrderForm(OrderFieldsForm):
         # loaded (a gateway callback), and `change_status` reads it afresh.
         order.save(update_fields=[*self.Meta.fields, "updated_at"])
         order.change_status(self.cleaned_data["status"])
+        order.set_course_access(self.cleaned_data["course_access"])
         return order
 
 

@@ -117,12 +117,28 @@ class Order(TimeStampedModel):
                 "updated_at",
             ]
         )
+        self.enrol()
+        return True
+
+    def enrol(self):
+        """Open the course this order paid for."""
         Enrollment.objects.update_or_create(
             student=self.student,
             course=self.course,
             defaults={"is_active": True, "granted_manually": False},
         )
-        return True
+
+    def set_course_access(self, enabled):
+        """Open or close the course on a paid order by hand from /manage/.
+
+        Closing it keeps the order paid, e.g. while a payment is disputed.
+        """
+        if self.status != self.Status.PAID:
+            return
+        if enabled:
+            self.enrol()
+        else:
+            Enrollment.revoke(self.student, [self.course])
 
     @transaction.atomic
     def mark_refunded(self):

@@ -168,9 +168,10 @@ class OrderEditTests(TestCase):
             "amount": "3500",
             "method": PaymentMethod.BKASH,
             "gateway_reference": "BK123456",
+            "course_access": "on",
         }
         data.update(extra)
-        return self.client.post(self.url, data)
+        return self.client.post(self.url, {k: v for k, v in data.items() if v is not None})
 
     def test_the_details_can_be_corrected(self):
         response = self.edit(amount="3000", method=PaymentMethod.NAGAD, gateway_reference="NG9")
@@ -218,6 +219,27 @@ class OrderEditTests(TestCase):
         self.edit(status=Order.Status.FAILED)
         self.assertTrue(self.is_enrolled())
 
+    def test_paid_with_course_access_restores_a_withdrawn_course(self):
+        self.order.mark_paid()
+        Enrollment.revoke(self.student, [self.course])
+        response = self.client.get(self.url)
+        self.assertFalse(response.context["form"]["course_access"].initial)
+        self.edit(status=Order.Status.PAID)
+        self.assertTrue(self.is_enrolled())
+        self.assertFalse(Enrollment.objects.get(student=self.student).granted_manually)
+
+    def test_paid_without_course_access_withdraws_it_and_stays_paid(self):
+        self.order.mark_paid()
+        self.assertTrue(self.client.get(self.url).context["form"]["course_access"].initial)
+        self.edit(status=Order.Status.PAID, course_access=None)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, Order.Status.PAID)
+        self.assertFalse(self.is_enrolled())
+
+    def test_course_access_does_nothing_unless_paid(self):
+        self.edit(status=Order.Status.PENDING)
+        self.assertFalse(self.is_enrolled())
+
     def test_a_paid_status_cannot_reuse_a_transaction_id(self):
         Order.objects.create(
             student=User.objects.create_user(email="nadia@example.com", password=PASSWORD),
@@ -252,6 +274,64 @@ class OrderEditTests(TestCase):
         self.assertEqual(self.edit(status=Order.Status.PAID).status_code, 404)
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, Order.Status.PENDING)
+
+
+class StudentEditCoursesTests(TestCase):
+    """Assigning and unassigning courses from the student edit form."""
+
+    def setUp(self):
+        self.course, self.modules = make_course()
+        self.staff = User.objects.create_user(
+            email="tanveer@example.com", password=PASSWORD, is_staff=True
+        )
+        self.student = User.objects.create_user(
+            email="rafiq@example.com", password=PASSWORD, full_name="Rafiq Ahmed"
+        )
+        self.url = reverse("manage:student_edit", kwargs={"pk": self.student.pk})
+        self.client.force_login(self.staff)
+
+    def is_enrolled(self):
+        return CourseAccess(self.student, self.course).is_enrolled
+
+    def save(self, *courses):
+        data = {"full_name": "Rafiq Ahmed", "email": "rafiq@example.com", "is_active": "on"}
+        data["courses"] = [c.slug for c in courses]
+        return self.client.post(self.url, data)
+
+    def test_ticking_a_course_assigns_it_without_a_payment(self):
+        self.assertContains(self.client.get(self.url), "Foundations of Music")
+        self.save(self.course)
+        enrollment = Enrollment.objects.get(student=self.student, course=self.course)
+        self.assertTrue(enrollment.is_active)
+        self.assertTrue(enrollment.granted_manually)
+        self.assertFalse(Order.objects.exists())
+        self.assertTrue(self.is_enrolled())
+
+    def test_the_form_shows_assigned_courses_ticked(self):
+        Enrollment.objects.create(student=self.student, course=self.course)
+        response = self.client.get(self.url)
+        self.assertEqual(list(response.context["form"]["courses"].initial), [self.course])
+
+    def test_unticking_a_course_unassigns_it_and_keeps_its_orders(self):
+        order = Order.objects.create(
+            student=self.student,
+            course=self.course,
+            amount=3500,
+            method=PaymentMethod.BKASH,
+        )
+        order.mark_paid()
+        self.save()
+        self.assertFalse(Enrollment.objects.get(student=self.student).is_active)
+        self.assertFalse(self.is_enrolled())
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PAID)
+
+    def test_saving_unchanged_keeps_a_paid_enrolment_as_it_was(self):
+        Enrollment.objects.create(student=self.student, course=self.course)
+        self.save(self.course)
+        enrollment = Enrollment.objects.get(student=self.student)
+        self.assertTrue(enrollment.is_active)
+        self.assertFalse(enrollment.granted_manually)
 
 
 class StudentCreateTests(TestCase):

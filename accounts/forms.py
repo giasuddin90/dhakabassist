@@ -51,11 +51,24 @@ class RegisterForm(UserCreationForm):
 class AccountSettingsForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ("full_name", "email", "marketing_opt_in")
-        labels = {"marketing_opt_in": "Email me when new modules are published"}
+        fields = (
+            "full_name", "email", "profession", "education", "location", "marketing_opt_in",
+        )
+        labels = {
+            "profession": "Profession (optional)",
+            "education": "Education (optional)",
+            "location": "Location (optional)",
+            "marketing_opt_in": "Email me when new modules are published",
+        }
+        help_texts = {
+            "education": "Highest qualification or where you study, e.g. BSc, University of Dhaka.",
+            "location": "City and country, e.g. Dhaka, Bangladesh.",
+        }
         widgets = {
             "full_name": forms.TextInput(attrs={"autocomplete": "name"}),
             "email": forms.EmailInput(attrs={"autocomplete": "email"}),
+            "profession": forms.TextInput(attrs={"autocomplete": "organization-title"}),
+            "location": forms.TextInput(attrs={"autocomplete": "address-level2"}),
         }
 
     def clean_email(self):
