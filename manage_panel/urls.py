@@ -59,6 +59,7 @@ urlpatterns = [
         name="student_record_payment",
     ),
     path("orders/", views.OrdersView.as_view(), name="orders"),
+    path("orders/new/", enrolment_views.order_create, name="order_create"),
     path("orders/<str:reference>/edit/", enrolment_views.order_edit, name="order_edit"),
     path("orders/<str:reference>/refund/", enrolment_views.order_refund, name="order_refund"),
     # Site content

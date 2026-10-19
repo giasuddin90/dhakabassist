@@ -1,4 +1,4 @@
-"""Granting, revoking, manual payments, order edits, refunds and adding students."""
+"""Granting, revoking, manual payments, adding and editing orders, refunds and students."""
 
 from urllib.parse import urlsplit
 
@@ -308,3 +308,84 @@ class StudentCreateTests(TestCase):
         self.client.force_login(User.objects.create_user(email="x@example.com", password=PASSWORD))
         self.assertEqual(self.add().status_code, 404)
         self.assertFalse(User.objects.filter(email="nadia@example.com").exists())
+
+
+class OrderCreateTests(TestCase):
+    """Adding an order by hand from /manage/orders/new/."""
+
+    def setUp(self):
+        self.course, self.modules = make_course()
+        self.staff = User.objects.create_user(
+            email="tanveer@example.com", password=PASSWORD, is_staff=True
+        )
+        self.student = User.objects.create_user(
+            email="rafiq@example.com", password=PASSWORD, full_name="Rafiq Ahmed"
+        )
+        self.url = reverse("manage:order_create")
+        self.client.force_login(self.staff)
+
+    def is_enrolled(self):
+        return CourseAccess(self.student, self.course).is_enrolled
+
+    def add(self, **extra):
+        data = {
+            "student": self.student.pk,
+            "course": self.course.slug,
+            "status": Order.Status.PAID,
+            "method": PaymentMethod.BKASH,
+            "gateway_reference": "BK123456",
+        }
+        data.update(extra)
+        return self.client.post(self.url, data)
+
+    def test_a_paid_order_enrols_and_sends_the_receipt(self):
+        response = self.add()
+        self.assertRedirects(response, reverse("manage:orders"))
+        order = Order.objects.get(student=self.student)
+        self.assertEqual(order.status, Order.Status.PAID)
+        self.assertEqual(order.gateway, MANUAL_GATEWAY)
+        self.assertEqual(order.amount, self.course.price)
+        self.assertTrue(self.is_enrolled())
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_a_pending_order_needs_no_transaction_id_and_gives_no_access(self):
+        self.add(status=Order.Status.PENDING, gateway_reference="", amount="2000")
+        order = Order.objects.get(student=self.student)
+        self.assertEqual(order.status, Order.Status.PENDING)
+        self.assertEqual(order.amount, 2000)
+        self.assertFalse(self.is_enrolled())
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_a_paid_order_needs_a_transaction_id(self):
+        response = self.add(gateway_reference="")
+        self.assertContains(response, "Enter the transaction ID for a paid order.")
+        self.assertFalse(Order.objects.exists())
+
+    def test_a_transaction_id_cannot_pay_twice(self):
+        self.add()
+        other = User.objects.create_user(email="nadia@example.com", password=PASSWORD)
+        response = self.add(student=other.pk)
+        self.assertContains(response, "Another order already uses this transaction ID.")
+        self.assertEqual(Order.objects.count(), 1)
+
+    def test_an_enrolled_student_cannot_be_charged_again(self):
+        Enrollment.objects.create(student=self.student, course=self.course)
+        response = self.add()
+        self.assertContains(response, "already has this course.")
+        self.assertFalse(Order.objects.exists())
+
+    def test_staff_cannot_be_chosen(self):
+        self.add(student=self.staff.pk)
+        self.assertFalse(Order.objects.exists())
+
+    def test_the_orders_page_links_to_the_form_and_a_student_can_be_preset(self):
+        self.assertContains(self.client.get(reverse("manage:orders")), self.url)
+        response = self.client.get(self.url, {"student": self.student.pk})
+        self.assertContains(response, "Add an order")
+        self.assertContains(response, f'<option value="{self.student.pk}" selected>')
+
+    def test_it_is_staff_only(self):
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.get(self.url).status_code, 404)
+        self.assertEqual(self.add().status_code, 404)
+        self.assertFalse(Order.objects.exists())

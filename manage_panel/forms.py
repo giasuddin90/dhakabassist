@@ -9,6 +9,7 @@ import secrets
 from pathlib import Path
 
 from django import forms
+from django.contrib.auth import get_user_model
 from django.core.validators import FileExtensionValidator, MinValueValidator
 from django.db import transaction
 from django.db.models import Q
@@ -25,8 +26,10 @@ from courses.models import (
     Question,
     Quiz,
 )
-from orders.models import Order, PaymentMethod
+from orders.models import MANUAL_GATEWAY, Order, PaymentMethod
 from pages.models import Faq, LegalPage
+
+User = get_user_model()
 
 
 class CourseForm(forms.ModelForm):
@@ -501,13 +504,15 @@ class ManualPaymentForm(OrderFieldsForm):
             "gateway_reference": "The bKash or Nagad TrxID, or the bank reference.",
         }
 
-    def __init__(self, *args, student, **kwargs):
+    def __init__(self, *args, student=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.student = student
         course = self.fields["course"]
-        course.queryset = Course.objects.exclude(
-            pk__in=student.enrollments.filter(is_active=True).values("course")
-        ).order_by("position", "title")
+        course.queryset = Course.objects.order_by("position", "title")
+        if student is not None:
+            course.queryset = course.queryset.exclude(
+                pk__in=student.enrollments.filter(is_active=True).values("course")
+            )
         course.to_field_name = "slug"
         course.empty_label = None
         course.label_from_instance = lambda c: " · ".join(filter(None, (c.title, c.subtitle)))
@@ -520,6 +525,68 @@ class ManualPaymentForm(OrderFieldsForm):
         if cleaned.get("amount") is None and cleaned.get("course"):
             cleaned["amount"] = cleaned["course"].price
         return cleaned
+
+
+# Seven of the eight ancestors are Django's own form classes.
+class NewOrderForm(ManualPaymentForm):  # pylint: disable=too-many-ancestors
+    """An order added by hand from the orders page, for any student.
+
+    Paid works like recording a payment on the student page. Pending keeps
+    the order open, e.g. while a bKash transfer is being checked.
+    """
+
+    status = forms.ChoiceField(
+        choices=[
+            (Order.Status.PAID, Order.Status.PAID.label),
+            (Order.Status.PENDING, Order.Status.PENDING.label),
+        ],
+        initial=Order.Status.PAID,
+        help_text="Paid enrols the student and emails the receipt.",
+    )
+
+    class Meta(ManualPaymentForm.Meta):
+        fields = ("student", "course", "amount", "method", "gateway_reference")
+        labels = {
+            **ManualPaymentForm.Meta.labels,
+            "student": "Student",
+            "amount": "Amount (BDT)",
+            "method": "Payment method",
+        }
+        help_texts = {
+            **ManualPaymentForm.Meta.help_texts,
+            "gateway_reference": "The bKash or Nagad TrxID, or the bank reference. "
+            "Required when paid.",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        student = self.fields["student"]
+        student.queryset = User.objects.filter(is_staff=False).order_by("full_name", "email")
+        student.label_from_instance = lambda u: f"{u.get_full_name()} · {u.email}"
+        self.fields["gateway_reference"].required = False
+        self.order_fields(("student", "course", "status", *self.Meta.fields[2:]))
+
+    def clean(self):
+        cleaned = super().clean()
+        student, course = cleaned.get("student"), cleaned.get("course")
+        if (
+            student
+            and course
+            and student.enrollments.filter(course=course, is_active=True).exists()
+        ):
+            self.add_error("course", f"{student.get_full_name()} already has this course.")
+        if cleaned.get("status") == Order.Status.PAID and not cleaned.get("gateway_reference"):
+            self.add_error("gateway_reference", "Enter the transaction ID for a paid order.")
+        return cleaned
+
+    @transaction.atomic
+    def save(self, commit=True):
+        order = super().save(commit=False)
+        order.gateway = MANUAL_GATEWAY
+        order.save()
+        if self.cleaned_data["status"] == Order.Status.PAID:
+            order.mark_paid()
+        return order
 
 
 class OrderForm(OrderFieldsForm):

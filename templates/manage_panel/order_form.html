@@ -4,9 +4,10 @@
 <header class="manage-head">
   <div class="stack u-gap-6">
     <nav class="manage-head__crumbs" aria-label="Breadcrumb">
-      <a href="{% url 'manage:orders' %}">Orders</a> / {{ order.reference }} / Edit
+      <a href="{% url 'manage:orders' %}">Orders</a> /
+      {% if order %}{{ order.reference }} / Edit{% else %}Add{% endif %}
     </nav>
-    <h1>Edit order {{ order.reference }}</h1>
+    <h1>{% if order %}Edit order {{ order.reference }}{% else %}Add an order{% endif %}</h1>
   </div>
 </header>
 
@@ -15,38 +16,44 @@
   <input type="hidden" name="next" value="{{ next_url }}">
   {% include "includes/form_errors.html" %}
 
-  <section class="panel" aria-labelledby="order-title">
-    <div class="panel__head">
-      <h2 class="panel__title" id="order-title">Order</h2>
-    </div>
-    <div class="panel--padded">
-      <dl class="facts">
-        <dt>Student</dt>
-        <dd>
-          {% if order.student.is_staff %}{{ order.student.get_full_name }}{% else %}<a href="{% url 'manage:student_detail' order.student.pk %}">{{ order.student.get_full_name }}</a>{% endif %}
-          · {{ order.student.email }}
-        </dd>
-        <dt>Course</dt><dd>{{ order.course.title }}{% if order.course.subtitle %} · {{ order.course.subtitle }}{% endif %}</dd>
-        <dt>Placed</dt><dd>{{ order.created_at|date:"j M Y, H:i" }}</dd>
-        <dt>Paid</dt><dd>{{ order.paid_at|date:"j M Y, H:i"|default:"—" }}</dd>
-        <dt>Gateway</dt><dd>{{ order.gateway|default:"—" }}</dd>
-        {% if order.failure_reason %}<dt>Failure reason</dt><dd>{{ order.failure_reason }}</dd>{% endif %}
-      </dl>
-    </div>
-  </section>
+  {% if order %}
+    <section class="panel" aria-labelledby="order-title">
+      <div class="panel__head">
+        <h2 class="panel__title" id="order-title">Order</h2>
+      </div>
+      <div class="panel--padded">
+        <dl class="facts">
+          <dt>Student</dt>
+          <dd>
+            {% if order.student.is_staff %}{{ order.student.get_full_name }}{% else %}<a href="{% url 'manage:student_detail' order.student.pk %}">{{ order.student.get_full_name }}</a>{% endif %}
+            · {{ order.student.email }}
+          </dd>
+          <dt>Course</dt><dd>{{ order.course.title }}{% if order.course.subtitle %} · {{ order.course.subtitle }}{% endif %}</dd>
+          <dt>Placed</dt><dd>{{ order.created_at|date:"j M Y, H:i" }}</dd>
+          <dt>Paid</dt><dd>{{ order.paid_at|date:"j M Y, H:i"|default:"—" }}</dd>
+          <dt>Gateway</dt><dd>{{ order.gateway|default:"—" }}</dd>
+          {% if order.failure_reason %}<dt>Failure reason</dt><dd>{{ order.failure_reason }}</dd>{% endif %}
+        </dl>
+      </div>
+    </section>
+  {% endif %}
 
   <section class="panel panel--padded field-grid" aria-label="Payment">
-    {% include "includes/field.html" with field=form.status %}
-    {% include "includes/field.html" with field=form.method %}
-    {% include "includes/field.html" with field=form.amount %}
-    {% include "includes/field.html" with field=form.gateway_reference %}
+    {% for field in form %}
+      {% include "includes/field.html" %}
+    {% endfor %}
   </section>
 
-  <p class="form-note">Changing the status does not move money. Issue a refund in the gateway
-    first. Setting a status to Paid emails the student their receipt.</p>
+  {% if order %}
+    <p class="form-note">Changing the status does not move money. Issue a refund in the gateway
+      first. Setting a status to Paid emails the student their receipt.</p>
+  {% else %}
+    <p class="form-note">For payments taken outside the gateway, such as bKash or Nagad Send Money.
+      The student needs an account first; <a href="{% url 'manage:student_create' %}">add a student</a> if they have none.</p>
+  {% endif %}
 
   <div class="cluster">
-    <button class="btn btn--sm" type="submit">Save changes</button>
+    <button class="btn btn--sm" type="submit">{% if order %}Save changes{% else %}Add order{% endif %}</button>
     <a class="btn-link btn-link--sm" href="{{ next_url }}">Cancel</a>
   </div>
 </form>

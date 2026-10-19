@@ -1,8 +1,8 @@
 """Who may study what, changed by hand from /manage/.
 
-Granting, revoking, recording a payment taken outside the gateway,
-editing an order and refunding all end in the same place: an `Enrollment` row, the only thing
-`courses.access` reads. The gateway path enrols through `Order.mark_paid`
+Granting, revoking, recording a payment taken outside the gateway, adding
+or editing an order and refunding all end in the same place: an
+`Enrollment` row, the only thing `courses.access` reads. The gateway path enrols through `Order.mark_paid`
 too, so both kinds of payment behave alike.
 """
 
@@ -19,7 +19,7 @@ from orders.emails import send_receipt
 from orders.models import MANUAL_GATEWAY, Order
 from pages.seo import noindex
 
-from .forms import ManualPaymentForm, OrderForm
+from .forms import ManualPaymentForm, NewOrderForm, OrderForm
 from .views import nav_counts, staff_required
 
 User = get_user_model()
@@ -94,6 +94,51 @@ def order_refund(request, reference):
     return redirect(request.POST.get("next") or reverse("manage:orders"))
 
 
+def return_url(request):
+    """Where an order form goes back to: the page it came from, if on this site."""
+    url = request.POST.get("next") or request.GET.get("next", "")
+    if url_has_allowed_host_and_scheme(url, allowed_hosts={request.get_host()}):
+        return url
+    return reverse("manage:orders")
+
+
+def render_order_form(request, form, order=None):
+    """The add-order page, or the edit page when `order` is given."""
+    title = f"Edit order {order.reference}" if order else "Add an order"
+    return render(
+        request,
+        "manage_panel/order_form.html",
+        {
+            "form": form,
+            "order": order,
+            "next_url": return_url(request),
+            "section": "orders",
+            "counts": nav_counts(),
+            "seo": noindex(title),
+        },
+    )
+
+
+@staff_required
+def order_create(request):
+    """Add an order by hand for any student, paid or awaiting payment."""
+    initial = {"student": request.GET["student"]} if "student" in request.GET else None
+    form = NewOrderForm(request.POST or None, initial=initial)
+    if request.method == "POST" and form.is_valid():
+        order = form.save()
+        if order.status == Order.Status.PAID:
+            send_receipt(order)
+            messages.success(
+                request,
+                f"Order {order.reference} recorded. {order.student.get_full_name()} "
+                f"now has access to “{order.course.title}”.",
+            )
+        else:
+            messages.success(request, f"Order {order.reference} added as pending.")
+        return redirect(return_url(request))
+    return render_order_form(request, form)
+
+
 @staff_required
 def order_edit(request, reference):
     """Correct an order's amount, method, transaction ID or status."""
@@ -102,24 +147,10 @@ def order_edit(request, reference):
     )
     was_paid = order.status == Order.Status.PAID
     form = OrderForm(request.POST or None, instance=order)
-    next_url = request.POST.get("next") or request.GET.get("next", "")
-    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-        next_url = reverse("manage:orders")
     if request.method == "POST" and form.is_valid():
         form.save()
         if order.status == Order.Status.PAID and not was_paid:
             send_receipt(order)
         messages.success(request, f"Order {order.reference} has been saved.")
-        return redirect(next_url)
-    return render(
-        request,
-        "manage_panel/order_form.html",
-        {
-            "form": form,
-            "order": order,
-            "next_url": next_url,
-            "section": "orders",
-            "counts": nav_counts(),
-            "seo": noindex(f"Edit order {order.reference}"),
-        },
-    )
+        return redirect(return_url(request))
+    return render_order_form(request, form, order)
