@@ -17,24 +17,29 @@ YouTube or Cloudflare Stream link is turned into a plain embed URL.
 
 import base64
 import json
+import logging
 import re
 import time
 from urllib.parse import parse_qs, urlsplit
 
+import jwt
 from django.conf import settings
 from django.urls import reverse
 
+logger = logging.getLogger(__name__)
+
 
 def _cloudflare_token(video_uid):
-    """Mint a Cloudflare Stream signed token, or None when unconfigured."""
+    """Mint a Cloudflare Stream signed token, or None when it cannot be made."""
     config = settings.CLOUDFLARE_STREAM
     key_id = config.get("signing_key_id")
     key_pem = config.get("signing_key_pem")
     if not (key_id and key_pem):
-        return None
-    try:
-        import jwt  # PyJWT, only needed when Cloudflare signing is configured
-    except ImportError:  # pragma: no cover - optional dependency
+        logger.warning(
+            "Cloudflare Stream signing key is not configured; video %s falls "
+            "back to the file stream.",
+            video_uid,
+        )
         return None
     now = int(time.time())
     payload = {
@@ -44,8 +49,22 @@ def _cloudflare_token(video_uid):
         "nbf": now - 60,
         "downloadable": False,
     }
-    private_key = base64.b64decode(key_pem) if "-----" not in key_pem else key_pem.encode()
-    return jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": key_id})
+    try:
+        # Cloudflare returns the key base64-encoded; accept a decoded PEM too.
+        private_key = key_pem.encode() if "-----" in key_pem else base64.b64decode(key_pem)
+        return jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": key_id})
+    except (ValueError, jwt.PyJWTError):
+        # A broken key in .env must not take the lesson page down with it.
+        logger.exception("Could not sign a Cloudflare Stream token for video %s.", video_uid)
+        return None
+
+
+def _cloudflare_iframe_url(token):
+    """Stream player URL for a signed token, on the account's customer host."""
+    code = settings.CLOUDFLARE_STREAM.get("customer_code")
+    if code:
+        return f"https://customer-{code}.cloudflarestream.com/{token}/iframe"
+    return f"https://iframe.videodelivery.net/{token}"
 
 
 def playback(module):
@@ -55,11 +74,7 @@ def playback(module):
     if module.video_provider == "cloudflare":
         token = _cloudflare_token(module.video_uid)
         if token:
-            return {
-                "kind": "iframe",
-                "src": f"https://iframe.videodelivery.net/{token}",
-                "poster": "",
-            }
+            return {"kind": "iframe", "src": _cloudflare_iframe_url(token), "poster": ""}
         # Unsigned Cloudflare playback would expose the video publicly, so
         # fall through to the access-checked file stream instead.
     return {

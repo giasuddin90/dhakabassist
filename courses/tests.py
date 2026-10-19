@@ -4,14 +4,20 @@ These are the behaviours that keep paid material paid, so they are tested
 directly rather than through the UI.
 """
 
+import base64
+import functools
 import shutil
 import tempfile
+import time
 from pathlib import Path
 
+import jwt
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -29,7 +35,7 @@ from courses.models import (
     Quiz,
     QuizAttempt,
 )
-from courses.video import trailer_embed_url
+from courses.video import playback, trailer_embed_url
 
 User = get_user_model()
 PASSWORD = "quite-a-long-test-password"
@@ -520,6 +526,137 @@ class TrailerLinkTests(TestCase):
         with self.assertRaises(ValidationError) as caught:
             course.full_clean()
         self.assertIn("trailer_url", caught.exception.message_dict)
+
+
+def stream_settings(**overrides):
+    """CLOUDFLARE_STREAM as .env would build it, with test values."""
+    config = {
+        "account_id": "",
+        "signing_key_id": "test-key-id",
+        "signing_key_pem": "",
+        "customer_code": "abc123",
+        "token_ttl_seconds": 7200,
+    }
+    config.update(overrides)
+    return config
+
+
+@functools.cache
+def signing_key():
+    """One throwaway RSA key for the run; generating it is the slow part."""
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    pem = key.private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.TraditionalOpenSSL,
+        serialization.NoEncryption(),
+    ).decode()
+    return key.public_key(), pem
+
+
+class CloudflarePlaybackTests(SimpleTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.public_key, cls.pem = signing_key()
+
+    def module(self):
+        return Module(pk=7, video_provider="cloudflare", video_uid=CF_UID)
+
+    def token_from(self, src):
+        prefix = "https://customer-abc123.cloudflarestream.com/"
+        self.assertTrue(src.startswith(prefix) and src.endswith("/iframe"), src)
+        token = src[len(prefix):-len("/iframe")]
+        return jwt.get_unverified_header(token), jwt.decode(
+            token, self.public_key, algorithms=["RS256"]
+        )
+
+    def test_a_signed_token_plays_on_the_customer_host(self):
+        # Cloudflare hands the key out base64-encoded, so test that form.
+        encoded = base64.b64encode(self.pem.encode()).decode()
+        with self.settings(CLOUDFLARE_STREAM=stream_settings(signing_key_pem=encoded)):
+            data = playback(self.module())
+        self.assertEqual(data["kind"], "iframe")
+        header, claims = self.token_from(data["src"])
+        self.assertEqual(header["kid"], "test-key-id")
+        self.assertEqual(claims["sub"], CF_UID)
+        self.assertEqual(claims["kid"], "test-key-id")
+        self.assertFalse(claims["downloadable"])
+        self.assertLessEqual(claims["exp"], int(time.time()) + 7200)
+
+    def test_a_decoded_pem_works_too(self):
+        with self.settings(CLOUDFLARE_STREAM=stream_settings(signing_key_pem=self.pem)):
+            self.token_from(playback(self.module())["src"])
+
+    def test_without_a_customer_code_the_legacy_host_is_used(self):
+        config = stream_settings(signing_key_pem=self.pem, customer_code="")
+        with self.settings(CLOUDFLARE_STREAM=config):
+            src = playback(self.module())["src"]
+        self.assertTrue(src.startswith("https://iframe.videodelivery.net/"), src)
+
+    def test_an_unconfigured_key_falls_back_and_says_so(self):
+        with (
+            self.settings(CLOUDFLARE_STREAM=stream_settings()),
+            self.assertLogs("courses.video", "WARNING"),
+        ):
+            data = playback(self.module())
+        self.assertEqual(data["kind"], "file")
+        self.assertNotIn(CF_UID, data["src"])
+
+    def test_a_broken_key_falls_back_instead_of_failing_the_page(self):
+        with (
+            self.settings(CLOUDFLARE_STREAM=stream_settings(signing_key_pem="not a key")),
+            self.assertLogs("courses.video", "ERROR"),
+        ):
+            data = playback(self.module())
+        self.assertEqual(data["kind"], "file")
+
+
+class CloudflareLessonPageTests(TestCase):
+    def setUp(self):
+        self.course, self.modules = make_course()
+        for module in self.modules[:2]:
+            module.video_provider = "cloudflare"
+            module.video_uid = CF_UID
+            module.save(update_fields=["video_provider", "video_uid"])
+        self.client.force_login(
+            User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
+        )
+        stream = stream_settings(signing_key_pem=signing_key()[1])
+        self.enterContext(self.settings(CLOUDFLARE_STREAM=stream))
+
+    def test_the_player_gets_a_signed_token_never_the_video_id(self):
+        response = self.client.get(self.modules[0].get_absolute_url())
+        self.assertContains(response, 'src="https://customer-abc123.cloudflarestream.com/ey')
+        # The bare UID would play publicly if the video's "require signed
+        # URLs" switch were ever off, so the page must not reveal it.
+        self.assertNotContains(response, CF_UID)
+
+    def test_a_locked_module_signs_nothing(self):
+        response = self.client.get(self.modules[1].get_absolute_url())
+        self.assertTemplateUsed(response, "courses/paywall.html")
+        self.assertNotContains(response, "cloudflarestream.com")
+
+
+class CloudflareVideoIdTests(SimpleTestCase):
+    def test_the_id_is_trimmed_and_lowercased(self):
+        module = Module(video_provider="cloudflare", video_uid=f"  {CF_UID.upper()} ")
+        module.clean()
+        self.assertEqual(module.video_uid, CF_UID)
+
+    def test_a_link_or_typo_is_refused(self):
+        for value in (
+            f"https://customer-abc123.cloudflarestream.com/{CF_UID}/watch",
+            CF_UID[:-1],
+            "foundations/module-01.mp4",
+        ):
+            with self.subTest(value=value):
+                module = Module(video_provider="cloudflare", video_uid=value)
+                with self.assertRaises(ValidationError) as caught:
+                    module.clean()
+                self.assertIn("video_uid", caught.exception.message_dict)
+
+    def test_an_uploaded_file_path_is_not_checked_as_an_id(self):
+        Module(video_provider="protected_file", video_uid="foundations/module-01.mp4").clean()
 
 
 class PromoteOnHomeTests(TestCase):

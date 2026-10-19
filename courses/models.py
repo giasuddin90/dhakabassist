@@ -23,7 +23,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from .markup import render_inline, render_notes, split_audio
-from .video import trailer_embed_url
+from .video import CLOUDFLARE_UID, trailer_embed_url
 
 
 def validate_trailer_url(value):
@@ -352,6 +352,20 @@ class Module(TimeStampedModel):
         if not self.slug:
             self.slug = slugify(self.title)[:180]
         super().save(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        if self.video_provider == "cloudflare" and self.video_uid:
+            # The UID is signed into the playback token as-is, so a typo or a
+            # pasted URL would only show up as a broken player for students.
+            self.video_uid = self.video_uid.strip().lower()
+            if not CLOUDFLARE_UID.match(self.video_uid):
+                raise ValidationError({
+                    "video_uid": _(
+                        "Enter the 32-character video ID from the Cloudflare "
+                        "Stream dashboard, not a link."
+                    )
+                })
 
     def get_absolute_url(self):
         return reverse(

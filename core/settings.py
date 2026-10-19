@@ -204,7 +204,10 @@ CLOUDFLARE_STREAM = {
     "account_id": env_str("CLOUDFLARE_ACCOUNT_ID", ""),
     "signing_key_id": env_str("CLOUDFLARE_STREAM_KEY_ID", ""),
     "signing_key_pem": env_str("CLOUDFLARE_STREAM_KEY_PEM", ""),
-    "token_ttl_seconds": env_int("CLOUDFLARE_STREAM_TOKEN_TTL", 7200),
+    # The "<CODE>" in customer-<CODE>.cloudflarestream.com (Stream dashboard).
+    "customer_code": env_str("CLOUDFLARE_STREAM_CUSTOMER_CODE", ""),
+    # Cloudflare rejects tokens that expire more than 24 hours after signing.
+    "token_ttl_seconds": min(env_int("CLOUDFLARE_STREAM_TOKEN_TTL", 7200), 86400),
 }
 
 # -- Logging ----------------------------------------------------------------

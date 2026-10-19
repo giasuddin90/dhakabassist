@@ -51,6 +51,39 @@ writes the manifest WhiteNoise needs, so skipping it breaks the site.
 
 Then restart gunicorn.
 
+## Cloudflare Stream
+
+Lesson videos play in Cloudflare's player through a token the application
+signs per page view, after the enrolment check. The token replaces the video
+ID in the iframe URL and expires (`CLOUDFLARE_STREAM_TOKEN_TTL`, two hours by
+default, at most 24). One-time setup, with an API token that has Stream edit
+permission:
+
+1. Create a signing key and keep the response; it is shown once.
+
+   ```bash
+   curl -X POST "https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/stream/keys" -H "Authorization: Bearer <API_TOKEN>"
+   ```
+
+   Put `result.id` in `CLOUDFLARE_STREAM_KEY_ID` and `result.pem` (still
+   base64) in `CLOUDFLARE_STREAM_KEY_PEM`.
+2. Set `CLOUDFLARE_STREAM_CUSTOMER_CODE` to the `<CODE>` in the
+   `customer-<CODE>.cloudflarestream.com` address shown in the Stream
+   dashboard.
+3. For every lesson video, turn on **Require signed URLs** (video settings
+   in the dashboard, or `"requireSignedURLs": true` via the API). This is the
+   switch that makes the video private: without it the bare video ID plays
+   for anyone, token or not.
+4. Under Stream settings, set **Allowed origins** to the site's domain so the
+   player cannot be embedded elsewhere.
+5. In `/manage/`, pick "Cloudflare Stream" as the module's video provider and
+   paste the 32-character video ID.
+
+If the key is missing or invalid the lesson falls back to the access-checked
+file stream and logs a warning (`courses.video`), so watch for that after a
+deploy. Revoking the key (`DELETE .../stream/keys/<KEY_ID>`) invalidates
+every token signed with it.
+
 ## nginx
 
 Static files are served directly. Uploaded media is handed back to nginx

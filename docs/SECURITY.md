@@ -129,9 +129,12 @@ cannot be found by counting. SVG files are served with a sandboxing
 Content-Security-Policy, so an SVG opened on its own cannot run script.
 
 With Cloudflare Stream configured, playback uses a token signed per request
-that expires (two hours by default), so a copied URL stops working. If signing
-is not configured the code deliberately falls back to the access-checked stream
-rather than serving an unsigned public URL.
+that expires (two hours by default), so a copied URL stops working. The page
+contains only the token, never the video ID. This holds only for videos with
+"Require signed URLs" switched on in Stream (see `docs/DEPLOYMENT.md`); a
+video without it plays publicly to anyone who learns its ID. If signing is not
+configured or the key is invalid, the code logs a warning and deliberately falls
+back to the access-checked stream rather than serving an unsigned public URL.
 
 The goal, as the brief states, is to prevent unauthorised access and casual
 redistribution — not to make screen recording impossible, which no platform

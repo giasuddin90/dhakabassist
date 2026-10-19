@@ -19,8 +19,9 @@ whitenoise>=6.6
 # Reads the local .env in development.
 python-dotenv>=1.0
 
-# Only needed when Cloudflare Stream signed playback is configured.
-# PyJWT>=2.8
+# Signs Cloudflare Stream playback tokens (RS256, which needs the `crypto`
+# extra). Unused until the Stream signing key is set in .env.
+PyJWT[crypto]>=2.8
 
 # Only needed when DJANGO_DB_URL points at PostgreSQL.
 # psycopg[binary]>=3.1
