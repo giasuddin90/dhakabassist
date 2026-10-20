@@ -50,6 +50,10 @@
     <div class="manage-side__foot">
       <a href="{% url 'pages:home' %}">View website</a>
       <a href="{% url 'admin:index' %}">Database admin</a>
+      <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button class="btn-link btn-link--sm" type="submit">Log out</button>
+      </form>
       <div class="manage-side__user">
         <span class="avatar avatar--lg" aria-hidden="true">{{ user.initials }}</span>
         <span>

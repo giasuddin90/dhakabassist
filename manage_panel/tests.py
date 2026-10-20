@@ -150,6 +150,12 @@ class StaffPanelTests(TestCase):
         self.assertContains(response, "Free accounts")
         self.assertContains(response, "Revenue")
 
+    def test_the_panel_has_a_logout_button_that_ends_the_session(self):
+        response = self.client.get(reverse("manage:overview"))
+        self.assertContains(response, f'action="{reverse("accounts:logout")}"')
+        self.client.post(reverse("accounts:logout"))
+        self.assertNotIn("_auth_user_id", self.client.session)
+
     def test_the_overview_survives_an_empty_database(self):
         Course.objects.all().delete()
         User.objects.filter(is_staff=False).delete()
