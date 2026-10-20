@@ -813,6 +813,14 @@ body.manage {
   gap: 4px 12px;
 }
 
+.answer-edit__lang {
+  flex: none;
+  width: 4.5rem;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
 .answer-edit__text + .answer-edit__text {
   border-top: 1px solid var(--line);
 }

@@ -95,6 +95,8 @@
           <div class="answer-edit__texts">
             {% for field in option.bilingual.text %}
               <div class="answer-edit__text">
+                {# Without the language tag, an option written alike in both languages looks listed twice. #}
+                <label class="answer-edit__lang" for="{{ field.id_for_label }}">{{ field.label }}</label>
                 {{ field }}
                 {% include "includes/md_tools.html" with target=field.id_for_label name="Option "|add:option.instance.letter|add:" "|add:field.label|add:" formatting" %}
               </div>
