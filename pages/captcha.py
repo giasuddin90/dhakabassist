@@ -94,6 +94,7 @@ class MathCaptchaMixin:  # pylint: disable=too-few-public-methods
         )
 
     def full_clean(self):
+        """Mark a wrong answer for screen readers as well as visually."""
         super().full_clean()
         if "captcha" in self.errors:
             self.fields["captcha"].widget.attrs["aria-invalid"] = "true"
