@@ -13,12 +13,12 @@
       {% if mode == 'register' %}{% translate "Create your account" %}{% else %}{% translate "Welcome back" %}{% endif %}
     </h1>
 
-    <div class="segmented">
-      <a href="{% url 'accounts:login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}"
-         {% if mode == 'login' %}aria-current="page"{% endif %}>{% translate "Log in" %}</a>
-      <a href="{% url 'accounts:register' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}"
-         {% if mode == 'register' %}aria-current="page"{% endif %}>{% translate "Create account" %}</a>
-    </div>
+<!--    <div class="segmented">-->
+<!--      <a href="{% url 'accounts:login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}"-->
+<!--         {% if mode == 'login' %}aria-current="page"{% endif %}>{% translate "Log in" %}</a>-->
+<!--      <a href="{% url 'accounts:register' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}"-->
+<!--         {% if mode == 'register' %}aria-current="page"{% endif %}>{% translate "Create account" %}</a>-->
+<!--    </div>-->
 
     <form method="post" class="stack u-gap-16" novalidate>
       {% csrf_token %}

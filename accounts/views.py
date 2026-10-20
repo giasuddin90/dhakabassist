@@ -55,7 +55,8 @@ class RegisterView(FormView):
     from then on.
     """
 
-    template_name = "accounts/login.html"
+    # template_name = "accounts/login.html"
+    template_name = "pages/404.html"
     form_class = RegisterForm
 
     def dispatch(self, request, *args, **kwargs):
