@@ -1,10 +1,12 @@
 """Django settings for the DhakaBassist learning platform."""
 
+import sys
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
-from .env import env_bool, env_int, env_list, env_str
+from .env import env_bool, env_list, env_str
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -12,10 +14,19 @@ load_dotenv(BASE_DIR / ".env")
 
 # -- Core -------------------------------------------------------------------
 
-SECRET_KEY = env_str("DJANGO_SECRET_KEY", "dev-only-insecure-key-change-me")
-DEBUG = env_bool("DJANGO_DEBUG", True)
-ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", [])
+# Off unless asked for, so a server with a missing `.env` fails safe.
+DEBUG = env_bool("DJANGO_DEBUG", False)
+# Tests run over plain HTTP without `collectstatic`, so they skip the
+# production-only settings below whatever DJANGO_DEBUG says.
+PRODUCTION = not DEBUG and sys.argv[1:2] != ["test"]
+
+SECRET_KEY = env_str("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    if PRODUCTION:
+        raise ImproperlyConfigured("Set DJANGO_SECRET_KEY, or DJANGO_DEBUG=1.")
+    SECRET_KEY = "dev-only-insecure-key"
+
+ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", ["localhost", "127.0.0.1"])
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -69,25 +80,26 @@ TEMPLATES = [
 
 # -- Database ---------------------------------------------------------------
 
+# SQLite until DB_NAME is set, then PostgreSQL (the port is the default 5432).
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / env_str("DJANGO_DB_NAME", "db.sqlite3"),
-    }
-}
-if env_str("DJANGO_DB_URL", ""):  # postgres://user:pass@host:port/name
-    import urllib.parse as _urlparse
-
-    _url = _urlparse.urlparse(env_str("DJANGO_DB_URL", ""))
-    DATABASES["default"] = {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": _url.path.lstrip("/"),
-        "USER": _url.username or "",
-        "PASSWORD": _url.password or "",
-        "HOST": _url.hostname or "",
-        "PORT": str(_url.port or ""),
+        "NAME": env_str("DB_NAME"),
+        "USER": env_str("DB_USER"),
+        "PASSWORD": env_str("DB_PASSWORD"),
+        "HOST": env_str("DB_HOST", "localhost"),
         "CONN_MAX_AGE": 600,
     }
+}
+
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -129,9 +141,9 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
         "BACKEND": (
-            "django.contrib.staticfiles.storage.StaticFilesStorage"
-            if DEBUG
-            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if PRODUCTION
+            else "django.contrib.staticfiles.storage.StaticFilesStorage"
         )
     },
 }
@@ -141,30 +153,25 @@ WHITENOISE_MAX_AGE = 31536000
 # directly: `courses.views.protected_asset` streams it after an enrolment
 # check. See docs/SECURITY.md.
 MEDIA_URL = "media/"
-MEDIA_ROOT = Path(env_str("DJANGO_MEDIA_ROOT", str(BASE_DIR / "media")))
-# Set to "/_media/" to hand streaming to nginx via X-Accel-Redirect.
-MEDIA_INTERNAL_URL = env_str("DJANGO_MEDIA_INTERNAL_URL", "")
+MEDIA_ROOT = BASE_DIR / "media"
+# Empty: Django streams the files itself. Set to "/_media/" to hand streaming
+# to nginx via X-Accel-Redirect (see docs/DEPLOYMENT.md).
+MEDIA_INTERNAL_URL = ""
 
 # -- Email ------------------------------------------------------------------
 
 # With a Resend API key, mail goes out through Resend's HTTP API
 # (`core/mail.py`); without one it prints to the console. Tests always use
 # Django's in-memory backend whatever this says.
-RESEND_API_KEY = env_str("RESEND_API_KEY", "")
-EMAIL_BACKEND = env_str(
-    "DJANGO_EMAIL_BACKEND",
+RESEND_API_KEY = env_str("RESEND_API_KEY")
+EMAIL_BACKEND = (
     "core.mail.ResendEmailBackend"
     if RESEND_API_KEY
-    else "django.core.mail.backends.console.EmailBackend",
+    else "django.core.mail.backends.console.EmailBackend"
 )
-EMAIL_HOST = env_str("DJANGO_EMAIL_HOST", "")
-EMAIL_PORT = env_int("DJANGO_EMAIL_PORT", 587)
-EMAIL_HOST_USER = env_str("DJANGO_EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = env_str("DJANGO_EMAIL_HOST_PASSWORD", "")
-EMAIL_USE_TLS = env_bool("DJANGO_EMAIL_USE_TLS", True)
-# Signup waits on the confirmation email, so a stalled SMTP server must not
+# Signup waits on the confirmation email, so a stalled mail service must not
 # hold the request open indefinitely.
-EMAIL_TIMEOUT = env_int("DJANGO_EMAIL_TIMEOUT", 10)
+EMAIL_TIMEOUT = 10
 DEFAULT_FROM_EMAIL = env_str("DJANGO_DEFAULT_FROM_EMAIL", "hello@dhakabassist.com")
 
 # -- Messages ---------------------------------------------------------------
@@ -181,10 +188,10 @@ SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
 
-if not DEBUG:
-    SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", True)
+if PRODUCTION:
+    SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    SECURE_HSTS_SECONDS = env_int("DJANGO_SECURE_HSTS_SECONDS", 31536000)
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SESSION_COOKIE_SECURE = True
@@ -192,13 +199,18 @@ if not DEBUG:
 
 # -- Site / branding -------------------------------------------------------
 
+SITE_BASE_URL = env_str("SITE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+# Forms posted from the canonical origin pass the CSRF origin check even when
+# a proxy rewrites the scheme or port.
+CSRF_TRUSTED_ORIGINS = [SITE_BASE_URL]
+
 SITE = {
     "name": "DhakaBassist",
     "tagline": "Music theory courses by Tanveer Haque.",
     "instructor": "Tanveer Haque",
     "email": "hello@dhakabassist.com",
     "location": "Dhaka, Bangladesh",
-    "base_url": env_str("SITE_BASE_URL", "http://127.0.0.1:8000").rstrip("/"),
+    "base_url": SITE_BASE_URL,
     # Open Graph locale per language code; see pages.context_processors.
     "locales": {"bn": "bn_BD", "en": "en_BD"},
     "currency": "BDT",
@@ -211,8 +223,8 @@ SITE = {
 # once live credentials exist; see orders/gateways.py.
 PAYMENT_GATEWAY = env_str("PAYMENT_GATEWAY", "sandbox")
 SSLCOMMERZ = {
-    "store_id": env_str("SSLCOMMERZ_STORE_ID", ""),
-    "store_password": env_str("SSLCOMMERZ_STORE_PASSWORD", ""),
+    "store_id": env_str("SSLCOMMERZ_STORE_ID"),
+    "store_password": env_str("SSLCOMMERZ_STORE_PASSWORD"),
     "sandbox": env_bool("SSLCOMMERZ_SANDBOX", True),
 }
 
@@ -221,13 +233,13 @@ SSLCOMMERZ = {
 # Cloudflare Stream signed playback. Empty key falls back to the access-checked
 # file stream, so local development needs no third-party account.
 CLOUDFLARE_STREAM = {
-    "account_id": env_str("CLOUDFLARE_ACCOUNT_ID", ""),
-    "signing_key_id": env_str("CLOUDFLARE_STREAM_KEY_ID", ""),
-    "signing_key_pem": env_str("CLOUDFLARE_STREAM_KEY_PEM", ""),
+    "account_id": env_str("CLOUDFLARE_ACCOUNT_ID"),
+    "signing_key_id": env_str("CLOUDFLARE_STREAM_KEY_ID"),
+    "signing_key_pem": env_str("CLOUDFLARE_STREAM_KEY_PEM"),
     # The "<CODE>" in customer-<CODE>.cloudflarestream.com (Stream dashboard).
-    "customer_code": env_str("CLOUDFLARE_STREAM_CUSTOMER_CODE", ""),
-    # Cloudflare rejects tokens that expire more than 24 hours after signing.
-    "token_ttl_seconds": min(env_int("CLOUDFLARE_STREAM_TOKEN_TTL", 7200), 86400),
+    "customer_code": env_str("CLOUDFLARE_STREAM_CUSTOMER_CODE"),
+    # Two hours; Cloudflare rejects tokens that live longer than 24.
+    "token_ttl_seconds": 7200,
 }
 
 # -- Logging ----------------------------------------------------------------

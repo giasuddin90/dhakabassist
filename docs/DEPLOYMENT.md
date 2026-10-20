@@ -16,28 +16,32 @@ arrangement intact: nothing under `/media/` is served directly.
 | CDN / DNS | Cloudflare | TLS, caching, rate limiting, DDoS |
 | Video | Cloudflare Stream | Signed playback, no server bandwidth |
 | Payments | SSLCommerz | bKash, Nagad, local and international cards |
-| Email | Resend (HTTP API, `core/mail.py`), or any SMTP provider | Signup confirmation, password resets, receipts |
-
-On Python 3.12, change the pin in `requirements.txt` to `Django>=5.2,<6` and
-run the test suite before deploying. The code targets both lines.
+| Email | Resend (HTTP API, `core/mail.py`) | Signup confirmation, password resets, receipts |
 
 ## Environment
 
-Copy `.env.example` and fill it in. The ones that must be right:
+Copy `.env.example` and fill it in. Production values:
 
 ```
 DJANGO_SECRET_KEY=<50+ random characters, never reused>
 DJANGO_DEBUG=0
 DJANGO_ALLOWED_HOSTS=dhakabassist.com,www.dhakabassist.com
-DJANGO_CSRF_TRUSTED_ORIGINS=https://dhakabassist.com,https://www.dhakabassist.com
 SITE_BASE_URL=https://dhakabassist.com
-DJANGO_DB_URL=postgres://user:password@localhost:5432/dhakabassist
-DJANGO_MEDIA_ROOT=/srv/dhakabassist/media
-DJANGO_MEDIA_INTERNAL_URL=/_media/
+DB_NAME=dhakabassist
+DB_USER=<database user>
+DB_PASSWORD=<database password>
+DB_HOST=localhost
 PAYMENT_GATEWAY=sslcommerz
+SSLCOMMERZ_STORE_ID=<from SSLCommerz>
+SSLCOMMERZ_STORE_PASSWORD=<from SSLCommerz>
+SSLCOMMERZ_SANDBOX=0
+RESEND_API_KEY=<from Resend>
 ```
 
-`DJANGO_DEBUG=0` is what turns on HTTPS redirection, HSTS and secure cookies.
+plus the four `CLOUDFLARE_*` values below. With `DJANGO_DEBUG` off (the
+default) the settings refuse to start without `DJANGO_SECRET_KEY`, and turn on
+HTTPS redirection, HSTS and secure cookies. `SITE_BASE_URL` is also the
+trusted CSRF origin.
 Confirm with `manage.py check --deploy`, which must report no issues.
 
 ## Deploying
@@ -74,8 +78,7 @@ Untranslated entries show in English. The staff panel is English only.
 
 Lesson videos play in Cloudflare's player through a token the application
 signs per page view, after the enrolment check. The token replaces the video
-ID in the iframe URL and expires (`CLOUDFLARE_STREAM_TOKEN_TTL`, two hours by
-default, at most 24). One-time setup, with an API token that has Stream edit
+ID in the iframe URL and expires after two hours. One-time setup, with an API token that has Stream edit
 permission:
 
 1. Create a signing key and keep the response; it is shown once.
@@ -122,7 +125,8 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
-    # Reachable only via Django's X-Accel-Redirect, never from outside.
+    # Optional: used only when MEDIA_INTERNAL_URL = "/_media/" in
+    # core/settings.py. Reachable only via Django's X-Accel-Redirect.
     # There is deliberately no `location /media/`: every upload is course
     # material, so a direct /media/ request falls through to Django and 404s.
     location /_media/ {

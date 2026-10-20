@@ -38,7 +38,7 @@ media/             # every uploaded file (MEDIA_ROOT)
 
 ## Uploads (media folder)
 
-Every uploaded file goes in the media folder (`MEDIA_ROOT`, default `./media`, set by `DJANGO_MEDIA_ROOT`). That covers videos, audio, worksheets, library files, author photos and anything added later.
+Every uploaded file goes in the media folder (`MEDIA_ROOT`, `./media`, set in `core/settings.py`). That covers videos, audio, worksheets, library files, author photos and anything added later.
 
 - Store uploads with a `FileField`/`ImageField` and an `upload_to` function that puts them in a subfolder of `media/` (e.g. `courses/<course>/<module>/`, `library/<folder>/`, `authors/<course>/`). Use the default storage; don't add another storage backend or write files anywhere else (`static/`, `Brand Assets/`, `/tmp`, the project root).
 - Never serve `media/` directly or link to `MEDIA_URL` in templates. Every file goes out through a view: course material through `courses.views.protected_asset` after an access check (see `docs/SECURITY.md`), and public files like author photos through their own view (`courses.views.author_photo`).
@@ -48,7 +48,7 @@ Every uploaded file goes in the media folder (`MEDIA_ROOT`, default `./media`, s
 
 `.env.example` lists every variable and is the source of truth. Copy it to `.env`; `core/env.py` reads values from the environment (loaded with `python-dotenv`).
 
-- `DJANGO_DEBUG` toggles debug. `DJANGO_DB_URL` (`postgres://user:pass@host:port/name`) switches to PostgreSQL; leave it unset to use SQLite.
+- `DJANGO_DEBUG` toggles debug. `DB_NAME`, `DB_USER`, `DB_PASSWORD` and `DB_HOST` switch to PostgreSQL; leave `DB_NAME` empty to use SQLite.
 - Commit `.env.example`, never `.env`.
 
 ## Two languages (Bangla primary, English second)

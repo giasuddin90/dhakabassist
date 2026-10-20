@@ -1,9 +1,7 @@
 # Direct dependencies. Transitive packages are resolved by pip.
 #
-# Django is pinned to the 4.2 LTS line because the only interpreter available
-# on the development machine is Python 3.9. The code targets both 4.2 and 5.2;
-# on Python 3.12 upgrade this to `Django>=5.2,<6` and re-run the test suite.
-Django>=4.2,<5
+# Django 5.2 LTS (needs Python 3.10+; the project targets 3.12+).
+Django>=5.2,<6
 
 # Lesson notes and legal pages are authored in Markdown and sanitised before
 # they are rendered.
@@ -24,7 +22,7 @@ python-dotenv>=1.0
 PyJWT[crypto]>=2.8
 
 # Only needed when DJANGO_DB_URL points at PostgreSQL.
-# psycopg[binary]>=3.1
+ psycopg[binary]>=3.1
 
 # Production application server.
-# gunicorn>=21.2
+ gunicorn>=21.2

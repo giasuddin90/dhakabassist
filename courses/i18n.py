@@ -83,4 +83,4 @@ def in_some_language(model_name, name):
     condition = models.Q()
     for column in columns(name):
         condition |= ~models.Q(**{column: ""})
-    return models.CheckConstraint(check=condition, name=f"{model_name}_{name}_in_some_language")
+    return models.CheckConstraint(condition=condition, name=f"{model_name}_{name}_in_some_language")

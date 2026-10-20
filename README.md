@@ -105,17 +105,15 @@ DJANGO_DEBUG=0 .venv/bin/python manage.py check --deploy
 
 ## Notes on choices
 
-**Django 4.2, not 5.2.** The development machine only has Python 3.9, which
-Django 5 does not support. The code avoids version-specific APIs, so on Python
-3.12 you can change the pin in `requirements.txt` to `Django>=5.2,<6` and the
-suite should pass unchanged. Production should run 3.12 + 5.2 LTS.
+**Django 5.2 LTS.** Pinned as `Django>=5.2,<6` in `requirements.txt`; it needs
+Python 3.10+ and the project targets 3.12+. Security support runs into 2028.
 
 **Two admin interfaces.** `/manage/` is the custom panel from the design and
 covers the day-to-day work the brief lists. Django's own admin stays at
 `/django-admin/` for structural edits and data repair.
 
 **SQLite by default.** Fine for development and a small launch; set
-`DJANGO_DB_URL` to move to PostgreSQL without code changes.
+`DB_NAME` (with `DB_USER`, `DB_PASSWORD`, `DB_HOST`) to move to PostgreSQL without code changes.
 
 ## Documentation
 
