@@ -16,7 +16,6 @@ from django.views.generic import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 
-from courses import views as course_views
 from courses.access import course_queryset
 from courses.markup import render_notes
 from courses.models import Course
@@ -49,10 +48,6 @@ HOW_IT_WORKS = (
         gettext_lazy("Answer every question correctly to unlock the next module."),
     ),
 )
-
-# The same lists the course page shows.
-INCLUDES = course_views.INCLUDES
-PAYMENT_CHIPS = course_views.PAYMENT_CHIPS
 
 
 def primary_course():
@@ -88,8 +83,6 @@ class HomeView(TemplateView):
             modules=course.module_list if course else [],
             faqs=faqs,
             steps=HOW_IT_WORKS,
-            includes=INCLUDES,
-            payment_chips=PAYMENT_CHIPS,
             seo=seo.SEO(
                 title=_("Learn to read, hear and understand music"),
                 description=_(

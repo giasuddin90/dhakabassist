@@ -1,0 +1,36 @@
+{% extends "manage_panel/base.html" %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <nav class="manage-head__crumbs" aria-label="Breadcrumb">
+      <a href="{% url 'manage:messages' %}">User messages</a> / {{ item.name }}
+    </nav>
+    <h1>Message from {{ item.name }}</h1>
+  </div>
+  <a class="btn btn--sm" href="mailto:{{ item.email }}">Reply by email</a>
+</header>
+
+<section class="panel" aria-labelledby="message-title">
+  <div class="panel__head">
+    <h2 class="panel__title" id="message-title">Message</h2>
+    {% if item.is_handled %}
+      <span class="badge badge--status badge--ok">Handled</span>
+    {% else %}
+      <span class="badge badge--status badge--current">New</span>
+    {% endif %}
+  </div>
+  <div class="panel--padded stack u-gap-12">
+    <dl class="facts">
+      <dt>From</dt><dd>{{ item.name }}</dd>
+      <dt>Email</dt><dd><a href="mailto:{{ item.email }}">{{ item.email }}</a></dd>
+      <dt>Received</dt><dd>{{ item.created_at|date:"j M Y, H:i" }}</dd>
+    </dl>
+    <div class="message-body">{{ item.message|linebreaks }}</div>
+    <div class="cluster">
+      {% include "includes/message_handled_switch.html" %}
+      <span class="u-fs-14">{% if item.is_handled %}Handled{% else %}Not handled yet{% endif %}</span>
+    </div>
+  </div>
+</section>
+{% endblock %}

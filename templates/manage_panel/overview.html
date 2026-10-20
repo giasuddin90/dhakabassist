@@ -79,31 +79,4 @@
     </div>
   </section>
 </div>
-
-{% if unhandled_messages %}
-  <section class="panel" aria-labelledby="messages-title">
-    <div class="panel__head">
-      <h2 class="panel__title" id="messages-title">New contact messages</h2>
-      <a class="btn-link btn-link--sm" href="{% url 'manage:content' %}">All messages</a>
-    </div>
-    <div class="table-wrap">
-      <table class="dtable">
-        <caption class="visually-hidden">Unhandled contact messages</caption>
-        <thead><tr><th scope="col">From</th><th scope="col">Message</th><th scope="col">Received</th></tr></thead>
-        <tbody>
-          {% for item in unhandled_messages %}
-            <tr>
-              <th scope="row">
-                <span class="dtable__name">{{ item.name }}</span>
-                <span class="dtable__sub">{{ item.email }}</span>
-              </th>
-              <td>{{ item.message|truncatechars:90 }}</td>
-              <td class="muted u-nowrap">{{ item.created_at|date:"j M" }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </section>
-{% endif %}
 {% endblock %}

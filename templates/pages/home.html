@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n money %}
+{% load i18n %}
 
 {% block content %}
 {% if course %}
@@ -103,31 +103,61 @@
     </div>
   </section>
 
-  {# --------------------------------------------------------------- pricing #}
-  <section class="section section--loose section--ruled reveal" id="pricing" aria-labelledby="pricing-title">
+  {# ----------------------------------------------------- free module funnel #}
+  {% comment %}The home page sells the free module, not the price: the paywall and the
+  course page carry the full offer once someone has tried a lesson.{% endcomment %}
+  {% with free=course.free_module %}{% if free %}
+  <section class="section section--loose section--ruled reveal" id="free-module" aria-labelledby="free-title">
     <div class="shell duo duo--start">
-      <div class="stack u-gap-14">
-        <p class="eyebrow">{% translate "Pricing" %}</p>
-        <h2 class="display-3" id="pricing-title">{% translate "One payment. Lifetime access." %}</h2>
-        <p class="prose" style="font-size:18px;line-height:1.6">{% blocktranslate trimmed with number=course.free_module.number_plain|default:'1' %}
-          Create a free account and study Module {{ number }} at no cost.
-          When you are ready, pay once in BDT with bKash, Nagad or card to unlock the rest of the course.
-          International cards are accepted.
-        {% endblocktranslate %}</p>
+      <div class="stack u-gap-22">
+        <div class="stack u-gap-14">
+          <p class="eyebrow">{% translate "Start free" %}</p>
+          <h2 class="display-3" id="free-title">{% blocktranslate with number=free.number_plain %}Study Module {{ number }} free, before you pay anything{% endblocktranslate %}</h2>
+          <p class="lede">{% blocktranslate trimmed with number=free.number_plain %}
+            Create a free account and all of Module {{ number }} is yours: the video lesson,
+            written notes, audio examples and the quiz. No card and no trial clock. It stays free.
+          {% endblocktranslate %}</p>
+        </div>
+
+        <ol class="funnel">
+          <li class="funnel__step">
+            <h3 class="funnel__title">{% translate "Create your free account" %}</h3>
+            <p class="funnel__body">{% translate "Your name and e-mail. Confirm the e-mail and you are in." %}</p>
+          </li>
+          <li class="funnel__step">
+            <h3 class="funnel__title">{% blocktranslate with number=free.number_plain %}Study Module {{ number }} at your own pace{% endblocktranslate %}</h3>
+            <p class="funnel__body">{% translate "Watch, read, listen, then take the quiz. See exactly how the course teaches." %}</p>
+          </li>
+          <li class="funnel__step">
+            <h3 class="funnel__title">{% translate "Unlock the rest when you are ready" %}</h3>
+            <p class="funnel__body">{% blocktranslate trimmed with total=course.module_count %}
+              Like it? Enroll once to open all {{ total }} modules, with lifetime access.
+            {% endblocktranslate %}</p>
+          </li>
+        </ol>
       </div>
 
-      <div class="panel panel--framed stack u-gap-20">
-        <h3 class="u-serif u-fs-19" style="font-weight:600;font-size:22px">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}</h3>
-        <p class="cluster" style="--cluster-gap:10px;align-items:baseline">
-          <span class="price">{{ course.price|taka }}</span>
-          <span class="muted u-fs-15">{% translate "one-time" %}</span>
-        </p>
-        {% include "includes/includes_list.html" %}
-        <a class="btn btn--block" href="{% url 'orders:checkout' course.slug %}">{% translate "Enroll now" %}</a>
-        {% include "includes/payment_chips.html" %}
-      </div>
+      <article class="free-card on-dark stack u-gap-18" aria-labelledby="free-card-title">
+        <div class="cluster free-card__head">
+          <span class="badge badge--light">{% translate "FREE" %}</span>
+          {% if free.meta_line %}<span class="free-card__meta">{{ free.meta_line }}</span>{% endif %}
+        </div>
+        <div class="stack u-gap-8">
+          <span class="free-card__number" aria-hidden="true">{{ free.number }}</span>
+          <p class="free-card__kicker">{% blocktranslate with number=free.number_plain %}Module {{ number }}{% endblocktranslate %}</p>
+          <h3 class="free-card__title" id="free-card-title">{{ free.title }}</h3>
+          {% if free.summary %}<p class="free-card__summary">{{ free.summary }}</p>{% endif %}
+        </div>
+        {% if user.is_authenticated %}
+          <a class="btn btn--light btn--block" href="{{ free.get_absolute_url }}">{% blocktranslate with number=free.number_plain %}Open Module {{ number }}{% endblocktranslate %}</a>
+        {% else %}
+          <a class="btn btn--light btn--block" href="{% url 'accounts:register' %}">{% blocktranslate with number=free.number_plain %}Start Module {{ number }} free{% endblocktranslate %}</a>
+          <p class="free-card__note">{% translate "Already have an account?" %} <a href="{% url 'accounts:login' %}">{% translate "Log in" %}</a></p>
+        {% endif %}
+      </article>
     </div>
   </section>
+  {% endif %}{% endwith %}
 
   {# -------------------------------------------------------------------- faq #}
   {% if faqs %}

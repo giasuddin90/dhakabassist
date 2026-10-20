@@ -66,5 +66,8 @@ urlpatterns = [
     path("content/", views.ContentView.as_view(), name="content"),
     path("content/faqs/new/", views.faq_create, name="faq_create"),
     path("content/legal/<slug:slug>/", views.legal_edit, name="legal_edit"),
-    path("content/messages/<int:pk>/", views.message_handled, name="message_handled"),
+    # User messages
+    path("messages/", views.MessagesView.as_view(), name="messages"),
+    path("messages/<int:pk>/", views.MessageDetailView.as_view(), name="message_detail"),
+    path("messages/<int:pk>/handled/", views.message_handled, name="message_handled"),
 ]

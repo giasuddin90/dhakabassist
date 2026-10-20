@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase
@@ -170,25 +171,58 @@ class DiscoveryFileTests(TestCase):
 
 
 class ContactFormTests(EnglishPagesMixin, TestCase):
+    def captcha(self):
+        """The token and right answer from a fresh contact form."""
+        form = self.client.get(reverse("pages:about")).context["form"]
+        return form["captcha_token"].value(), sum(form.captcha_operands)
+
+    def post(self, **fields):
+        token, answer = self.captcha()
+        data = {
+            "name": "Nusrat",
+            "email": "nusrat@example.com",
+            "message": "Is Part 2 ready?",
+            "captcha_token": token,
+            "captcha": answer,
+            **fields,
+        }
+        return self.client.post(reverse("pages:about"), data, follow=True)
+
     def test_a_valid_message_is_saved(self):
-        response = self.client.post(
-            reverse("pages:about"),
-            {"name": "Nusrat", "email": "nusrat@example.com", "message": "Is Part 2 ready?"},
-            follow=True,
-        )
+        response = self.post()
         self.assertEqual(ContactMessage.objects.count(), 1)
         self.assertContains(response, "your message has been sent")
 
+    def test_the_question_is_on_the_page(self):
+        response = self.client.get(reverse("pages:about"))
+        first, second = response.context["form"].captcha_operands
+        self.assertContains(response, f"What is {first} + {second}?")
+        self.assertContains(response, 'name="captcha_token"')
+
+    def test_a_wrong_answer_is_rejected_with_a_new_question(self):
+        token, answer = self.captcha()
+        response = self.post(captcha_token=token, captcha=answer + 1)
+        self.assertEqual(ContactMessage.objects.count(), 0)
+        self.assertContains(response, "That answer is not right")
+        # The form keeps the message but asks a new question.
+        self.assertContains(response, "Is Part 2 ready?")
+        self.assertNotContains(response, token)
+
+    def test_a_tampered_or_missing_token_is_rejected(self):
+        for token in ("forged:token", ""):
+            with self.subTest(token=token):
+                response = self.post(captcha_token=token)
+                self.assertContains(response, "This question has expired")
+        self.assertEqual(ContactMessage.objects.count(), 0)
+
+    def test_an_expired_question_is_rejected(self):
+        with mock.patch("pages.captcha.MAX_AGE", -1):
+            response = self.post()
+        self.assertEqual(ContactMessage.objects.count(), 0)
+        self.assertContains(response, "This question has expired")
+
     def test_the_honeypot_rejects_a_bot_submission(self):
-        self.client.post(
-            reverse("pages:about"),
-            {
-                "name": "Bot",
-                "email": "bot@example.com",
-                "message": "Buy followers",
-                "website": "http://spam.example",
-            },
-        )
+        self.post(name="Bot", message="Buy followers", website="http://spam.example")
         self.assertEqual(ContactMessage.objects.count(), 0)
 
 

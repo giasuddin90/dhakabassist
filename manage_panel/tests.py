@@ -448,13 +448,66 @@ class StaffPanelTests(TestCase):
         page.refresh_from_db()
         self.assertIn("New text.", page.body_markdown)
 
+    # -- user messages -----------------------------------------------------
+
     def test_a_contact_message_can_be_marked_handled(self):
         message = ContactMessage.objects.create(
             name="Nusrat", email="nusrat@example.com", message="Question."
         )
-        self.client.post(reverse("manage:message_handled", kwargs={"pk": message.pk}))
+        response = self.client.post(
+            reverse("manage:message_handled", kwargs={"pk": message.pk})
+        )
+        self.assertRedirects(response, reverse("manage:messages"))
         message.refresh_from_db()
         self.assertTrue(message.is_handled)
+
+    def test_marking_a_message_handled_returns_to_the_page_it_was_on(self):
+        message = ContactMessage.objects.create(
+            name="Nusrat", email="nusrat@example.com", message="Question."
+        )
+        url = reverse("manage:messages") + "?page=2"
+        response = self.client.post(
+            reverse("manage:message_handled", kwargs={"pk": message.pk}), {"next": url}
+        )
+        self.assertRedirects(response, url, fetch_redirect_response=False)
+        response = self.client.post(
+            reverse("manage:message_handled", kwargs={"pk": message.pk}),
+            {"next": "https://evil.example.com/"},
+        )
+        self.assertRedirects(response, reverse("manage:messages"))
+
+    def test_the_message_list_is_paginated(self):
+        ContactMessage.objects.bulk_create(
+            ContactMessage(name=f"Sender {n}", email=f"s{n}@example.com", message="Hi.")
+            for n in range(30)
+        )
+        response = self.client.get(reverse("manage:messages"))
+        self.assertEqual(len(response.context["page"]), 25)
+        self.assertContains(response, "Showing 1–25 of 30 messages")
+        self.assertContains(response, 'rel="next"')
+        response = self.client.get(reverse("manage:messages") + "?page=2")
+        self.assertEqual(len(response.context["page"]), 5)
+
+    def test_a_message_detail_shows_the_whole_message(self):
+        body = "First line of a long question. " * 10 + "The end."
+        message = ContactMessage.objects.create(
+            name="Nusrat", email="nusrat@example.com", message=body
+        )
+        response = self.client.get(reverse("manage:message_detail", kwargs={"pk": message.pk}))
+        self.assertContains(response, "Message from Nusrat")
+        self.assertContains(response, "The end.")
+        self.assertContains(response, "mailto:nusrat@example.com")
+        missing = reverse("manage:message_detail", kwargs={"pk": message.pk + 1})
+        self.assertEqual(self.client.get(missing).status_code, 404)
+
+    def test_messages_are_not_on_the_overview(self):
+        ContactMessage.objects.create(
+            name="Nusrat", email="nusrat@example.com", message="A secret question."
+        )
+        response = self.client.get(reverse("manage:overview"))
+        self.assertNotContains(response, "A secret question.")
+        self.assertContains(response, reverse("manage:messages"))
+        self.assertContains(response, "1 new")
 
 
 def png_upload(name="author.png"):

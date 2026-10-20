@@ -1,11 +1,12 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from .captcha import MathCaptchaMixin
 from .models import ContactMessage
 
 
-class ContactForm(forms.ModelForm):
-    """Contact form with a hidden honeypot instead of a captcha."""
+class ContactForm(MathCaptchaMixin, forms.ModelForm):
+    """Contact form with a simple sum to answer and a hidden honeypot."""
 
     # Bots fill every field; people never see this one.
     website = forms.CharField(required=False, widget=forms.HiddenInput)

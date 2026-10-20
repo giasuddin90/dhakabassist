@@ -1,0 +1,11 @@
+{% comment %}
+The handled on/off switch for one contact message. Pass `item`. It posts
+back to the page it sits on, so the list keeps its page number.
+{% endcomment %}
+<form method="post" action="{% url 'manage:message_handled' item.pk %}">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  <button class="switch" type="submit" role="switch"
+          aria-checked="{{ item.is_handled|yesno:'true,false' }}"
+          aria-label="Mark message from {{ item.name }} as {% if item.is_handled %}not handled{% else %}handled{% endif %}"></button>
+</form>

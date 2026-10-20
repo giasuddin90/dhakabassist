@@ -1567,6 +1567,17 @@ a.pager__step:hover {
   }
 }
 
+/* A contact message in full, kept to a readable line length. */
+.message-body {
+  max-width: 68ch;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.message-body p {
+  margin: 0 0 12px;
+}
+
 .grant-form {
   --cluster-gap: 10px;
 }

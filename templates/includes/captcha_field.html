@@ -1,0 +1,19 @@
+{% comment %}
+The anti-spam sum from `pages.captcha.MathCaptchaMixin`, for any `form` that
+uses it. The page shows "3 + 4 =" next to the box; screen readers hear the
+label's full question instead.
+{% endcomment %}
+{% load i18n %}
+{% with field=form.captcha %}
+<div class="captcha{% if field.errors %} captcha--invalid{% endif %}" role="group" aria-labelledby="{{ field.auto_id }}_title">
+  {{ form.captcha_token }}
+  <p class="captcha__title" id="{{ field.auto_id }}_title">{% translate "Quick check" %}</p>
+  <label class="captcha__row" for="{{ field.id_for_label }}">
+    <span class="captcha__sum" aria-hidden="true">{{ form.captcha_sum }} =</span>
+    <span class="visually-hidden">{{ field.label }}</span>
+    {{ field }}
+  </label>
+  <span class="field__help" id="{{ field.auto_id }}_help">{{ field.help_text }}</span>
+  {% if field.errors %}<span class="field__error" id="{{ field.auto_id }}_error">{{ field.errors|join:" " }}</span>{% endif %}
+</div>
+{% endwith %}

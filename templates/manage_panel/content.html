@@ -56,42 +56,4 @@
     {% endfor %}
   </section>
 </div>
-
-{# ------------------------------------------------------- contact messages #}
-<section class="panel" aria-labelledby="contact-title">
-  <div class="panel__head">
-    <h2 class="panel__title" id="contact-title">Contact messages</h2>
-  </div>
-  <div class="table-wrap">
-    <table class="dtable">
-      <caption class="visually-hidden">Messages sent through the contact form</caption>
-      <thead>
-        <tr><th scope="col">From</th><th scope="col">Message</th><th scope="col">Received</th>
-            <th scope="col">Handled</th></tr>
-      </thead>
-      <tbody>
-        {% for item in contact_messages %}
-          <tr>
-            <th scope="row">
-              <span class="dtable__name">{{ item.name }}</span>
-              <span class="dtable__sub"><a href="mailto:{{ item.email }}">{{ item.email }}</a></span>
-            </th>
-            <td>{{ item.message|truncatechars:120 }}</td>
-            <td class="muted u-nowrap">{{ item.created_at|date:"j M Y" }}</td>
-            <td>
-              <form method="post" action="{% url 'manage:message_handled' item.pk %}">
-                {% csrf_token %}
-                <button class="switch" type="submit" role="switch"
-                        aria-checked="{{ item.is_handled|yesno:'true,false' }}"
-                        aria-label="Mark message from {{ item.name }} as {% if item.is_handled %}not handled{% else %}handled{% endif %}"></button>
-              </form>
-            </td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="4" class="muted">No messages yet.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</section>
 {% endblock %}

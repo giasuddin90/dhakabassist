@@ -41,8 +41,9 @@
       <a href="{% url 'manage:orders' %}"{% if section == 'orders' %} aria-current="page"{% endif %}>
         Orders{% if counts.orders %}<span class="manage-nav__count">{{ counts.orders }} pending</span>{% endif %}
       </a>
-      <a href="{% url 'manage:content' %}"{% if section == 'content' %} aria-current="page"{% endif %}>
-        Site content{% if counts.messages %}<span class="manage-nav__count">{{ counts.messages }} new</span>{% endif %}
+      <a href="{% url 'manage:content' %}"{% if section == 'content' %} aria-current="page"{% endif %}>Site content</a>
+      <a href="{% url 'manage:messages' %}"{% if section == 'messages' %} aria-current="page"{% endif %}>
+        User messages{% if counts.messages %}<span class="manage-nav__count">{{ counts.messages }} new</span>{% endif %}
       </a>
     </nav>
 

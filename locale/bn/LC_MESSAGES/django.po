@@ -1513,3 +1513,53 @@ msgstr "লিংকটির মেয়াদ কয়েক দিন প�
 
 msgid "email confirmed"
 msgstr "ইমেইল নিশ্চিত"
+
+msgid "Start free"
+msgstr "বিনামূল্যে শুরু করুন"
+
+#, python-format
+msgid "Study Module %(number)s free, before you pay anything"
+msgstr "কোনো টাকা দেওয়ার আগেই বিনামূল্যে মডিউল %(number)s পড়ুন"
+
+#, python-format
+msgid "Create a free account and all of Module %(number)s is yours: the video lesson, written notes, audio examples and the quiz. No card and no trial clock. It stays free."
+msgstr "বিনামূল্যে অ্যাকাউন্ট খুললেই পুরো মডিউল %(number)s আপনার: ভিডিও পাঠ, লিখিত নোট, অডিও উদাহরণ আর কুইজ। কোনো কার্ড লাগবে না, ট্রায়ালের সময়সীমাও নেই। এটি সবসময় বিনামূল্যে থাকবে।"
+
+msgid "Create your free account"
+msgstr "বিনামূল্যে অ্যাকাউন্ট খুলুন"
+
+msgid "Your name and e-mail. Confirm the e-mail and you are in."
+msgstr "শুধু নাম আর ইমেইল। ইমেইলটি নিশ্চিত করলেই শুরু।"
+
+#, python-format
+msgid "Study Module %(number)s at your own pace"
+msgstr "নিজের গতিতে মডিউল %(number)s পড়ুন"
+
+msgid "Watch, read, listen, then take the quiz. See exactly how the course teaches."
+msgstr "দেখুন, পড়ুন, শুনুন, তারপর কুইজ দিন। কোর্সটি কীভাবে শেখায়, নিজেই যাচাই করুন।"
+
+msgid "Unlock the rest when you are ready"
+msgstr "প্রস্তুত হলে বাকিটা খুলে নিন"
+
+#, python-format
+msgid "Like it? Enroll once to open all %(total)s modules, with lifetime access."
+msgstr "ভালো লাগলে একবার ভর্তি হয়ে সব %(total)sটি মডিউল খুলে নিন, আজীবন অ্যাক্সেসসহ।"
+
+msgid "Already have an account?"
+msgstr "আগে থেকেই অ্যাকাউন্ট আছে?"
+
+msgid "That answer is not right. Try the new question."
+msgstr "উত্তরটি সঠিক নয়। নতুন প্রশ্নটির উত্তর দিন।"
+
+msgid "This question has expired. Answer the new one."
+msgstr "প্রশ্নটির মেয়াদ শেষ হয়ে গেছে। নতুন প্রশ্নটির উত্তর দিন।"
+
+#, python-format
+msgid "What is %(first)s + %(second)s?"
+msgstr "%(first)s + %(second)s = কত?"
+
+msgid "Add the two numbers. This keeps spam robots out."
+msgstr "সংখ্যা দুটি যোগ করুন। এতে স্প্যাম রোবট দূরে থাকে।"
+
+msgid "Quick check"
+msgstr "ছোট্ট যাচাই"

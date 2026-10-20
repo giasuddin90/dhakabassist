@@ -21,6 +21,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.defaultfilters import pluralize
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 
@@ -180,7 +181,6 @@ class OverviewView(ManageBase):
             recent_orders=Order.objects.select_related("student")[:5],
             funnel=self._funnel(course) if course else [],
             course=course,
-            unhandled_messages=ContactMessage.objects.filter(is_handled=False)[:5],
         )
         return context
 
@@ -938,7 +938,7 @@ class OrdersView(ManageBase):
 
 
 class ContentView(ManageBase):
-    """FAQs, legal pages and contact messages in one place."""
+    """FAQs and legal pages in one place."""
 
     template_name = "manage_panel/content.html"
     section = "content"
@@ -949,7 +949,6 @@ class ContentView(ManageBase):
         context.update(
             faqs=Faq.objects.all(),
             legal_pages=LegalPage.objects.all(),
-            contact_messages=ContactMessage.objects.all()[:25],
             faq_form=FaqForm(),
         )
         return context
@@ -991,10 +990,52 @@ def legal_edit(request, slug):
     )
 
 
+# -- User messages ----------------------------------------------------------
+
+
+class MessagesView(ManageBase):
+    """Every message sent through the contact form, newest first."""
+
+    template_name = "manage_panel/messages.html"
+    section = "messages"
+    heading = "User messages"
+
+    paginate_by = 25
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        page = Paginator(ContactMessage.objects.all(), self.paginate_by).get_page(
+            self.request.GET.get("page")
+        )
+        context.update(
+            page=page,
+            page_range=page.paginator.get_elided_page_range(page.number, on_each_side=1),
+        )
+        return context
+
+
+class MessageDetailView(ManageBase):
+    """One contact message in full."""
+
+    template_name = "manage_panel/message_detail.html"
+    section = "messages"
+    heading = "User message"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["item"] = get_object_or_404(ContactMessage, pk=self.kwargs["pk"])
+        return context
+
+
 @staff_required
 @require_POST
 def message_handled(request, pk):
+    """Flip a contact message between handled and not handled."""
     message = get_object_or_404(ContactMessage, pk=pk)
     message.is_handled = not message.is_handled
     message.save(update_fields=["is_handled"])
-    return redirect("manage:content")
+    # Back to the list page or the message the switch was on.
+    url = request.POST.get("next", "")
+    if url_has_allowed_host_and_scheme(url, allowed_hosts={request.get_host()}):
+        return redirect(url)
+    return redirect("manage:messages")

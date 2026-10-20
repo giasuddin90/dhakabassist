@@ -566,6 +566,19 @@ select {
   --btn-fg: var(--parchment);
 }
 
+/* The primary button on an ink surface. */
+.btn--light {
+  --btn-bg: var(--parchment);
+  --btn-fg: var(--ink);
+  --btn-border: var(--parchment);
+}
+
+.btn--light:hover {
+  --btn-bg: var(--cream);
+  --btn-border: var(--cream);
+  color: var(--ink);
+}
+
 .btn--sm {
   padding: 9px 15px;
   font-size: 14px;
@@ -642,6 +655,12 @@ select {
   background: var(--ink);
   color: var(--parchment);
   border: 1px solid var(--ink);
+}
+
+.badge--light {
+  background: var(--parchment);
+  color: var(--ink);
+  border-color: var(--parchment);
 }
 
 .badge--status {
@@ -800,6 +819,158 @@ select {
   font-family: var(--font-display);
   font-size: 24px;
   font-weight: 500;
+}
+
+/* ------------------------------------------------------- free module funnel */
+
+/* Three numbered steps joined by a hairline, so the path from sign-up to
+   enrolment reads as one route. The first step is filled: it is where you start. */
+.funnel {
+  counter-reset: funnel;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.funnel__step {
+  counter-increment: funnel;
+  position: relative;
+  padding-left: 54px;
+  min-height: 38px;
+}
+
+.funnel__step::before {
+  content: counter(funnel);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--parchment);
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.funnel__step:first-child::before {
+  background: var(--ink);
+  color: var(--parchment);
+}
+
+.funnel__step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 44px;
+  bottom: -16px;
+  width: 1px;
+  background: var(--line-muted);
+}
+
+.funnel__title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.25;
+  padding-top: 6px;
+}
+
+.funnel__body {
+  margin-top: 4px;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* The free module itself, set on ink so it is the one dark object on the
+   page section: the thing to click. A stave runs across the top edge. */
+.free-card {
+  position: relative;
+  background: var(--ink);
+  color: var(--parchment);
+  border-radius: var(--radius);
+  padding: 44px 24px 26px;
+  box-shadow: 8px 8px 0 var(--highlight);
+  overflow: hidden;
+}
+
+.free-card::before {
+  content: "";
+  position: absolute;
+  inset: 16px 24px auto;
+  height: 13px;
+  background: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--parchment) 22%, transparent) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+.free-card__head {
+  --cluster-gap: 10px;
+  justify-content: space-between;
+}
+
+.free-card__meta {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.free-card__number {
+  font-family: var(--font-display);
+  font-size: clamp(72px, 9vw, 112px);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+
+.free-card__kicker {
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.free-card__title {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 2.6vw, 32px);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.free-card__summary {
+  font-size: 16px;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
+.free-card__note {
+  font-size: 15px;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.free-card__note a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+@media (min-width: 768px) {
+  .free-card {
+    padding: 52px 36px 32px;
+    box-shadow: 12px 12px 0 var(--highlight);
+  }
+
+  .free-card::before {
+    inset-inline: 36px;
+  }
 }
 
 /* ------------------------------------------------------------------- list */
@@ -1185,6 +1356,68 @@ select {
 .field--invalid .field__input,
 .field--invalid input,
 .field--invalid textarea {
+  border-color: var(--err);
+}
+
+/* The anti-spam sum: a small panel so it reads as one quick step, not one
+   more text field. */
+.captcha {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.captcha__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.captcha__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.captcha__sum {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.captcha__input {
+  width: 5.5rem;
+  min-height: 52px;
+  padding: 8px 10px;
+  background: var(--cream);
+  border: 1px solid var(--line-field);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text);
+  transition: border-color var(--fast) var(--ease);
+}
+
+.captcha__input:hover,
+.captcha__input:focus {
+  border-color: var(--ink);
+}
+
+.captcha__input::placeholder {
+  color: var(--text-faint);
+}
+
+.captcha--invalid .captcha__input {
   border-color: var(--err);
 }
 

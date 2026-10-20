@@ -31,10 +31,6 @@
     <div class="stack u-gap-22" id="contact">
       <p class="eyebrow">{% translate "Contact" %}</p>
       <h2 class="display-3">{% translate "Send a message" %}</h2>
-      <p class="u-fs-17" style="line-height:1.6">{% blocktranslate trimmed %}
-        Questions about the course, payments or access.
-        Replies within two working days.
-      {% endblocktranslate %}</p>
 
       <form method="post" class="stack u-gap-16" novalidate>
         {% csrf_token %}
@@ -43,6 +39,7 @@
         {% include "includes/field.html" with field=form.name %}
         {% include "includes/field.html" with field=form.email %}
         {% include "includes/field.html" with field=form.message %}
+        {% include "includes/captcha_field.html" %}
         <button class="btn" type="submit" style="align-self:flex-start">{% translate "Send message" %}</button>
       </form>
 
