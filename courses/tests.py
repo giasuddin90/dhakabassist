@@ -147,6 +147,33 @@ class AccessRuleTests(TestCase):
         Enrollment.objects.create(student=self.student, course=self.course, is_active=False)
         self.assertFalse(CourseAccess(self.student, self.course).is_enrolled)
 
+    def test_a_superuser_previews_every_module_without_enrolling(self):
+        owner = User.objects.create_superuser(email="owner@example.com", password=PASSWORD)
+        access = CourseAccess(owner, self.course)
+        self.assertTrue(access.is_previewing)
+        self.assertTrue(access.is_enrolled)
+        self.assertTrue(all(s.is_unlocked for s in access.module_states()))
+        self.assertTrue(all(access.can_view(m) for m in self.modules))
+
+    def test_a_superuser_preview_opens_a_later_module_page_and_its_media(self):
+        owner = User.objects.create_superuser(email="owner@example.com", password=PASSWORD)
+        self.client.force_login(owner)
+        response = self.client.get(self.modules[2].get_absolute_url())
+        self.assertTemplateUsed(response, "courses/lesson.html")
+
+    def test_staff_who_is_not_a_superuser_still_follows_the_progression(self):
+        staff = User.objects.create_user(
+            email="staff@example.com", password=PASSWORD, is_staff=True
+        )
+        access = CourseAccess(staff, self.course)
+        self.assertFalse(access.is_previewing)
+        self.assertFalse(access.module_states()[1].is_unlocked)
+
+    def test_an_inactive_superuser_previews_nothing(self):
+        owner = User.objects.create_superuser(email="owner@example.com", password=PASSWORD)
+        owner.is_active = False
+        self.assertFalse(CourseAccess(owner, self.course).is_previewing)
+
     def test_draft_modules_are_invisible_to_students(self):
         self.modules[1].status = Module.Status.DRAFT
         self.modules[1].save(update_fields=["status"])

@@ -60,10 +60,27 @@ class CourseAccess:
     # -- enrolment ---------------------------------------------------------
 
     @property
+    def is_previewing(self):
+        """True for an active superuser, who sees the course as a student would.
+
+        Every published module is open to them at once, with no payment and no
+        quiz to pass first, so the owner can check any lesson without
+        enrolling or working through the course.
+        """
+        student = self.student
+        return (
+            self._authenticated
+            and getattr(student, "is_active", False)
+            and getattr(student, "is_superuser", False)
+        )
+
+    @property
     def is_enrolled(self):
         """True when the student has paid for (or been granted) this course."""
         if not self._authenticated:
             return False
+        if self.is_previewing:
+            return True
         if not getattr(self.student, "access_enabled", True):
             return False
         if getattr(self.student, "is_staff", False):
@@ -85,14 +102,18 @@ class CourseAccess:
         """Every published module, in order, with its state for this student."""
         completed = self.completed_ids()
         enrolled = self.is_enrolled
+        previewing = self.is_previewing
         states = []
         current_found = False
         for index, module in enumerate(self._modules):
             is_complete = module.id in completed
             # Module 1 (the free preview) is open to any signed-in account;
             # the rest need enrolment plus every earlier module finished.
+            # A superuser previewing the course skips the progression.
             earlier_done = all(m.id in completed for m in self._modules[:index])
-            if module.is_free:
+            if previewing:
+                unlocked = True
+            elif module.is_free:
                 unlocked = self._authenticated
             else:
                 unlocked = enrolled and earlier_done
