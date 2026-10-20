@@ -51,7 +51,7 @@
         <a class="btn-link btn-link--sm" href="{% url 'manage:legal_edit' page.slug %}">Edit</a>
       </div>
     {% empty %}
-      <p class="asset-row muted">No legal pages yet. Run <code>manage.py seed_demo</code> or add them in the
+      <p class="asset-row muted">No legal pages yet. Run <code>manage.py seed_course</code> or add them in the
         <a href="{% url 'admin:pages_legalpage_changelist' %}">database admin</a>.</p>
     {% endfor %}
   </section>

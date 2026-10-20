@@ -11,6 +11,8 @@ from django.core.management import CommandError, call_command
 from django.test import TestCase, override_settings
 
 from courses.models import Author, Course, LibraryFile, Module
+from pages.models import Faq, LegalPage
+from pages.seed_content import FAQS, LEGAL_PAGES
 
 ENGLISH = {
     "00. Course Outline.md": """\
@@ -201,17 +203,44 @@ class SeedCourseTests(TestCase):
         self.assertEqual([c.is_correct for c in choices], [False, False, True])
         self.assertFalse(hasattr(Module.objects.get(number="01"), "quiz"))
 
+    def test_loads_faqs_and_legal_pages_in_both_languages(self):
+        output = run(self.source)
+        self.assertIn(f"{len(FAQS)} FAQs and {len(LEGAL_PAGES)} legal pages", output)
+        for faq in Faq.objects.all():
+            self.assertTrue(faq.is_published)
+            self.assertTrue(all((faq.question_bn, faq.question_en, faq.answer_bn, faq.answer_en)))
+        self.assertEqual(
+            set(LegalPage.objects.values_list("slug", flat=True)), set(LegalPage.Slug.values)
+        )
+        terms = LegalPage.objects.get(slug="terms")
+        self.assertEqual((terms.title_en, terms.title_bn), ("Terms & Conditions", "শর্তাবলি"))
+        self.assertTrue(terms.body_markdown_bn.startswith("## আমরা কারা"))
+
     def test_rerunning_updates_in_place(self):
         run(self.source)
+        LegalPage.objects.filter(slug="terms").update(title_en="Edited")
         run(self.source)
         self.assertEqual(Course.objects.count(), 1)
         self.assertEqual(Module.objects.count(), 2)
         self.assertEqual(Module.objects.get(number="02").quiz.questions.count(), 2)
+        self.assertEqual(Faq.objects.count(), len(FAQS))
+        self.assertEqual(LegalPage.objects.get(slug="terms").title_en, "Terms & Conditions")
+
+    def test_the_author_gets_a_photo_but_an_uploaded_one_is_kept(self):
+        run(self.source)
+        author = Author.objects.get()
+        self.assertTrue(author.photo.storage.exists(author.photo.name))
+        author.photo = SimpleUploadedFile("new.jpg", author.photo.read())
+        author.save()
+        run(self.source)
+        author.refresh_from_db()
+        self.assertTrue(author.photo.name.endswith("new.jpg"))
 
     def test_dry_run_saves_nothing(self):
         output = run(self.source, dry_run=True)
         self.assertIn("Dry run", output)
         self.assertFalse(Course.objects.exists())
+        self.assertFalse(Faq.objects.exists() or LegalPage.objects.exists())
 
     def test_missing_library_file_aborts(self):
         self.audio.delete()

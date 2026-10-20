@@ -1,7 +1,5 @@
 """Content and media stored in Bangla and English."""
 
-import io
-import json
 import shutil
 import tempfile
 from pathlib import Path
@@ -9,7 +7,6 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.management import call_command
 from django.db import IntegrityError, transaction
 from django.test import TestCase, override_settings
 from django.utils import translation
@@ -130,30 +127,6 @@ class LanguageMediaTests(TestCase):
                     pk=self.module.pk
                 )
                 self.assertEqual({f.language for f in module.download_files}, expected)
-
-
-class ImportLanguageTests(TestCase):
-    def run_import(self, data):
-        path = Path(tempfile.mkdtemp()) / "content.json"
-        path.write_text(json.dumps(data), encoding="utf-8")
-        self.addCleanup(shutil.rmtree, path.parent)
-        call_command("import_content", str(path), stdout=io.StringIO())
-
-    def test_both_languages_import(self):
-        self.run_import({"courses": [{
-            "slug": "c", "title_bn": "কোর্স", "title_en": "Course",
-            "summary_en": "S.", "description_en": "D.",
-        }]})
-        course = Course.objects.get(slug="c")
-        self.assertEqual((course.title_bn, course.title_en), ("কোর্স", "Course"))
-
-    def test_a_file_from_before_the_site_was_bilingual_imports_as_english(self):
-        self.run_import({"courses": [{
-            "slug": "c", "title": "Course", "summary": "S.", "description": "D.",
-            "modules": [{"number": "01", "title": "Sound", "video_uid": "c/01.mp4"}],
-        }]})
-        module = Module.objects.get(course__slug="c")
-        self.assertEqual((module.title_en, module.video_uid_en), ("Sound", "c/01.mp4"))
 
 
 class MissingTranslationTests(TestCase):

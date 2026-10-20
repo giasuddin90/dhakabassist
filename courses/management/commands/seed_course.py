@@ -1,4 +1,4 @@
-"""Load the Foundations of Music course and its author from the Markdown files.
+"""Load the Foundations of Music course, its author, FAQs and legal pages.
 
     manage.py import_library        # first: the diagrams and audio
     manage.py seed_course           # then: MEDIA_ROOT/markup_content
@@ -20,9 +20,13 @@ written in Obsidian:
 that name, so `import_library` must have run first. Questions are paired
 across the languages by number and must agree on the right answer.
 
-Idempotent: the author, course and modules are matched by slug and number
-and updated in place; lessons and quiz questions are replaced. Everything is
-loaded in one transaction, so an error leaves the database as it was.
+The FAQs and the three legal pages (terms, privacy, refunds) are not in the
+Markdown; they come in both languages from `pages/seed_content.py`.
+
+Idempotent: the author, course and modules are matched by slug and number,
+FAQs by their English question and legal pages by slug, and updated in place;
+lessons and quiz questions are replaced. Everything is loaded in one
+transaction, so an error leaves the database as it was.
 """
 
 import re
@@ -35,7 +39,6 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils.text import slugify
 
-from courses.management.commands.seed_demo import AUTHOR_PHOTO
 from courses.models import (
     Author,
     Choice,
@@ -47,6 +50,8 @@ from courses.models import (
     Quiz,
 )
 from manage_panel.forms import title_from_filename
+from pages.models import Faq, LegalPage
+from pages.seed_content import FAQS, LEGAL_PAGES
 
 LANGUAGES = {"en": "English", "bn": "Bangla"}
 
@@ -58,6 +63,9 @@ COURSE = {
     "level_bn": "প্রাথমিক",
     "price": 3500,
 }
+
+# Copied into media, so the seeded photo is served like one an editor uploads.
+AUTHOR_PHOTO = Path(settings.BASE_DIR) / "static" / "img" / "instructor-640.jpg"
 
 HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
 EMBED = re.compile(r"!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]")
@@ -190,7 +198,7 @@ class DryRun(Exception):
 class Command(BaseCommand):
     """Seed the course; see the module docstring for the file format."""
 
-    help = "Load the Foundations of Music course and its author from Markdown files."
+    help = "Load the Foundations of Music course, its author, FAQs and legal pages."
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -220,6 +228,8 @@ class Command(BaseCommand):
         try:
             with transaction.atomic():
                 course = self._load(content)
+                self._faqs()
+                self._legal_pages()
                 if self.missing:
                     raise CommandError(
                         "Not in the media library (run import_library first): "
@@ -231,7 +241,8 @@ class Command(BaseCommand):
                     f"{course.modules.count()} modules, "
                     f"{Lesson.objects.filter(module__course=course).count()} lessons, "
                     f"{Question.objects.filter(quiz__module__course=course).count()} "
-                    "quiz questions."
+                    f"quiz questions, {Faq.objects.count()} FAQs and "
+                    f"{LegalPage.objects.count()} legal pages."
                 )
                 if options["dry_run"]:
                     raise DryRun
@@ -438,4 +449,21 @@ class Command(BaseCommand):
                 for index, (text_en, text_bn) in enumerate(
                     zip(q_en["choices"], q_bn["choices"])
                 )
+            )
+
+    # -- site content --------------------------------------------------------
+
+    @staticmethod
+    def _faqs():
+        for position, fields in enumerate(FAQS):
+            Faq.objects.update_or_create(
+                question_en=fields["question_en"],
+                defaults={**fields, "position": position, "is_published": True},
+            )
+
+    @staticmethod
+    def _legal_pages():
+        for slug, fields in LEGAL_PAGES.items():
+            LegalPage.objects.update_or_create(
+                slug=slug, defaults={**fields, "is_published": True}
             )

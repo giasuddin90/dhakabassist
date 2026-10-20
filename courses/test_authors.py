@@ -7,7 +7,6 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.management import call_command
 from django.db.models import ProtectedError
 from django.templatetags.static import static
 from django.test import TestCase, override_settings
@@ -154,31 +153,3 @@ class AuthorOnPublicPagesTests(EnglishPagesMixin, TestCase):
             response = self.client.get(reverse(name))
             self.assertContains(response, settings.SITE["instructor"])
             self.assertContains(response, f'src="{static("img/instructor-640.jpg")}"')
-
-
-@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
-class SeedDemoAuthorTests(TestCase):
-    """`seed_demo` loads the instructor as an `Author` with a photo in media."""
-
-    def tearDown(self):
-        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
-
-    def test_the_seed_creates_the_author_with_a_photo_and_links_both_courses(self):
-        """Both demo courses point at the seeded author, whose photo is in storage."""
-        call_command("seed_demo", stdout=io.StringIO())
-        author = Author.objects.get()
-        self.assertEqual(author.name_en, "Tanveer Haque")
-        self.assertTrue(author.bio)
-        self.assertTrue(author.photo.storage.exists(author.photo.name))
-        self.assertEqual(author.courses.count(), 2)
-
-    def test_running_it_again_keeps_one_author_and_an_uploaded_photo(self):
-        """Re-seeding updates in place and never replaces a photo an editor uploaded."""
-        call_command("seed_demo", stdout=io.StringIO())
-        author = Author.objects.get()
-        author.photo = png_upload("new.png")
-        author.save()
-        call_command("seed_demo", stdout=io.StringIO())
-        author.refresh_from_db()
-        self.assertEqual(Author.objects.count(), 1)
-        self.assertTrue(author.photo.name.endswith("new.png"))

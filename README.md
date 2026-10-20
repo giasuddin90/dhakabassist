@@ -16,22 +16,25 @@ python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt
 ```
 
 ```bash
-cp .env.example .env && .venv/bin/python manage.py migrate && .venv/bin/python manage.py seed_demo
+cp .env.example .env && .venv/bin/python manage.py migrate
+```
+
+```bash
+.venv/bin/python manage.py import_library && .venv/bin/python manage.py seed_course
 ```
 
 ```bash
 .venv/bin/python manage.py createsuperuser && .venv/bin/python manage.py runserver
 ```
 
-`seed_demo` loads the nine modules, the course author (bio and photo, which the
-home and About pages show), the FAQs and the three legal pages. It is
-idempotent, so re-running it updates rather than duplicates; it never replaces
-an author photo uploaded in the panel.
-
-To load your own content from a file, copy [docs/seed.example.json](docs/seed.example.json),
-edit it, and run `manage.py import_content my-content.json` (add `--dry-run` to
-validate without saving). It covers courses, modules, lessons, quizzes, FAQs
-and legal pages; the file is all-or-nothing, so one invalid entry changes nothing.
+`import_library` loads the diagrams and audio from `MEDIA_ROOT/markup_media`;
+`seed_course` then loads the course from the Bangla and English Markdown in
+`MEDIA_ROOT/markup_content`: the nine modules, their lessons and quizzes, the
+course author (bio and photo, which the home and About pages show), plus the
+FAQs and the three legal pages in both languages from
+[pages/seed_content.py](pages/seed_content.py). It is idempotent, so re-running
+it updates rather than duplicates; it never replaces an author photo uploaded in
+the panel. Add `--dry-run` to check the files without saving.
 
 ## Layout
 
