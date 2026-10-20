@@ -15,14 +15,22 @@
 <div class="manage-shell">
 
   <aside class="manage-side">
-    <a class="manage-side__brand" href="{% url 'manage:overview' %}">
-      <img src="{% static 'img/logo-mark.svg' %}" alt="" width="34" height="34">
-      <span>
-        <span class="manage-side__name">{{ site.name }}</span>
-        <span class="manage-side__role">Admin</span>
-      </span>
-    </a>
+    <div class="manage-side__bar">
+      <a class="manage-side__brand" href="{% url 'manage:overview' %}">
+        <img src="{% static 'img/logo-mark.svg' %}" alt="" width="34" height="34">
+        <span>
+          <span class="manage-side__name">{{ site.name }}</span>
+          <span class="manage-side__role">Admin</span>
+        </span>
+      </a>
+      <button class="manage-side__toggle" type="button" data-side-toggle
+              aria-expanded="false" aria-controls="manage-menu">
+        <span class="manage-side__toggle-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Menu</span>
+      </button>
+    </div>
 
+    <div class="manage-side__menu" id="manage-menu">
     <nav class="manage-nav" aria-label="Administration">
       <a href="{% url 'manage:overview' %}"{% if section == 'overview' %} aria-current="page"{% endif %}>Overview</a>
       <a href="{% url 'manage:courses' %}"{% if section == 'courses' %} aria-current="page"{% endif %}>
@@ -56,11 +64,12 @@
       </form>
       <div class="manage-side__user">
         <span class="avatar avatar--lg" aria-hidden="true">{{ user.initials }}</span>
-        <span>
-          <span class="u-bold u-fs-14" style="display:block">{{ user.get_full_name }}</span>
+        <span class="manage-side__who">
+          <span class="manage-side__who-name">{{ user.get_full_name }}</span>
           <span class="u-fs-13 muted">{% if user.is_superuser %}Owner{% else %}Staff{% endif %}</span>
         </span>
       </div>
+    </div>
     </div>
   </aside>
 

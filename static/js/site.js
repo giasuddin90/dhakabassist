@@ -22,6 +22,26 @@
     });
   }
 
+  /* -- Staff panel menu ------------------------------------------------- */
+
+  var sideToggle = document.querySelector("[data-side-toggle]");
+  var sideMenu = document.getElementById("manage-menu");
+  if (sideToggle && sideMenu) {
+    var setSide = function (open) {
+      sideMenu.classList.toggle("is-open", open);
+      sideToggle.setAttribute("aria-expanded", String(open));
+    };
+    sideToggle.addEventListener("click", function () {
+      setSide(!sideMenu.classList.contains("is-open"));
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && sideMenu.classList.contains("is-open")) {
+        setSide(false);
+        sideToggle.focus();
+      }
+    });
+  }
+
   /* -- Accordions ------------------------------------------------------- */
 
   // Only one panel open at a time, matching the design.

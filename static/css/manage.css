@@ -1598,43 +1598,173 @@ a.pager__step:hover {
 
 /* --------------------------------------------------------- small screens */
 
+/* Desktop keeps the bar and menu as plain wrappers around the old layout. */
+.manage-side__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.manage-side__menu {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 28px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.manage-side__toggle {
+  display: none;
+}
+
+.manage-side__who {
+  min-width: 0;
+}
+
+.manage-side__who-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  /* An email can be one long word; let it break instead of overflowing. */
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 900px) {
   .manage-shell {
     flex-direction: column;
   }
 
+  /* A sticky top bar; the menu opens beneath it and scrolls on short screens. */
   .manage-side {
-    position: static;
+    position: sticky;
+    top: 0;
+    z-index: 30;
     width: 100%;
     height: auto;
     border-right: 0;
     border-bottom: 1px solid var(--line);
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 14px;
+    padding: 10px 16px;
+    gap: 0;
   }
 
-  .manage-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    flex: 1;
+  .manage-side__brand {
+    padding: 0;
+    min-height: 44px;
+  }
+
+  .manage-side__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    background: none;
+    border: 1px solid var(--line-muted);
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  /* Three bars that turn into a cross while the menu is open. */
+  .manage-side__toggle-icon,
+  .manage-side__toggle-icon::before,
+  .manage-side__toggle-icon::after {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 1px;
+    transition: transform var(--fast) var(--ease), background var(--fast) var(--ease);
+  }
+
+  .manage-side__toggle-icon {
+    position: relative;
+  }
+
+  .manage-side__toggle-icon::before,
+  .manage-side__toggle-icon::after {
+    content: "";
+    position: absolute;
+    left: 0;
+  }
+
+  .manage-side__toggle-icon::before {
+    top: -6px;
+  }
+
+  .manage-side__toggle-icon::after {
+    top: 6px;
+  }
+
+  .manage-side__toggle[aria-expanded="true"] .manage-side__toggle-icon {
+    background: transparent;
+  }
+
+  .manage-side__toggle[aria-expanded="true"] .manage-side__toggle-icon::before {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .manage-side__toggle[aria-expanded="true"] .manage-side__toggle-icon::after {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  .manage-side__menu {
+    flex: none;
+    gap: 20px;
+    max-height: calc(100vh - 84px);
+    padding-top: 12px;
+  }
+
+  /* Without JavaScript the menu simply stays open above the page. */
+  .js .manage-side__menu {
+    display: none;
+  }
+
+  .js .manage-side__menu.is-open {
+    display: flex;
+  }
+
+  .manage-nav a {
+    min-height: 44px;
   }
 
   .manage-side__foot {
     margin-top: 0;
-    flex-direction: row;
+    padding: 14px 0 4px;
+    border-top: 1px solid var(--line);
+    gap: 0;
+  }
+
+  .manage-side__foot > a,
+  .manage-side__foot .btn-link {
+    display: flex;
     align-items: center;
-    gap: 16px;
+    min-height: 44px;
+    padding: 0 12px;
+    font-size: 15px;
+    text-decoration: none;
+  }
+
+  .manage-side__foot form {
+    display: contents;
+  }
+
+  .manage-side__foot .btn-link {
+    width: 100%;
+    text-align: left;
   }
 
   .manage-side__user {
-    border-top: 0;
-    padding-top: 0;
+    margin-top: 8px;
+    padding: 14px 12px 0;
   }
 
   .manage-main {
-    padding: 24px 20px 56px;
+    padding: 20px 16px 56px;
+    gap: 22px;
   }
 
   .manage-grid--editor,
