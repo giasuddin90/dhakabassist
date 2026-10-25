@@ -7,13 +7,15 @@
   <section class="shell duo" style="padding-block:72px 64px" aria-labelledby="hero-title">
     <div class="stack u-gap-22">
       <p class="eyebrow">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}</p>
-      <h1 class="display-1" id="hero-title">{% translate "Learn to read, hear and understand music." %}</h1>
-      <p class="lede">{{ course.summary }}</p>
+      <h1 class="display-1" id="hero-title">{% translate "Learn Music Theory the Practical Way" %}</h1>
+      <p class="lede">{% translate "Understand how music works and learn to use that knowledge in your playing." %}</p>
+      <p>{% translate "Whether you play guitar, piano, drums, bass, sing, or make music on a computer, this course will help you build a stronger understanding of music." %}</p>
       <div class="cluster" style="margin-top:6px">
         <a class="btn" href="{% url 'accounts:register' %}">{% blocktranslate with number=course.free_module.number_plain|default:'1' %}Start Module {{ number }}{% endblocktranslate %}</a>
         <a class="btn btn--outline" href="{% url 'orders:checkout' course.slug %}">{% translate "Enroll now" %}</a>
       </div>
       <p class="meta-row" style="margin-top:8px">
+        <span>{% translate "No music theory experience needed." %}</span>
         <span>{% blocktranslate count count=course.module_count %}{{ count }} module{% plural %}{{ count }} modules{% endblocktranslate %}</span>
         <span>{% translate "Video, audio and notation" %}</span>
       </p>
@@ -58,25 +60,6 @@
     </div>
   </section>
 
-  {# ------------------------------------------------------- how it works #}
-  <section class="section section--ink on-dark reveal" aria-labelledby="steps-title">
-    <div class="shell stack u-gap-36">
-      <div class="stack u-gap-10" style="max-width:640px">
-        <p class="eyebrow">{% translate "How each module works" %}</p>
-        <h2 class="display-3" id="steps-title">{% translate "Watch, read, listen, then prove it" %}</h2>
-      </div>
-      <div class="grid-rule grid-rule--ink grid-rule--steps">
-        {% for key, title, body in steps %}
-          <div style="padding:26px" class="stack u-gap-10">
-            <span class="step__key">{{ key }}</span>
-            <h3 class="step__title">{{ title }}</h3>
-            <p class="u-fs-15" style="line-height:1.55">{{ body }}</p>
-          </div>
-        {% endfor %}
-      </div>
-    </div>
-  </section>
-
   {# ------------------------------------------------------------ instructor #}
   <section class="shell duo section--loose reveal" aria-labelledby="instructor-title">
     <div class="media media--portrait media--face" style="max-width:440px">
@@ -97,51 +80,58 @@
     </div>
   </section>
 
-  {# ----------------------------------------------------- free module funnel #}
-  {% comment %}The home page sells the free module, not the price: the paywall and the
-  course page carry the full offer once someone has tried a lesson.{% endcomment %}
-  {% with free=course.free_module %}{% if free %}
-  <section class="section section--loose section--ruled reveal" id="free-module" aria-labelledby="free-title">
-    <div class="shell duo duo--start">
-      <div class="stack u-gap-22">
-        <div class="stack u-gap-14">
-          <p class="eyebrow">{% translate "Start free" %}</p>
-          <h2 class="display-3" id="free-title">{% blocktranslate with number=free.number_plain %}Study Module {{ number }} free, before you pay anything{% endblocktranslate %}</h2>
-          <p class="lede">{% blocktranslate trimmed with number=free.number_plain %}
-            Create a free account and all of Module {{ number }} is yours: the video lesson,
-            written notes, audio examples and the quiz. No card and no trial clock. It stays free.
-          {% endblocktranslate %}</p>
-        </div>
+  {# ---------------------------------------------------------- why this course #}
+  <section class="section section--loose section--ruled reveal" aria-labelledby="why-title">
+    <div class="shell stack u-gap-36">
+      <div class="stack u-gap-10">
+        <p class="eyebrow">{% translate "What you get" %}</p>
+        <h2 class="display-3" id="why-title">{% translate "Why this course?" %}</h2>
+      </div>
+      <ul class="grid-rule benefits">
+        {% for benefit in benefits %}
+          <li class="benefit">
+            <span class="benefit__mark">{% include "includes/icon_tick.html" with size=14 color="currentColor" %}</span>
+            <span>{{ benefit }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
 
-        <ol class="funnel">
-          <li class="funnel__step">
-            <h3 class="funnel__title">{% translate "Create your free account" %}</h3>
-            <p class="funnel__body">{% translate "Your name and e-mail. Confirm the e-mail and you are in." %}</p>
-          </li>
-          <li class="funnel__step">
-            <h3 class="funnel__title">{% blocktranslate with number=free.number_plain %}Study Module {{ number }} at your own pace{% endblocktranslate %}</h3>
-            <p class="funnel__body">{% translate "Watch, read, listen, then take the quiz. See exactly how the course teaches." %}</p>
-          </li>
-          <li class="funnel__step">
-            <h3 class="funnel__title">{% translate "Unlock the rest when you are ready" %}</h3>
-            <p class="funnel__body">{% blocktranslate trimmed with total=course.module_count %}
-              Like it? Enroll once to open all {{ total }} modules, with lifetime access.
-            {% endblocktranslate %}</p>
-          </li>
-        </ol>
+  {# ----------------------------------------------------- free module funnel #}
+  {% comment %}The home page sells the free modules, not the price: the paywall and the
+  course page carry the full offer once someone has tried a lesson.{% endcomment %}
+  {% with free=course.free_module free_count=course.free_modules|length %}{% if free %}
+  <section class="section section--loose section--ruled reveal" id="free-module" aria-labelledby="free-title">
+    <div class="shell duo">
+      <div class="stack u-gap-14">
+        <p class="eyebrow">{% translate "Start free" %}</p>
+        <h2 class="display-3" id="free-title">{% translate "Start learning for free" %}</h2>
+        <p class="lede">{% blocktranslate trimmed count count=free_count %}
+          Try the first module for free before deciding if the full course is right for you.
+        {% plural %}
+          Try the first {{ count }} modules for free before deciding if the full course is right for you.
+        {% endblocktranslate %}</p>
+        <p class="free-intro__body">{% translate "You’ll get introductory lessons, key music terms, exercises, and an interactive quiz." %}</p>
       </div>
 
-      <article class="free-card on-dark stack u-gap-18" aria-labelledby="free-card-title">
+      <article class="free-card on-dark stack u-gap-22" aria-labelledby="free-card-title">
         <div class="cluster free-card__head">
           <span class="badge badge--light">{% translate "FREE" %}</span>
-          {% if free.meta_line %}<span class="free-card__meta">{{ free.meta_line }}</span>{% endif %}
+          <span class="free-card__meta">{% blocktranslate count count=free_count %}{{ count }} module{% plural %}{{ count }} modules{% endblocktranslate %}</span>
         </div>
-        <div class="stack u-gap-8">
-          <span class="free-card__number" aria-hidden="true">{{ free.number }}</span>
-          <p class="free-card__kicker">{% blocktranslate with number=free.number_plain %}Module {{ number }}{% endblocktranslate %}</p>
-          <h3 class="free-card__title" id="free-card-title">{{ free.title }}</h3>
-          {% if free.summary %}<p class="free-card__summary">{{ free.summary }}</p>{% endif %}
-        </div>
+        <h3 class="visually-hidden" id="free-card-title">{% translate "Free modules" %}</h3>
+        <ol class="free-card__modules">
+          {% for module in course.free_modules %}
+            <li class="free-card__module">
+              <span class="free-card__number" aria-hidden="true">{{ module.number }}</span>
+              <span class="stack u-gap-6">
+                <span class="free-card__kicker">{% blocktranslate with number=module.number_plain %}Module {{ number }}{% endblocktranslate %}</span>
+                <span class="free-card__title">{{ module.title }}</span>
+              </span>
+            </li>
+          {% endfor %}
+        </ol>
         {% if user.is_authenticated %}
           <a class="btn btn--light btn--block" href="{{ free.get_absolute_url }}">{% blocktranslate with number=free.number_plain %}Open Module {{ number }}{% endblocktranslate %}</a>
         {% else %}
@@ -149,6 +139,61 @@
           <p class="free-card__note">{% translate "Already have an account?" %} <a href="{% url 'accounts:login' %}">{% translate "Log in" %}</a></p>
         {% endif %}
       </article>
+    </div>
+  </section>
+
+  {# ------------------------------------------------- audience and community #}
+  <section class="section section--loose section--ruled reveal" aria-labelledby="audience-title">
+    <div class="shell duo duo--start">
+      <div class="stack u-gap-22">
+        <div class="stack u-gap-10">
+          <p class="eyebrow">{% translate "Who it’s for" %}</p>
+          <h2 class="display-3" id="audience-title">{% translate "Who is this course for?" %}</h2>
+        </div>
+        <ul class="audience ruled">
+          {% for person in audience %}
+            <li class="audience__item">{{ person }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <aside class="community stack u-gap-14" aria-labelledby="community-title">
+        <span class="community__icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 28 28" focusable="false">
+            <path d="M4 6h14v10H9l-5 4zM10 19v1h9l5 4V10h-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <p class="eyebrow">{% translate "Community" %}</p>
+        <h2 class="display-4" id="community-title">{% translate "Learn with other musicians" %}</h2>
+        <p class="community__body">{% translate "Join the course Discord community to ask questions, share your progress, and take part in live video discussions." %}</p>
+      </aside>
+    </div>
+  </section>
+
+  {# ---------------------------------------------------------- closing call #}
+  <section class="section section--loose section--ink on-dark reveal" aria-labelledby="ready-title">
+    <div class="shell shell--narrow stack u-gap-22 ready">
+      <h2 class="display-2" id="ready-title">{% translate "Ready to get started?" %}</h2>
+      {% if user.is_authenticated %}
+        <a class="btn btn--light" href="{{ free.get_absolute_url }}">{% blocktranslate with number=free.number_plain %}Open Module {{ number }}{% endblocktranslate %}</a>
+      {% else %}
+        <p class="ready__lede">{% blocktranslate trimmed count count=free_count %}
+          Enter your email below to get free access to the first module and start learning today.
+        {% plural %}
+          Enter your email below to get free access to the first {{ count }} modules and start learning today.
+        {% endblocktranslate %}</p>
+        {% comment %}Posts only the address: the sign-up page opens with it filled in,
+        so the student adds a name and password there. Works without JavaScript.{% endcomment %}
+        <form class="ready__form" method="post" action="{% url 'accounts:register' %}">
+          {% csrf_token %}
+          <input type="hidden" name="prefill" value="1">
+          <label class="visually-hidden" for="ready-email">{% translate "Email" %}</label>
+          <input class="ready__input" id="ready-email" type="email" name="email" required
+                 autocomplete="email" placeholder="you@example.com">
+          <button class="btn btn--light" type="submit">{% translate "Get free access" %}</button>
+        </form>
+        <p class="ready__note">{% translate "No card needed." %} {% translate "Already have an account?" %} <a href="{% url 'accounts:login' %}">{% translate "Log in" %}</a></p>
+      {% endif %}
     </div>
   </section>
   {% endif %}{% endwith %}

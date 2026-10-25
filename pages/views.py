@@ -23,29 +23,26 @@ from . import seo
 from .forms import ContactForm
 from .models import Faq, LegalPage
 
-HOW_IT_WORKS = (
-    (
-        "01",
-        gettext_lazy("Watch"),
-        gettext_lazy(
-            "A short video lesson introduces each idea with examples on the bass and keyboard."
-        ),
+# The home page's "Why this course?" and "Who is this course for?" lists.
+BENEFITS = (
+    gettext_lazy("A clear, step-by-step learning plan"),
+    gettext_lazy("Lessons in English and Bangla"),
+    gettext_lazy("26 practice exercises and 8 interactive quizzes"),
+    gettext_lazy("Ear training and real music examples"),
+    gettext_lazy("Covers beginner to intermediate music theory"),
+    gettext_lazy("Learn on any device, at your own pace"),
+    gettext_lazy("Lifetime access to lessons and study materials"),
+    gettext_lazy("A community of musicians to learn with and ask questions"),
+)
+
+AUDIENCE = (
+    gettext_lazy("Beginners learning music theory for the first time"),
+    gettext_lazy("Self-taught musicians who want to fill gaps in their knowledge"),
+    gettext_lazy("Performing musicians who want to understand music better"),
+    gettext_lazy(
+        "Songwriters and producers who want to improve their use of melody and harmony"
     ),
-    (
-        "02",
-        gettext_lazy("Read"),
-        gettext_lazy("Written notes and notation diagrams you can return to any time."),
-    ),
-    (
-        "03",
-        gettext_lazy("Listen"),
-        gettext_lazy("Audio examples train your ear to recognise what you have just learned."),
-    ),
-    (
-        "04",
-        gettext_lazy("Quiz"),
-        gettext_lazy("Answer every question correctly to unlock the next module."),
-    ),
+    gettext_lazy("Music students preparing for further study"),
 )
 
 
@@ -73,9 +70,10 @@ class HomeView(TemplateView):
             course=course,
             modules=course.module_list if course else [],
             faqs=faqs,
-            steps=HOW_IT_WORKS,
+            benefits=BENEFITS,
+            audience=AUDIENCE,
             seo=seo.SEO(
-                title=_("Learn to read, hear and understand music"),
+                title=_("Learn Music Theory the Practical Way"),
                 description=_(
                     "Foundations of Music — a nine-module online music theory course by "
                     "Tanveer Haque. Module 1 is free. Lifetime access for ৳3,500."

@@ -57,6 +57,23 @@ class PublicPageTests(EnglishPagesMixin, TestCase):
         self.assertContains(response, "Sound")
         self.assertContains(response, "Do I need to read music?")
 
+    def test_home_sells_the_course_and_its_free_modules(self):
+        response = self.client.get(reverse("pages:home"))
+        self.assertContains(response, "Why this course?")
+        self.assertContains(response, "Lessons in English and Bangla")
+        self.assertContains(response, "Who is this course for?")
+        self.assertContains(response, "Learn with other musicians")
+        self.assertContains(response, "Try the first module for free")
+        self.assertContains(response, 'name="prefill"')
+        self.assertContains(response, "csrfmiddlewaretoken")
+
+    def test_home_counts_every_free_module(self):
+        Module.objects.filter(course=self.course).update(access=Module.Access.FREE)
+        response = self.client.get(reverse("pages:home"))
+        self.assertContains(response, "Try the first 2 modules for free")
+        self.assertContains(response, "first 2 modules and start learning today")
+        self.assertContains(response, "Notation")
+
     def test_home_features_the_promoted_course(self):
         Course.objects.create(
             title="Harmony in Practice", slug="harmony", summary="Chords.",

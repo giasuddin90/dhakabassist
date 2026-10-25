@@ -781,10 +781,6 @@ select {
   background: var(--ink);
 }
 
-.grid-rule--steps {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-}
-
 .grid-rule--facts {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   border-radius: 0;
@@ -808,84 +804,70 @@ select {
   font-weight: 700;
 }
 
-.step__key {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-style: italic;
-  opacity: 0.8;
-}
+/* -------------------------------------------------------- why this course */
 
-.step__title {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 500;
-}
-
-/* ------------------------------------------------------- free module funnel */
-
-/* Three numbered steps joined by a hairline, so the path from sign-up to
-   enrolment reads as one route. The first step is filled: it is where you start. */
-.funnel {
-  counter-reset: funnel;
+/* Eight short benefits on the hairline grid: one per row on a phone, two
+   from 576px, four from 992px. Each carries a tick in an ink disc. */
+.benefits {
   list-style: none;
   margin: 0;
   padding: 0;
+  grid-template-columns: 1fr;
+}
+
+.benefit {
   display: flex;
-  flex-direction: column;
-  gap: 22px;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  font-size: 17px;
+  line-height: 1.45;
+  transition: background var(--fast) var(--ease);
 }
 
-.funnel__step {
-  counter-increment: funnel;
-  position: relative;
-  padding-left: 54px;
-  min-height: 38px;
+.benefit:hover {
+  background: var(--cream);
 }
 
-.funnel__step::before {
-  content: counter(funnel);
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 38px;
-  height: 38px;
+.benefit__mark {
+  flex: none;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
-  border: 1.5px solid var(--ink);
   border-radius: 50%;
-  background: var(--parchment);
-  font-family: var(--font-display);
-  font-size: 18px;
-  line-height: 1;
-}
-
-.funnel__step:first-child::before {
   background: var(--ink);
   color: var(--parchment);
 }
 
-.funnel__step:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  left: 18px;
-  top: 44px;
-  bottom: -16px;
-  width: 1px;
-  background: var(--line-muted);
+.benefit__mark .tick__mark {
+  margin-top: 0;
 }
 
-.funnel__title {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 1.25;
-  padding-top: 6px;
+@media (min-width: 576px) {
+  .benefits {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.funnel__body {
-  margin-top: 4px;
-  font-size: 16px;
-  line-height: 1.55;
+@media (min-width: 992px) {
+  .benefits {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .benefit {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 26px 22px 30px;
+  }
+}
+
+/* ------------------------------------------------------- free module offer */
+
+.free-intro__body {
+  max-width: 54ch;
+  font-size: 17px;
+  line-height: 1.6;
   color: var(--text-muted);
 }
 
@@ -923,9 +905,29 @@ select {
   opacity: 0.8;
 }
 
+/* Every free module, one per row between faint stave-like rules. */
+.free-card__modules {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.free-card__module {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-block: 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--parchment) 22%, transparent);
+}
+
+.free-card__module:first-child {
+  border-top: 1px solid color-mix(in srgb, var(--parchment) 22%, transparent);
+}
+
 .free-card__number {
+  min-width: 2ch;
   font-family: var(--font-display);
-  font-size: clamp(72px, 9vw, 112px);
+  font-size: clamp(44px, 5vw, 60px);
   font-weight: 400;
   line-height: 0.9;
   letter-spacing: -0.02em;
@@ -940,15 +942,9 @@ select {
 
 .free-card__title {
   font-family: var(--font-display);
-  font-size: clamp(26px, 2.6vw, 32px);
+  font-size: clamp(22px, 2.2vw, 26px);
   font-weight: 500;
-  line-height: 1.15;
-}
-
-.free-card__summary {
-  font-size: 16px;
-  line-height: 1.6;
-  opacity: 0.85;
+  line-height: 1.2;
 }
 
 .free-card__note {
@@ -970,6 +966,128 @@ select {
 
   .free-card::before {
     inset-inline: 36px;
+  }
+}
+
+/* ------------------------------------------------- audience and community */
+
+.audience {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Each line opens on a note head, tilted as it would sit on a stave. */
+.audience__item {
+  position: relative;
+  padding: 16px 0 16px 34px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.audience__item::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 24px;
+  width: 13px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ink);
+  transform: rotate(-20deg);
+}
+
+.community {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  box-shadow: 8px 8px 0 var(--highlight);
+}
+
+.community__icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--parchment);
+}
+
+.community__body {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+@media (min-width: 768px) {
+  .community {
+    padding: 40px 36px;
+    box-shadow: 12px 12px 0 var(--highlight);
+  }
+}
+
+/* ------------------------------------------------------------ closing call */
+
+.ready {
+  align-items: center;
+  text-align: center;
+}
+
+.ready__lede {
+  max-width: 52ch;
+  font-size: 19px;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
+.ready__form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 520px;
+}
+
+.ready__input {
+  min-height: 50px;
+  padding: 13px 16px;
+  font-size: 17px;
+  color: var(--parchment);
+  background: color-mix(in srgb, var(--parchment) 8%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--parchment) 45%, transparent);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--fast) var(--ease);
+}
+
+.ready__input::placeholder {
+  color: color-mix(in srgb, var(--parchment) 55%, transparent);
+}
+
+.ready__input:hover,
+.ready__input:focus {
+  border-color: var(--parchment);
+}
+
+.ready__note {
+  font-size: 15px;
+  opacity: 0.8;
+}
+
+.ready__note a {
+  color: inherit;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+@media (min-width: 576px) {
+  .ready__form {
+    flex-direction: row;
+  }
+
+  .ready__input {
+    flex: 1;
   }
 }
 
@@ -2148,6 +2266,11 @@ select {
   .disclose > summary {
     grid-template-columns: 40px 1fr auto;
     gap: 12px;
+  }
+
+  /* FAQ rows have no number column; keep the question full width. */
+  .disclose--faq > summary {
+    grid-template-columns: 1fr auto;
   }
 
   .disclose__panel {

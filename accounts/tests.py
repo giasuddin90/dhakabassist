@@ -88,6 +88,15 @@ class RegistrationTests(EnglishPagesMixin, TestCase):
         self.assertEqual(User.objects.count(), 0)
         self.assertContains(response, "entirely numeric")
 
+    def test_the_home_page_email_box_opens_the_form_filled_in(self):
+        response = self.client.post(
+            reverse("accounts:register"), {"prefill": "1", "email": "rafiq@example.com"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["form"].is_bound)
+        self.assertEqual(response.context["form"].initial["email"], "rafiq@example.com")
+        self.assertEqual(User.objects.count(), 0)
+
     def test_registering_grants_no_enrolment(self):
         self.client.post(
             reverse("accounts:register"),

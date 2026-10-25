@@ -64,6 +64,14 @@ class RegisterView(FormView):
             return redirect(settings.LOGIN_REDIRECT_URL)
         return super().dispatch(request, *args, **kwargs)
 
+    def post(self, request, *args, **kwargs):
+        # The home page's "Ready to get started?" box sends only an address.
+        # Open the full form with it filled in, not a page of missing-field errors.
+        if "prefill" in request.POST:
+            form = self.get_form_class()(initial={"email": request.POST.get("email", "")})
+            return self.render_to_response(self.get_context_data(form=form))
+        return super().post(request, *args, **kwargs)
+
     def form_valid(self, form):
         user = form.save()
         send_confirmation(user)
