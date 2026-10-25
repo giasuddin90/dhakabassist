@@ -1380,7 +1380,7 @@ a.pager__step:hover {
 
 /* The native file picker reads as a drop zone. */
 .library-upload input[type="file"],
-.author-upload input[type="file"] {
+.image-upload input[type="file"] {
   width: 100%;
   padding: 18px 14px;
   font-size: 14px;
@@ -1394,12 +1394,12 @@ a.pager__step:hover {
 }
 
 .library-upload input[type="file"]:hover,
-.author-upload input[type="file"]:hover {
+.image-upload input[type="file"]:hover {
   border-color: var(--ink);
 }
 
 .library-upload input[type="file"]::file-selector-button,
-.author-upload input[type="file"]::file-selector-button {
+.image-upload input[type="file"]::file-selector-button {
   margin-right: 12px;
   padding: 8px 14px;
   font: inherit;
@@ -1412,14 +1412,14 @@ a.pager__step:hover {
 }
 
 /* Course editor: the current author photo beside the picker. */
-.author-upload {
+.image-upload {
   display: grid;
   gap: 16px;
   align-items: start;
 }
 
 @media (min-width: 576px) {
-  .author-upload {
+  .image-upload {
     grid-template-columns: auto minmax(0, 1fr);
   }
 }
@@ -1439,17 +1439,24 @@ a.pager__step:hover {
   border-radius: 50%;
 }
 
-.author-upload__remove {
+.image-upload__remove {
   min-height: 44px;
   align-self: flex-start;
 }
 
-.author-upload__current {
+.image-upload__current {
   width: 96px;
   height: 96px;
   object-fit: cover;
   border-radius: 50%;
   border: 1px solid var(--line-muted);
+}
+
+/* A course banner keeps its 16:9 shape. */
+.image-upload__current--wide {
+  width: 192px;
+  height: 108px;
+  border-radius: var(--radius-sm);
 }
 
 .library-empty {

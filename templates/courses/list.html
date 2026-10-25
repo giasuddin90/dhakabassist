@@ -19,7 +19,7 @@
           <p class="meta-row">
             <span>{% blocktranslate count count=course.module_count %}{{ count }} module{% plural %}{{ count }} modules{% endblocktranslate %}</span>
             {% if course.total_runtime %}<span>{% blocktranslate with runtime=course.total_runtime %}{{ runtime }} of video{% endblocktranslate %}</span>{% endif %}
-            {% if course.free_module %}<span>{% blocktranslate with number=course.free_module.number_plain %}Module {{ number }} free{% endblocktranslate %}</span>{% endif %}
+            {% if course.free_module %}<span>{% blocktranslate with number=course.free_numbers %}Module {{ number }} free{% endblocktranslate %}</span>{% endif %}
             <span>{{ course.level }}</span>
           </p>
         </div>

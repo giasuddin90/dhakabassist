@@ -7,6 +7,7 @@ app_name = "courses"
 urlpatterns = [
     path("courses/", views.CourseListView.as_view(), name="list"),
     path("courses/<slug:slug>/", views.CourseDetailView.as_view(), name="detail"),
+    path("courses/<slug:slug>/banner/", views.course_banner, name="banner"),
     path("authors/<slug:slug>/photo/", views.author_photo, name="author_photo"),
     path("my-courses/", views.DashboardView.as_view(), name="dashboard"),
     path(

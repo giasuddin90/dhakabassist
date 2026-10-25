@@ -20,6 +20,7 @@ from django.core.validators import (
 )
 from django.db import models, transaction
 from django.db.models import F
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -56,13 +57,19 @@ def format_runtime(seconds):
     return gettext("%(minutes)s min") % {"minutes": minutes}
 
 
-# No SVG: the photo is served publicly, and an SVG can carry script.
-AUTHOR_PHOTO_EXTENSIONS = ("jpg", "jpeg", "png", "webp")
+# No SVG: author photos and course banners are served publicly, and an SVG
+# can carry script.
+PUBLIC_IMAGE_EXTENSIONS = ("jpg", "jpeg", "png", "webp")
 
 
 def author_photo_upload_to(instance, filename):
     """Keep each author's photo in their own folder."""
     return f"authors/{instance.slug or slugify(instance.name)}/{filename}"
+
+
+def course_banner_upload_to(instance, filename):
+    """Keep each course's banner beside its modules' files."""
+    return f"courses/{instance.slug or slugify(instance.title)}/banner/{filename}"
 
 
 class TimeStampedModel(models.Model):
@@ -90,7 +97,7 @@ class Author(TimeStampedModel):
         upload_to=author_photo_upload_to,
         max_length=255,
         blank=True,
-        validators=[FileExtensionValidator(AUTHOR_PHOTO_EXTENSIONS)],
+        validators=[FileExtensionValidator(PUBLIC_IMAGE_EXTENSIONS)],
         help_text=_("A square JPG, PNG or WEBP, at least 320 × 320 px, up to 5 MB."),
     )
     bio_bn = models.TextField(
@@ -188,6 +195,14 @@ class Course(TimeStampedModel):
     )
     status = models.CharField(
         _("status"), max_length=12, choices=Status.choices, default=Status.DRAFT
+    )
+    banner = models.ImageField(
+        _("banner"),
+        upload_to=course_banner_upload_to,
+        max_length=255,
+        blank=True,
+        validators=[FileExtensionValidator(PUBLIC_IMAGE_EXTENSIONS)],
+        help_text=_("A 16:9 JPG, PNG or WEBP, at least 1280 × 720 px, up to 5 MB."),
     )
     trailer_url_bn = models.URLField(
         _("trailer video link (Bangla)"),
@@ -315,6 +330,20 @@ class Course(TimeStampedModel):
         return trailer_embed_url(self.trailer_url)
 
     @property
+    def banner_url(self):
+        """The public URL of the banner, or "" when there is none."""
+        if not self.banner:
+            return ""
+        # The version busts the browser cache when the banner is replaced.
+        url = reverse("courses:banner", kwargs={"slug": self.slug})
+        return f"{url}?v={int(self.updated_at.timestamp())}"
+
+    @property
+    def banner_src(self):
+        """The banner, or the site's placeholder when none is uploaded."""
+        return self.banner_url or static(settings.SITE["course_banner_placeholder"])
+
+    @property
     def author_name(self):
         """The author's name, or the site's instructor when none is linked."""
         return self.author.name if self.author else settings.SITE["instructor"]
@@ -328,8 +357,22 @@ class Course(TimeStampedModel):
         return len(self.module_list)
 
     @property
+    def free_modules(self):
+        """Every module marked as a free preview, in course order."""
+        return [m for m in self.module_list if m.is_free]
+
+    @property
     def free_module(self):
-        return next((m for m in self.module_list if m.is_free), None)
+        """The first free module: where "Try it free" links send people."""
+        return next(iter(self.free_modules), None)
+
+    @property
+    def free_numbers(self):
+        """Every free module's number for a sentence: "1", "1 & 2", "1, 2 & 3"."""
+        numbers = [m.number_plain for m in self.free_modules]
+        if len(numbers) < 2:
+            return "".join(numbers)
+        return f"{', '.join(numbers[:-1])} & {numbers[-1]}"
 
     @property
     def total_runtime(self):

@@ -84,7 +84,7 @@ class CourseDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         course = self.object
         access = CourseAccess(self.request.user, course)
-        free = course.free_module
+        free = course.free_numbers
         context.update(
             access=access,
             module_states=access.module_states(),
@@ -95,7 +95,7 @@ class CourseDetailView(DetailView):
                 (_("Total video"), course.total_runtime or "—"),
                 (
                     _("Free preview"),
-                    _("Module %(number)s") % {"number": free.number_plain} if free else "—",
+                    _("Module %(number)s") % {"number": free} if free else "—",
                 ),
                 (_("Level"), course.level),
             ],
@@ -104,6 +104,7 @@ class CourseDetailView(DetailView):
                 title=course.meta_title or course.title,
                 description=course.meta_description or course.summary,
                 canonical_path=course.get_absolute_url(),
+                image_path=course.banner_url,
                 breadcrumbs=[
                     seo.Breadcrumb(_("Home"), "/"),
                     seo.Breadcrumb(_("Courses"), reverse("courses:list")),
@@ -562,10 +563,21 @@ def author_photo(request, slug):
     if not request.user.is_staff:
         authors = authors.filter(courses__status=Course.Status.PUBLISHED).distinct()
     author = get_object_or_404(authors, slug=slug)
-    if not author.photo:
-        raise Http404("No author photo.")
-    response = _serve_media(author.photo.name)
-    # `photo_url` changes when the photo does, so it may be cached.
+    return _serve_public_image(author.photo)
+
+
+def course_banner(request, slug):
+    """A course's banner: public once the course is, and to staff before."""
+    courses = Course.objects.all() if request.user.is_staff else Course.published.all()
+    return _serve_public_image(get_object_or_404(courses, slug=slug).banner)
+
+
+def _serve_public_image(image):
+    """An author photo or course banner, cacheable by the browser."""
+    if not image:
+        raise Http404("No image.")
+    response = _serve_media(image.name)
+    # Its URL carries a version that changes with the file, so it may be cached.
     response["Cache-Control"] = "public, max-age=86400"
     return response
 

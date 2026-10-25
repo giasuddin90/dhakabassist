@@ -1183,35 +1183,6 @@ select {
   height: 42px;
 }
 
-.play--xs {
-  width: 34px;
-  height: 34px;
-  background: var(--ink);
-}
-
-.trailer-cta {
-  position: absolute;
-  left: 18px;
-  bottom: 18px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--parchment);
-  color: var(--ink);
-  border: 1px solid var(--ink);
-  border-radius: 999px;
-  padding: 7px 18px 7px 7px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background var(--fast) var(--ease);
-}
-
-.trailer-cta:hover {
-  background: var(--cream);
-}
-
 .player-bar {
   position: absolute;
   left: 0;

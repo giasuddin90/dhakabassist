@@ -13,7 +13,7 @@
   </button>
 </header>
 
-<form method="post" id="course-form" class="stack u-gap-20" novalidate style="max-width:860px">
+<form method="post" enctype="multipart/form-data" id="course-form" class="stack u-gap-20" novalidate style="max-width:860px">
   {% csrf_token %}
   {% include "includes/form_errors.html" %}
 
@@ -33,19 +33,29 @@
     </label>
   </section>
 
-  <section class="panel" aria-labelledby="trailer-title">
+  <section class="panel" aria-labelledby="banner-title">
     <div class="panel__head">
-      <h2 class="panel__title" id="trailer-title">Trailer</h2>
-      {% if course.trailer_embed_url %}
+      <h2 class="panel__title" id="banner-title">Banner</h2>
+      {% if course.banner %}
         <span class="badge badge--status badge--ok">Showing on the course page</span>
       {% else %}
-        <span class="badge badge--status badge--locked">No trailer yet</span>
+        <span class="badge badge--status badge--locked">Showing the placeholder</span>
       {% endif %}
     </div>
-    <div class="panel__body stack">
-      {% include "includes/bilingual_field.html" with pair=form.bilingual.trailer_url %}
-      {% include "includes/bilingual_field.html" with pair=form.bilingual.trailer_duration %}
-      {% include "includes/bilingual_field.html" with pair=form.bilingual.trailer_label %}
+    <div class="panel__body image-upload">
+      {% if course %}
+        <img class="image-upload__current image-upload__current--wide" src="{{ course.banner_src }}"
+             alt="{% if course.banner %}Current banner of {{ course.title }}{% else %}The placeholder banner{% endif %}"
+             width="192" height="108">
+      {% endif %}
+      <div class="stack u-gap-10">
+        {% include "includes/field.html" with field=form.banner help="Shown at the top of the enrolment box on the course page, and when the page is shared." %}
+        {% if course.banner %}
+          <label class="check image-upload__remove">
+            {{ form.remove_banner }} {{ form.remove_banner.label }}
+          </label>
+        {% endif %}
+      </div>
     </div>
   </section>
 

@@ -29,15 +29,15 @@
     <div class="panel__head">
       <h2 class="panel__title" id="photo-title">Photo</h2>
     </div>
-    <div class="panel__body author-upload">
+    <div class="panel__body image-upload">
       {% if author.photo %}
-        <img class="author-upload__current" src="{{ author.photo_url }}"
+        <img class="image-upload__current" src="{{ author.photo_url }}"
              alt="Current photo of {{ author.name }}" width="96" height="96">
       {% endif %}
       <div class="stack u-gap-10">
         {% include "includes/field.html" with field=form.photo %}
         {% if author.photo %}
-          <label class="check author-upload__remove">
+          <label class="check image-upload__remove">
             {{ form.remove_photo }} {{ form.remove_photo.label }}
           </label>
         {% endif %}

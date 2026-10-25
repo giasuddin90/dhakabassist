@@ -14,8 +14,10 @@ from pathlib import Path
 import jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
@@ -448,8 +450,6 @@ class CourseMediaTests(TestCase):
         self.other = User.objects.create_user(email="other@example.com", password=PASSWORD)
 
     def tearDown(self):
-        from django.conf import settings
-
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def asset(self, module):
@@ -479,8 +479,6 @@ class CourseMediaTests(TestCase):
         self.assertIn(reverse("accounts:login"), response["Location"])
 
     def test_files_are_stored_in_media_but_not_served_from_it(self):
-        from django.conf import settings
-
         asset = self.asset(self.modules[0])
         self.assertTrue((Path(settings.MEDIA_ROOT) / asset.file.name).is_file())
         self.client.force_login(self.student)
@@ -560,6 +558,14 @@ class CoursePageTests(EnglishPagesMixin, TestCase):
         self.assertEqual(self.course.total_runtime, "30 min")
         self.assertEqual(self.course.iso_duration, "PT30M")
 
+    def test_every_free_module_is_named_as_a_free_preview(self):
+        for module in self.modules[1:]:
+            module.access = Module.Access.FREE
+            module.save(update_fields=["access"])
+        response = self.client.get(self.course.get_absolute_url())
+        self.assertContains(response, "Module 1, 2 &amp; 3")
+        self.assertContains(response, "Module 1, 2 &amp; 3 are free.")
+
     def test_the_dashboard_hides_courses_with_nothing_unlocked(self):
         student = User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
         self.modules[0].access = Module.Access.PAID
@@ -568,15 +574,56 @@ class CoursePageTests(EnglishPagesMixin, TestCase):
         response = self.client.get(reverse("courses:dashboard"))
         self.assertContains(response, "You have not enrolled yet")
 
-    def test_the_trailer_is_embedded_when_a_link_is_set(self):
+    def test_the_trailer_is_not_shown_on_the_course_page(self):
         self.course.trailer_url_en = "https://youtu.be/dQw4w9WgXcQ"
         self.course.save(update_fields=["trailer_url_en"])
         response = self.client.get(self.course.get_absolute_url())
-        self.assertContains(response, "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ")
-
-    def test_no_trailer_means_no_iframe(self):
-        response = self.client.get(self.course.get_absolute_url())
         self.assertNotContains(response, "<iframe")
+
+    @override_settings(SITE={**settings.SITE, "course_banner_placeholder": "img/logo-full.svg"})
+    def test_without_a_banner_the_placeholder_from_settings_shows(self):
+        response = self.client.get(self.course.get_absolute_url())
+        self.assertContains(response, 'src="/static/img/logo-full.svg"')
+
+
+@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
+class CourseBannerTests(EnglishPagesMixin, TestCase):
+    def setUp(self):
+        self.course, _ = make_course()
+        self.course.banner.save("banner.png", ContentFile(b"banner bytes"))
+
+    def tearDown(self):
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+
+    def test_the_banner_shows_on_the_course_page_and_when_shared(self):
+        response = self.client.get(self.course.get_absolute_url())
+        self.assertContains(response, f'src="{self.course.banner_url}"')
+        self.assertContains(response, f'alt="{self.course.title}"')
+        self.assertContains(response, f'content="{settings.SITE_BASE_URL}{self.course.banner_url}"')
+
+    def test_the_banner_is_stored_in_the_course_s_media_folder(self):
+        self.assertTrue(self.course.banner.name.startswith("courses/foundations-of-music/banner/"))
+
+    def test_a_published_course_s_banner_is_public(self):
+        response = self.client.get(reverse("courses:banner", kwargs={"slug": self.course.slug}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(b"".join(response.streaming_content), b"banner bytes")
+        self.assertIn("public", response["Cache-Control"])
+
+    def test_a_draft_course_s_banner_is_for_staff_only(self):
+        Course.objects.filter(pk=self.course.pk).update(status=Course.Status.DRAFT)
+        url = reverse("courses:banner", kwargs={"slug": self.course.slug})
+        self.assertEqual(self.client.get(url).status_code, 404)
+        staff = User.objects.create_user(
+            email="staff@example.com", password=PASSWORD, is_staff=True
+        )
+        self.client.force_login(staff)
+        self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_no_banner_is_a_404(self):
+        Course.objects.filter(pk=self.course.pk).update(banner="")
+        url = reverse("courses:banner", kwargs={"slug": self.course.slug})
+        self.assertEqual(self.client.get(url).status_code, 404)
 
 
 CF_UID = "31c9291ab41fac05471db4e73aa11717"
@@ -799,8 +846,6 @@ class XAccelRedirectTests(TestCase):
         )
 
     def tearDown(self):
-        from django.conf import settings
-
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def test_an_allowed_request_hands_the_path_to_nginx(self):
@@ -930,8 +975,6 @@ class LibraryFileTests(TestCase):
         )
 
     def tearDown(self):
-        from django.conf import settings
-
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def link(self, module, item):
@@ -1065,8 +1108,6 @@ class ModuleDownloadTests(TestCase):
         self.client.force_login(self.student)
 
     def tearDown(self):
-        from django.conf import settings
-
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def test_the_lesson_lists_the_module_downloads(self):
@@ -1124,8 +1165,6 @@ class QuizLibraryMediaTests(TestCase):
         )
 
     def tearDown(self):
-        from django.conf import settings
-
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def test_question_markdown_renders_audio_and_diagrams(self):

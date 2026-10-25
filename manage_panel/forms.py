@@ -94,26 +94,68 @@ class BilingualFormMixin:
         return cleaned
 
 
-class CourseForm(BilingualFormMixin, forms.ModelForm):
+# The file picker for a public image; SVG is left out as it can carry script.
+IMAGE_INPUT = forms.FileInput(attrs={"accept": "image/jpeg,image/png,image/webp"})
+
+
+class ImageUploadMixin:
+    """One optional public image with a size limit and a "remove" tick box.
+
+    A separate tick box rather than ClearableFileInput, whose "Currently"
+    link points at MEDIA_URL, which is never served.
+    """
+
+    image_field = ""
+    IMAGE_MAX_BYTES = 5 * 1024 * 1024
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields[self._remove_field] = forms.BooleanField(
+            required=False, label=f"Remove the current {self.image_field}"
+        )
+
+    @property
+    def _remove_field(self):
+        return f"remove_{self.image_field}"
+
+    def clean(self):
+        """Refuse a new image over the size limit."""
+        cleaned = super().clean()
+        # Only a new upload is checked; the saved file is already within the limit.
+        upload = self.files.get(self.image_field)
+        if upload and upload.size > self.IMAGE_MAX_BYTES:
+            self.add_error(self.image_field, f"The {self.image_field} is larger than 5 MB.")
+        return cleaned
+
+    def save(self, commit=True):
+        """Save, clearing the image when asked to."""
+        # A new upload wins over the tick box, so replacing needs one step.
+        if self.cleaned_data.get(self._remove_field) and self.image_field not in self.files:
+            setattr(self.instance, self.image_field, "")
+        return super().save(commit=commit)
+
+
+# Django's form classes are seven ancestors deep, so any mixin passes pylint's limit.
+class CourseForm(ImageUploadMixin, BilingualFormMixin, forms.ModelForm):  # pylint: disable=too-many-ancestors
     bilingual_fields = (
-        "title", "subtitle", "summary", "description", "level", "trailer_url",
-        "trailer_label", "trailer_duration", "meta_title", "meta_description",
+        "title", "subtitle", "summary", "description", "level", "meta_title",
+        "meta_description",
     )
     required_bilingual = ("title", "summary", "description")
+    image_field = "banner"
 
     class Meta:
         model = Course
         fields = (
             *bilingual("title", "subtitle"), "slug", *bilingual("summary", "description", "level"),
-            "price", "status", "requires", "promote_on_home", "author",
-            *bilingual("trailer_url", "trailer_label", "trailer_duration"),
+            "price", "status", "requires", "promote_on_home", "author", "banner",
             *bilingual("meta_title", "meta_description"),
         )
         widgets = bilingual_widgets(
             summary=forms.Textarea(attrs={"rows": 3}),
             description=forms.Textarea(attrs={"rows": 8}),
             meta_description=forms.Textarea(attrs={"rows": 2}),
-        )
+        ) | {"banner": IMAGE_INPUT}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -125,36 +167,19 @@ class CourseForm(BilingualFormMixin, forms.ModelForm):
         self.fields["author"].empty_label = "No author"
 
 
-class AuthorForm(BilingualFormMixin, forms.ModelForm):
+# Django's form classes are seven ancestors deep, so any mixin passes pylint's limit.
+class AuthorForm(ImageUploadMixin, BilingualFormMixin, forms.ModelForm):  # pylint: disable=too-many-ancestors
     bilingual_fields = ("name", "bio")
     required_bilingual = ("name",)
-    PHOTO_MAX_BYTES = 5 * 1024 * 1024
-
-    # A separate tick box rather than ClearableFileInput, whose "Currently"
-    # link points at MEDIA_URL, which is never served.
-    remove_photo = forms.BooleanField(required=False, label="Remove the current photo")
+    image_field = "photo"
 
     class Meta:
         model = Author
         fields = (*bilingual("name"), "slug", "photo", *bilingual("bio"))
         widgets = {
-            "photo": forms.FileInput(attrs={"accept": "image/jpeg,image/png,image/webp"}),
+            "photo": IMAGE_INPUT,
             **bilingual_widgets(bio=forms.Textarea(attrs={"rows": 12, "class": "editor-area"})),
         }
-
-    def clean_photo(self):
-        """Refuse photos over the size limit."""
-        photo = self.cleaned_data["photo"]
-        if photo and photo.size > self.PHOTO_MAX_BYTES:
-            raise forms.ValidationError("The photo is larger than 5 MB.")
-        return photo
-
-    def save(self, commit=True):
-        """Save the author, clearing the photo when asked to."""
-        # A new upload wins over the tick box, so replacing needs one step.
-        if self.cleaned_data.get("remove_photo") and "photo" not in self.files:
-            self.instance.photo = ""
-        return super().save(commit=commit)
 
 
 class ModuleForm(BilingualFormMixin, forms.ModelForm):

@@ -260,7 +260,7 @@ class CoursesView(ManageBase):
 def course_edit(request, slug=None):
     """Create or edit a course's own fields."""
     course = get_object_or_404(Course, slug=slug) if slug else None
-    form = CourseForm(request.POST or None, instance=course)
+    form = CourseForm(request.POST or None, request.FILES or None, instance=course)
     if request.method == "POST" and form.is_valid():
         course = form.save()
         messages.success(request, f"“{course.title}” has been saved.")

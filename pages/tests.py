@@ -78,14 +78,12 @@ class PublicPageTests(EnglishPagesMixin, TestCase):
         response = self.client.get(reverse("pages:home"))
         self.assertEqual(response.context["course"], self.course)
 
-    def test_the_trailer_button_shows_only_with_a_trailer(self):
-        response = self.client.get(reverse("pages:home"))
-        self.assertNotContains(response, "trailer-cta")
+    def test_the_home_page_no_longer_links_to_a_trailer(self):
         Course.objects.filter(pk=self.course.pk).update(
             trailer_url_en="https://youtu.be/dQw4w9WgXcQ"
         )
         response = self.client.get(reverse("pages:home"))
-        self.assertContains(response, f'href="{self.course.get_absolute_url()}#trailer"')
+        self.assertNotContains(response, "#trailer")
 
     def test_home_renders_without_a_published_course(self):
         Course.objects.update(status=Course.Status.DRAFT)

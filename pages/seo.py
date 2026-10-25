@@ -180,15 +180,18 @@ def course_schema(course):
             "instructor": course_author(course),
         },
     }
-    free = course.free_module
+    free = course.free_modules
     if free:
-        data["hasPart"] = {
-            "@type": "Course",
-            "name": free.title,
-            "description": free.summary,
-            "isAccessibleForFree": True,
-            "provider": {"@id": absolute("/") + "#organization"},
-        }
+        data["hasPart"] = [
+            {
+                "@type": "Course",
+                "name": module.title,
+                "description": module.summary,
+                "isAccessibleForFree": True,
+                "provider": {"@id": absolute("/") + "#organization"},
+            }
+            for module in free
+        ]
     return data
 
 

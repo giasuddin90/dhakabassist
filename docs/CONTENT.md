@@ -30,8 +30,9 @@ live under `/en/`.
   ever empty. Content from before the site was bilingual is in the English
   boxes; add the Bangla when you are ready.
 - Media works the same way. A module can have a Bangla video and an English
-  one; with only one, both languages play it. A course can have a trailer
-  per language.
+  one; with only one, both languages play it. A course has one banner for
+  both languages (Course settings → Banner); until one is uploaded the course
+  page shows the placeholder set in `SITE["course_banner_placeholder"]`.
 - Web addresses (slugs) are shared and made from the English title, because
   Bangla letters cannot go in an address. With no English title, type the
   slug yourself.

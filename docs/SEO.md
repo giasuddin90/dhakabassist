@@ -35,6 +35,8 @@ crawlers see and index both.
 Views build a small `SEO` object (`pages/seo.py`) and `base.html` renders it.
 Because it is one object in one template, no page can ship without a title, a
 description, a canonical URL or an Open Graph image.
+A course page shares its banner (uploaded under Course settings) as that image;
+without one it falls back to the site default.
 
 Each page carries a unique `<title>` and meta description, a canonical URL
 built from `SITE_BASE_URL` (not the request's `Host`, which can be spoofed),

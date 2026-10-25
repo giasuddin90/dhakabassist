@@ -25,12 +25,6 @@
              alt="{% translate 'The circle of fifths: the twelve major keys and their key signatures' %}"
              fetchpriority="high" decoding="async">
       </div>
-      {% if course.trailer_embed_url %}
-        <a class="trailer-cta" href="{{ course.get_absolute_url }}#trailer">
-          <span class="play play--xs" aria-hidden="true">{% include "includes/icon_play.html" with size=11 height=12 color="#F1E9D2" %}</span>
-          {% if course.trailer_label %}{{ course.trailer_label }}{% else %}{% translate "Watch the trailer" %}{% endif %}{% if course.trailer_duration %} · {{ course.trailer_duration }}{% endif %}
-        </a>
-      {% endif %}
     </div>
   </section>
 

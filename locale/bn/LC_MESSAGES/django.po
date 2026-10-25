@@ -212,7 +212,9 @@ msgstr "পাঠ্যক্রম"
 
 #, python-format
 msgid "Module %(number)s is free. Each module unlocks when you pass the previous quiz with 100%%."
-msgstr "মডিউল %(number)s বিনামূল্যে। আগের কুইজে 100%% পেলে পরের মডিউল খুলে যায়।"
+msgid_plural "Module %(number)s are free. Each module unlocks when you pass the previous quiz with 100%%."
+msgstr[0] "মডিউল %(number)s বিনামূল্যে। আগের কুইজে 100%% পেলে পরের মডিউল খুলে যায়।"
+msgstr[1] "মডিউল %(number)s বিনামূল্যে। আগের কুইজে 100%% পেলে পরের মডিউল খুলে যায়।"
 
 msgid "FREE"
 msgstr "বিনামূল্যে"
@@ -835,6 +837,9 @@ msgstr ""
 msgid "status"
 msgstr ""
 
+msgid "banner"
+msgstr ""
+
 msgid "trailer video link (Bangla)"
 msgstr ""
 
@@ -1071,6 +1076,9 @@ msgid "Left blank, it is made from the English name."
 msgstr ""
 
 msgid "A square JPG, PNG or WEBP, at least 320 × 320 px, up to 5 MB."
+msgstr ""
+
+msgid "A 16:9 JPG, PNG or WEBP, at least 1280 × 720 px, up to 5 MB."
 msgstr ""
 
 msgid "Markdown. Shown under “About the author” on the course page."

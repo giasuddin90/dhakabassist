@@ -4,6 +4,7 @@ import io
 import shutil
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -23,6 +24,7 @@ from courses.models import (
     Question,
     Quiz,
 )
+from manage_panel.forms import CourseForm
 from orders.models import Order, PaymentMethod
 from pages.models import ContactMessage, Faq, LegalPage
 
@@ -180,8 +182,6 @@ class StaffPanelTests(TestCase):
                 "level_en": "Beginner",
                 "price": "4000",
                 "status": Course.Status.PUBLISHED,
-                "trailer_label_en": "Watch the trailer",
-                "trailer_duration_en": "2:10",
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -194,30 +194,25 @@ class StaffPanelTests(TestCase):
             "title_en": self.course.title, "slug": self.course.slug,
             "summary_en": "Summary.", "description_en": "Description.",
             "level_en": "Beginner", "price": "3500", "status": Course.Status.PUBLISHED,
-            "trailer_label_en": "Watch the trailer",
         }
         data.update(changes)
         return self.client.post(
             reverse("manage:course_edit", kwargs={"slug": self.course.slug}), data
         )
 
-    def test_a_trailer_link_and_home_promotion_can_be_set(self):
-        response = self._course_post(
-            trailer_url_en="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            promote_on_home="on",
-        )
+    def test_home_promotion_can_be_set(self):
+        response = self._course_post(promote_on_home="on")
         self.assertEqual(response.status_code, 302)
         self.course.refresh_from_db()
         self.assertTrue(self.course.promote_on_home)
-        self.assertEqual(
-            self.course.trailer_embed_url,
-            "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0",
-        )
 
-    def test_an_unsupported_trailer_link_is_refused(self):
-        response = self._course_post(trailer_url_en="https://vimeo.com/76979871")
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Paste a YouTube or Cloudflare Stream link")
+    def test_saving_course_settings_keeps_the_trailer_link(self):
+        Course.objects.filter(pk=self.course.pk).update(
+            trailer_url_en="https://youtu.be/dQw4w9WgXcQ"
+        )
+        self._course_post()
+        self.course.refresh_from_db()
+        self.assertEqual(self.course.trailer_url_en, "https://youtu.be/dQw4w9WgXcQ")
 
     def test_a_module_s_notes_and_access_can_be_changed(self):
         module = self.modules[1]
@@ -671,6 +666,59 @@ class StudentManagementTests(TestCase):
 
 
 @override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
+class CourseBannerEditorTests(TestCase):
+    """The banner is uploaded, replaced and removed from the course settings."""
+
+    def setUp(self):
+        self.course, _ = make_course()
+        self.client.force_login(
+            User.objects.create_user(email="tanveer@example.com", password=PASSWORD, is_staff=True)
+        )
+
+    def tearDown(self):
+        from django.conf import settings
+
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+
+    def post_course(self, **extra):
+        data = {
+            "title_en": self.course.title, "slug": self.course.slug,
+            "summary_en": "Summary.", "description_en": "Description.",
+            "level_en": "Beginner", "price": "3500", "status": Course.Status.PUBLISHED,
+        }
+        data.update(extra)
+        return self.client.post(
+            reverse("manage:course_edit", kwargs={"slug": self.course.slug}), data
+        )
+
+    def test_the_form_accepts_a_banner_upload(self):
+        response = self.client.get(reverse("manage:course_edit", kwargs={"slug": self.course.slug}))
+        self.assertContains(response, 'enctype="multipart/form-data"')
+        self.assertContains(response, 'name="banner"')
+        self.assertContains(response, "Showing the placeholder")
+
+    def test_a_banner_is_saved_kept_and_removed(self):
+        self.assertEqual(self.post_course(banner=png_upload("banner.png")).status_code, 302)
+        self.course.refresh_from_db()
+        self.assertTrue(self.course.banner.name.startswith("courses/foundations-of-music/banner/"))
+
+        self.post_course()
+        self.course.refresh_from_db()
+        self.assertTrue(self.course.banner)
+
+        self.post_course(remove_banner="on")
+        self.course.refresh_from_db()
+        self.assertFalse(self.course.banner)
+
+    def test_svg_and_oversized_banners_are_refused(self):
+        svg = SimpleUploadedFile("banner.svg", b"<svg/>", content_type="image/svg+xml")
+        self.assertTrue(self.post_course(banner=svg).context["form"].errors["banner"])
+        with patch.object(CourseForm, "IMAGE_MAX_BYTES", 10):
+            response = self.post_course(banner=png_upload("banner.png"))
+        self.assertIn("The banner is larger than 5 MB.", response.context["form"].errors["banner"])
+
+
+@override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
 class AuthorEditorTests(TestCase):
     """Authors are kept on their own and linked to courses."""
 
@@ -758,7 +806,6 @@ class AuthorEditorTests(TestCase):
                 "level_en": "Beginner",
                 "price": "3500",
                 "status": Course.Status.PUBLISHED,
-                "trailer_label_en": "Watch the trailer",
                 "author": author.pk,
             },
         )

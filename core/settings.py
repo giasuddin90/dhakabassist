@@ -215,6 +215,8 @@ SITE = {
     "locales": {"bn": "bn_BD", "en": "en_BD"},
     "currency": "BDT",
     "currency_symbol": "৳",
+    # Shown on a course page until staff upload a banner (a static path).
+    "course_banner_placeholder": "img/course-banner-placeholder.svg",
 }
 
 # -- Payments ---------------------------------------------------------------
