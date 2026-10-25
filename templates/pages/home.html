@@ -4,24 +4,24 @@
 {% block content %}
 {% if course %}
   {# ---------------------------------------------------------------- hero #}
-  <section class="shell duo" style="padding-block:72px 64px" aria-labelledby="hero-title">
+  <section class="shell duo hero" aria-labelledby="hero-title">
     <div class="stack u-gap-22">
       <p class="eyebrow">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}</p>
       <h1 class="display-1" id="hero-title">{% translate "Learn Music Theory the Practical Way" %}</h1>
       <p class="lede">{% translate "Understand how music works and learn to use that knowledge in your playing." %}</p>
-      <p>{% translate "Whether you play guitar, piano, drums, bass, sing, or make music on a computer, this course will help you build a stronger understanding of music." %}</p>
-      <div class="cluster" style="margin-top:6px">
+      <p class="hero__body">{% translate "Whether you play guitar, piano, drums, bass, sing, or make music on a computer, this course will help you build a stronger understanding of music." %}</p>
+      <div class="cluster hero__actions">
         <a class="btn" href="{% url 'accounts:register' %}">{% blocktranslate with number=course.free_module.number_plain|default:'1' %}Start Module {{ number }}{% endblocktranslate %}</a>
         <a class="btn btn--outline" href="{% url 'orders:checkout' course.slug %}">{% translate "Enroll now" %}</a>
       </div>
-      <p class="meta-row" style="margin-top:8px">
-        <span>{% translate "No music theory experience needed." %}</span>
-        <span>{% blocktranslate count count=course.module_count %}{{ count }} module{% plural %}{{ count }} modules{% endblocktranslate %}</span>
-        <span>{% translate "Video, audio and notation" %}</span>
-      </p>
+      <ul class="hero__facts">
+        <li>{% include "includes/icon_tick.html" with size=14 color="currentColor" %}{% translate "No music theory experience needed." %}</li>
+        <li>{% include "includes/icon_tick.html" with size=14 color="currentColor" %}{% blocktranslate count count=course.module_count %}{{ count }} module{% plural %}{{ count }} modules{% endblocktranslate %}</li>
+        <li>{% include "includes/icon_tick.html" with size=14 color="currentColor" %}{% translate "Video, audio and notation" %}</li>
+      </ul>
     </div>
 
-    <div style="position:relative;max-width:520px;justify-self:end;width:100%">
+    <div class="hero__art">
       <div class="media media--square">
         <img src="{% static 'img/circle-of-fifths.svg' %}" width="1200" height="1200"
              alt="{% translate 'The circle of fifths: the twelve major keys and their key signatures' %}"
@@ -35,24 +35,24 @@
   {# ----------------------------------------------------------- curriculum #}
   <section class="section reveal" aria-labelledby="modules-title">
     <div class="shell">
-      <div class="split" style="margin-bottom:36px">
+      <div class="split section-head">
         <div class="stack u-gap-10">
           <p class="eyebrow">{% translate "What you will learn" %}</p>
           <h2 class="display-3" id="modules-title">{% blocktranslate count count=course.module_count %}{{ count }} module, in order{% plural %}{{ count }} modules, in order{% endblocktranslate %}</h2>
         </div>
-        <a class="btn-link" href="{{ course.get_absolute_url }}">{% translate "Full curriculum" %}</a>
+        <a class="btn-link section-head__link" href="{{ course.get_absolute_url }}">{% translate "Full curriculum" %}</a>
       </div>
 
-      <ul class="ruled ruled--columns" style="list-style:none;padding:0;margin:0">
+      <ul class="ruled ruled--columns module-list">
         {% for module in modules %}
           <li class="module-row">
             <span class="module-row__number" aria-hidden="true">{{ module.number }}</span>
             <div class="stack u-gap-6">
-              <div class="cluster" style="--cluster-gap:10px">
+              <div class="cluster module-row__head">
                 <h3 class="module-row__title">{{ module.title }}</h3>
                 {% if module.is_free %}<span class="badge">{% translate "FREE" %}</span>{% endif %}
               </div>
-              <p class="module-row__body">{{ module.summary }}</p>
+              {% if module.summary %}<p class="module-row__body">{{ module.summary }}</p>{% endif %}
             </div>
           </li>
         {% endfor %}
@@ -62,7 +62,7 @@
 
   {# ------------------------------------------------------------ instructor #}
   <section class="shell duo section--loose reveal" aria-labelledby="instructor-title">
-    <div class="media media--portrait media--face" style="max-width:440px">
+    <div class="media media--portrait media--face instructor__photo">
       {% include "includes/instructor_photo.html" with author=course.author name=course.author_name sizes="(max-width: 768px) 92vw, 440px" lazy=True %}
     </div>
     <div class="stack u-gap-18">
@@ -222,7 +222,7 @@
   <section class="shell section section--loose stack u-gap-18">
     <h1 class="display-2">{{ site.name }}</h1>
     <p class="lede">{{ site.tagline }} {% translate "The first course is being prepared and will be published shortly." %}</p>
-    <a class="btn" href="{% url 'pages:contact' %}" style="align-self:flex-start">{% translate "Get in touch" %}</a>
+    <a class="btn u-self-start" href="{% url 'pages:contact' %}">{% translate "Get in touch" %}</a>
   </section>
 {% endif %}
 {% endblock %}

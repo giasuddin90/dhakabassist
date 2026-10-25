@@ -804,29 +804,123 @@ select {
   font-weight: 700;
 }
 
+/* -------------------------------------------------------------- home hero */
+
+/* The words lead and the circle of fifths follows. While the two columns are
+   stacked the picture stays small and centred, so the calls to action sit
+   near the top of a phone screen instead of below a full-width image. */
+.hero {
+  padding-block: 32px 48px;
+}
+
+.hero__body {
+  max-width: 58ch;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.hero__actions {
+  margin-top: 6px;
+}
+
+.hero__facts {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.hero__facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero__facts .tick__mark {
+  margin-top: 0;
+  color: var(--ink);
+}
+
+.hero__art {
+  width: 100%;
+  max-width: 300px;
+  justify-self: center;
+}
+
+@media (min-width: 576px) {
+  .hero__art {
+    max-width: 400px;
+  }
+}
+
+@media (min-width: 768px) {
+  .hero {
+    padding-block: 56px 64px;
+  }
+}
+
+@media (min-width: 992px) {
+  .hero {
+    padding-block: 72px 64px;
+  }
+
+  .hero__art {
+    max-width: 520px;
+    justify-self: end;
+  }
+}
+
+/* A section's eyebrow and heading, with an optional link on the right. */
+.section-head {
+  margin-bottom: 28px;
+}
+
+.section-head__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+@media (min-width: 768px) {
+  .section-head {
+    margin-bottom: 36px;
+  }
+}
+
 /* -------------------------------------------------------- why this course */
 
 /* Eight short benefits on the hairline grid: one per row on a phone, two
-   from 576px, four from 992px. Each carries a tick in an ink disc. */
+   from 576px, four from 992px. The cards are ink, so the 1px gaps read as
+   faint parchment rules, and each carries a tick in a parchment disc. */
 .benefits {
   list-style: none;
   margin: 0;
   padding: 0;
   grid-template-columns: 1fr;
+  background: color-mix(in srgb, var(--parchment) 20%, var(--ink));
+  border-color: var(--ink);
+  box-shadow: 8px 8px 0 var(--highlight);
 }
 
 .benefit {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 18px 20px;
-  font-size: 17px;
+  gap: 14px;
+  padding: 14px 16px;
+  font-size: 16px;
   line-height: 1.45;
+  background: var(--ink);
+  color: var(--parchment);
   transition: background var(--fast) var(--ease);
 }
 
 .benefit:hover {
-  background: var(--cream);
+  background: color-mix(in srgb, var(--parchment) 8%, var(--ink));
 }
 
 .benefit__mark {
@@ -836,8 +930,8 @@ select {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--ink);
-  color: var(--parchment);
+  background: var(--parchment);
+  color: var(--ink);
 }
 
 .benefit__mark .tick__mark {
@@ -847,6 +941,18 @@ select {
 @media (min-width: 576px) {
   .benefits {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .benefit {
+    gap: 16px;
+    padding: 18px 20px;
+    font-size: 17px;
+  }
+}
+
+@media (min-width: 768px) {
+  .benefits {
+    box-shadow: 12px 12px 0 var(--highlight);
   }
 }
 
@@ -1109,20 +1215,45 @@ select {
   column-gap: 32px;
 }
 
+.module-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Number and title share a baseline, so a row without a summary still lines
+   up. Rows are tighter on a phone, where all nine stack in one column. */
 .module-row {
   display: flex;
-  gap: 18px;
-  padding: 26px 8px 30px 0;
+  align-items: baseline;
+  gap: 16px;
+  padding: 18px 8px 20px 0;
   text-align: left;
+}
+
+.module-row__head {
+  --cluster-gap: 10px;
 }
 
 .module-row__number {
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 26px;
   font-weight: 400;
   line-height: 1;
-  width: 44px;
+  width: 40px;
   flex: none;
+}
+
+@media (min-width: 768px) {
+  .module-row {
+    gap: 18px;
+    padding: 26px 8px 30px 0;
+  }
+
+  .module-row__number {
+    font-size: 30px;
+    width: 44px;
+  }
 }
 
 .module-row__title {
@@ -1353,6 +1484,20 @@ select {
   .author-card__photo {
     width: 160px;
     height: 160px;
+  }
+}
+
+/* Home page: the instructor. A landscape crop while the photo sits above the
+   text, so it does not fill the screen; the full portrait beside it. */
+.instructor__photo {
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 4 / 3;
+}
+
+@media (min-width: 992px) {
+  .instructor__photo {
+    aspect-ratio: 4 / 5;
   }
 }
 
