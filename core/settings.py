@@ -185,7 +185,9 @@ EMAIL_BACKEND = (
 # Signup waits on the confirmation email, so a stalled mail service must not
 # hold the request open indefinitely.
 EMAIL_TIMEOUT = 10
-DEFAULT_FROM_EMAIL = env_str("DJANGO_DEFAULT_FROM_EMAIL", "hello@dhakabassist.com")
+DEFAULT_FROM_EMAIL = env_str(
+    "DJANGO_DEFAULT_FROM_EMAIL", "DhakaBassist <hello@dhakabassist.com>"
+)
 
 # -- Messages ---------------------------------------------------------------
 

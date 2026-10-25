@@ -53,28 +53,21 @@ msgid "This password is too close to your name or email."
 msgstr "এই পাসওয়ার্ডটি আপনার নাম বা ইমেইলের খুব কাছাকাছি।"
 
 #: accounts/forms.py:26
-#, fuzzy, python-format
-#| msgid "Use at least %(min_length)d characters."
+#, python-format
 msgid "At least %(min_length)d characters"
-msgstr "কমপক্ষে %(min_length)dটি অক্ষর দিন।"
+msgstr "কমপক্ষে %(min_length)dটি অক্ষর"
 
 #: accounts/forms.py:27
-#, fuzzy
-#| msgid "Start Module %(number)s"
 msgid "Not only numbers"
-msgstr "মডিউল %(number)s শুরু করুন"
+msgstr "শুধু সংখ্যা নয়"
 
 #: accounts/forms.py:28
-#, fuzzy
-#| msgid "This password is too close to your name or email."
 msgid "Not too similar to your name or email"
-msgstr "এই পাসওয়ার্ডটি আপনার নাম বা ইমেইলের খুব কাছাকাছি।"
+msgstr "আপনার নাম বা ইমেইলের খুব কাছাকাছি নয়"
 
 #: accounts/forms.py:29
-#, fuzzy
-#| msgid "Choose a new password"
 msgid "Not a common password"
-msgstr "নতুন পাসওয়ার্ড বেছে নিন"
+msgstr "খুব সাধারণ পাসওয়ার্ড নয়"
 
 #: accounts/forms.py:37 accounts/forms.py:71 accounts/forms.py:144
 #: templates/pages/home.html:192
@@ -1459,11 +1452,11 @@ msgstr "আগে ওপরের পাসওয়ার্ডটি ঠিক
 
 #: templates/accounts/login.html:43
 msgid "Done"
-msgstr ""
+msgstr "হয়েছে"
 
 #: templates/accounts/login.html:44 templates/accounts/login.html:59
 msgid "Not met yet"
-msgstr ""
+msgstr "এখনো হয়নি"
 
 #: templates/accounts/login.html:82
 msgid "Forgot password?"
@@ -2365,10 +2358,6 @@ msgstr "যোগাযোগ করুন"
 #, python-format
 msgid "Last updated %(date)s"
 msgstr "সর্বশেষ হালনাগাদ %(date)s"
-
-#, python-format
-#~ msgid "At least %(count)s characters"
-#~ msgstr "কমপক্ষে %(count)sটি অক্ষর"
 
 #~ msgid "Watch the trailer"
 #~ msgstr "ট্রেইলার দেখুন"

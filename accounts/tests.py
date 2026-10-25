@@ -108,7 +108,41 @@ class RegistrationTests(EnglishPagesMixin, TestCase):
         self.assertContains(response, "At least 6 characters")
         self.assertContains(response, 'minlength="6"', count=2)
         self.assertContains(response, "data-password-match-status hidden")
-        self.assertContains(response, 'data-text-numeric="Use at least one letter')
+
+    def test_the_password_rules_are_listed_before_anyone_types(self):
+        response = self.client.get(reverse("accounts:register"))
+        self.assertContains(response, "data-rule=", count=4)
+        for rule in (
+            "At least 6 characters",
+            "Not only numbers",
+            "Not too similar to your name or email",
+            "Not a common password",
+        ):
+            self.assertContains(response, rule)
+        self.assertNotContains(response, "is-failed")
+
+    def test_a_broken_rule_is_marked_in_the_list(self):
+        response = self.client.post(
+            reverse("accounts:register"),
+            {**SIGNUP, "password1": "password", "password2": "password"},
+        )
+        rules = {rule["code"]: rule["failed"] for rule in response.context["form"].password_rules}
+        self.assertEqual(
+            rules,
+            {
+                "password_too_short": False,
+                "password_entirely_numeric": False,
+                "password_too_similar": False,
+                "password_too_common": True,
+            },
+        )
+        self.assertContains(response, "pw-checklist__item is-failed", count=1)
+
+    def test_the_password_rules_are_in_bangla_on_the_bangla_page(self):
+        with translation.override("bn"):
+            rules = [rule["text"] for rule in RegisterForm().password_rules]
+        self.assertEqual(rules[0], "কমপক্ষে 6টি অক্ষর")
+        self.assertEqual(rules[1], "শুধু সংখ্যা নয়")
 
     def register_errors(self, **data):
         response = self.client.post(reverse("accounts:register"), {**SIGNUP, **data})
