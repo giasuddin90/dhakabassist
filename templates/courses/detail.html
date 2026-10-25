@@ -100,7 +100,7 @@
       <a class="btn btn--block" href="{% url 'orders:checkout' course.slug %}">{% translate "Enroll now" %}</a>
       {% if not user.is_authenticated and course.free_module %}
         <a class="btn btn--outline btn--block" href="{% url 'accounts:register' %}">
-          {% blocktranslate with number=course.free_module.number_plain %}Try Module {{ number }} free{% endblocktranslate %}
+          {% blocktranslate count counter=course.free_modules|length with number=course.free_numbers %}Try Module {{ number }} free{% plural %}Try Modules {{ number }} free{% endblocktranslate %}
         </a>
       {% elif course.free_module %}
         <a class="btn btn--outline btn--block" href="{{ course.free_module.get_absolute_url }}">

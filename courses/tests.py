@@ -565,6 +565,14 @@ class CoursePageTests(EnglishPagesMixin, TestCase):
         response = self.client.get(self.course.get_absolute_url())
         self.assertContains(response, "Module 1, 2 &amp; 3")
 
+    def test_the_try_free_button_names_every_free_module(self):
+        response = self.client.get(self.course.get_absolute_url())
+        self.assertContains(response, "Try Module 1 free")
+        self.modules[1].access = Module.Access.FREE
+        self.modules[1].save(update_fields=["access"])
+        response = self.client.get(self.course.get_absolute_url())
+        self.assertContains(response, "Try Modules 1 &amp; 2 free")
+
     def test_the_dashboard_hides_courses_with_nothing_unlocked(self):
         student = User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
         self.modules[0].access = Module.Access.PAID

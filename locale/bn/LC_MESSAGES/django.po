@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DhakaBassist\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-26 00:34+0600\n"
+"POT-Creation-Date: 2026-10-26 01:04+0600\n"
 "Language: bn\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1199,7 +1199,9 @@ msgstr "যারা মিউজিক পরিবেশন করেন এ�
 #: pages/views.py:43
 msgid ""
 "Songwriters and producers who want to improve their use of melody and harmony"
-msgstr "যারা গান লেখেন বা মিউজিক তৈরি করেন এবং সুর ও হারমোনি নিয়ে আরও ভালোভাবে কাজ করতে চান"
+msgstr ""
+"যারা গান লেখেন বা মিউজিক তৈরি করেন এবং সুর ও হারমোনি নিয়ে আরও ভালোভাবে কাজ "
+"করতে চান"
 
 #: pages/views.py:45
 msgid "Music students preparing for further study"
@@ -1637,7 +1639,9 @@ msgstr "এখনই ভর্তি হোন"
 #: templates/courses/detail.html:103
 #, python-format
 msgid "Try Module %(number)s free"
-msgstr "মডিউল %(number)s বিনামূল্যে দেখুন"
+msgid_plural "Try Modules %(number)s free"
+msgstr[0] "মডিউল %(number)s বিনামূল্যে দেখুন"
+msgstr[1] "মডিউল %(number)s বিনামূল্যে দেখুন"
 
 #: templates/courses/detail.html:107 templates/pages/home.html:137
 #: templates/pages/home.html:179
@@ -1773,7 +1777,9 @@ msgstr "%(runtime)s ভিডিও"
 #: templates/courses/list.html:22
 #, python-format
 msgid "Module %(number)s free"
-msgstr "মডিউল %(number)s বিনামূল্যে"
+msgid_plural "Modules %(number)s free"
+msgstr[0] "মডিউল %(number)s বিনামূল্যে"
+msgstr[1] "মডিউল %(number)s বিনামূল্যে"
 
 #: templates/courses/list.html:31
 msgid "View curriculum"
@@ -2213,13 +2219,16 @@ msgid_plural ""
 "Try the first %(count)s modules for free before deciding if the full course "
 "is right for you."
 msgstr[0] "পুরো কোর্সটি কেনার সিদ্ধান্ত নেওয়ার আগে প্রথম মডিউলটি বিনামূল্যে করে দেখুন।"
-msgstr[1] "পুরো কোর্সটি কেনার সিদ্ধান্ত নেওয়ার আগে প্রথম %(count)sটি মডিউল বিনামূল্যে করে দেখুন।"
+msgstr[1] ""
+"পুরো কোর্সটি কেনার সিদ্ধান্ত নেওয়ার আগে প্রথম %(count)sটি মডিউল বিনামূল্যে করে দেখুন।"
 
 #: templates/pages/home.html:116
 msgid ""
 "You’ll get introductory lessons, key music terms, exercises, and an "
 "interactive quiz."
-msgstr "এতে পাবেন পরিচিতিমূলক পাঠ, মিউজিকের গুরুত্বপূর্ণ শব্দের তালিকা, অনুশীলন এবং একটি ইন্টার‍্যাকটিভ কুইজ।"
+msgstr ""
+"এতে পাবেন পরিচিতিমূলক পাঠ, মিউজিকের গুরুত্বপূর্ণ শব্দের তালিকা, অনুশীলন এবং একটি "
+"ইন্টার‍্যাকটিভ কুইজ।"
 
 #: templates/pages/home.html:124
 msgid "Free modules"
@@ -2249,7 +2258,9 @@ msgstr "অন্য মিউজিশিয়ানদের সঙ্গে 
 msgid ""
 "Join the course Discord community to ask questions, share your progress, and "
 "take part in live video discussions."
-msgstr "কোর্সের Discord কমিউনিটিতে যোগ দিন। প্রশ্ন করুন, নিজের অগ্রগতি শেয়ার করুন এবং লাইভ ভিডিও আলোচনায় অংশ নিন।"
+msgstr ""
+"কোর্সের Discord কমিউনিটিতে যোগ দিন। প্রশ্ন করুন, নিজের অগ্রগতি শেয়ার করুন এবং লাইভ "
+"ভিডিও আলোচনায় অংশ নিন।"
 
 #: templates/pages/home.html:177
 msgid "Ready to get started?"
@@ -2263,8 +2274,11 @@ msgid ""
 msgid_plural ""
 "Enter your email below to get free access to the first %(count)s modules and "
 "start learning today."
-msgstr[0] "নিচে আপনার ইমেইল দিন। প্রথম মডিউলে বিনামূল্যে অ্যাক্সেস নিয়ে আজই শেখা শুরু করুন।"
-msgstr[1] "নিচে আপনার ইমেইল দিন। প্রথম %(count)sটি মডিউলে বিনামূল্যে অ্যাক্সেস নিয়ে আজই শেখা শুরু করুন।"
+msgstr[0] ""
+"নিচে আপনার ইমেইল দিন। প্রথম মডিউলে বিনামূল্যে অ্যাক্সেস নিয়ে আজই শেখা শুরু করুন।"
+msgstr[1] ""
+"নিচে আপনার ইমেইল দিন। প্রথম %(count)sটি মডিউলে বিনামূল্যে অ্যাক্সেস নিয়ে আজই শেখা "
+"শুরু করুন।"
 
 #: templates/pages/home.html:195
 msgid "Get free access"
