@@ -10,6 +10,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone, translation
 
+from accounts.forms import RegisterForm
 from core.testing import EnglishPagesMixin
 
 User = get_user_model()
@@ -86,7 +87,58 @@ class RegistrationTests(EnglishPagesMixin, TestCase):
             },
         )
         self.assertEqual(User.objects.count(), 0)
-        self.assertContains(response, "entirely numeric")
+        self.assertContains(response, "not only numbers")
+
+    def test_a_five_character_password_is_refused(self):
+        response = self.client.post(
+            reverse("accounts:register"), {**SIGNUP, "password1": "q7#Lm", "password2": "q7#Lm"}
+        )
+        self.assertEqual(User.objects.count(), 0)
+        self.assertContains(response, "at least 6 characters")
+
+    def test_a_six_character_password_is_accepted(self):
+        response = self.client.post(
+            reverse("accounts:register"), {**SIGNUP, "password1": "q7#Lm2", "password2": "q7#Lm2"}
+        )
+        self.assertRedirects(response, reverse("accounts:confirm_sent"))
+        self.assertTrue(User.objects.get().check_password("q7#Lm2"))
+
+    def test_the_form_hints_the_minimum_length(self):
+        response = self.client.get(reverse("accounts:register"))
+        self.assertContains(response, "At least 6 characters")
+        self.assertContains(response, 'minlength="6"', count=2)
+        self.assertContains(response, "data-password-match-status hidden")
+        self.assertContains(response, 'data-text-numeric="Use at least one letter')
+
+    def register_errors(self, **data):
+        response = self.client.post(reverse("accounts:register"), {**SIGNUP, **data})
+        self.assertEqual(User.objects.count(), 0)
+        return response.context["form"].errors
+
+    def test_password_rules_are_shown_under_the_password_not_the_confirmation(self):
+        errors = self.register_errors(password1="12345", password2="12345")
+        self.assertEqual(len(errors["password1"]), 3)
+        self.assertNotIn("password2", errors)
+
+    def test_a_mismatch_is_shown_under_the_confirmation(self):
+        errors = self.register_errors(password1="q7#Lm2zz", password2="q7#Lm2zy")
+        self.assertEqual(errors["password2"], ["The two passwords do not match."])
+
+    def test_a_common_password_is_refused(self):
+        errors = self.register_errors(password1="password", password2="password")
+        self.assertIn("too common", errors["password1"][0])
+
+    def test_a_password_like_the_name_is_refused(self):
+        errors = self.register_errors(password1="ahmedrafiq", password2="ahmedrafiq")
+        self.assertEqual(
+            errors["password1"], ["This password is too close to your name or email."]
+        )
+
+    def test_password_errors_are_in_bangla_on_the_bangla_form(self):
+        with translation.override("bn"):
+            form = RegisterForm({**SIGNUP, "password1": "123456", "password2": "123456"})
+            self.assertFalse(form.is_valid())
+            self.assertIn("শুধু সংখ্যা নয়", " ".join(form.errors["password1"]))
 
     def test_the_home_page_email_box_opens_the_form_filled_in(self):
         response = self.client.post(

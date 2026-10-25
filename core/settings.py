@@ -111,9 +111,22 @@ LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "courses:dashboard"
 LOGOUT_REDIRECT_URL = "pages:home"
 
+PASSWORD_MIN_LENGTH = 6
+
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    # Django's defaults look for `first_name`/`last_name`; this user model has
+    # one `full_name`.
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "OPTIONS": {"user_attributes": ("full_name", "email")},
+    },
+    # Six, not Django's eight. The registration form reads the same number
+    # for its hint and `minlength`; the common and numeric checks below still
+    # turn away the weakest choices.
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": PASSWORD_MIN_LENGTH},
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]

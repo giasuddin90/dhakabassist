@@ -169,6 +169,166 @@
     });
   }
 
+  /* -- Password checks -------------------------------------------------- */
+
+  // Registration. Under "Password", the server's rules are listed up front;
+  // each one gets a tick as soon as it is met, and a cross once the student
+  // has left the field without meeting it (not mid-word). Under "Confirm
+  // password", a line fills while the start matches, turns red once the two
+  // differ, and goes green with a tick when they agree and the password
+  // passes. The server repeats every check.
+  var matchGroup = document.querySelector("[data-password-match]");
+  if (matchGroup) {
+    var passwords = matchGroup.querySelectorAll("input[type=password]");
+    var matchStatus = matchGroup.querySelector("[data-password-match-status]");
+    var matchText = matchGroup.querySelector("[data-password-match-text]");
+    var checklist = matchGroup.querySelector("[data-password-checklist]");
+    var signupForm = matchGroup.closest("form");
+
+    if (passwords.length === 2 && matchStatus && matchText && checklist && signupForm) {
+      var first = passwords[0];
+      var second = passwords[1];
+      var firstLabel = first.closest(".field");
+      var secondLabel = second.closest(".field");
+      var confirmBox = matchStatus.parentElement;
+      var minLength = parseInt(first.getAttribute("minlength") || "0", 10);
+      var wording = matchGroup.dataset;
+      var touched = false;
+      var edited = false;
+
+      // Django's UserAttributeSimilarityValidator: it compares which
+      // characters two strings share (SequenceMatcher.quick_ratio), not their
+      // order, against the name, the email and each word in them.
+      var tooSimilar = function (password) {
+        var chars = Array.from(password.toLowerCase());
+        return ["full_name", "email"].some(function (name) {
+          var input = signupForm.elements[name];
+          var value = input ? input.value.trim().toLowerCase() : "";
+          if (!value) return false;
+          return value.split(/[^\p{L}\p{N}_]+/u).concat(value).some(function (part) {
+            var partChars = Array.from(part);
+            if (chars.length >= 10 * partChars.length && partChars.length < 0.35 * chars.length) {
+              return false;
+            }
+            var counts = {};
+            partChars.forEach(function (ch) { counts[ch] = (counts[ch] || 0) + 1; });
+            var shared = 0;
+            chars.forEach(function (ch) {
+              if (counts[ch]) {
+                counts[ch] -= 1;
+                shared += 1;
+              }
+            });
+            return (2 * shared) / (chars.length + partChars.length) >= 0.7;
+          });
+        });
+      };
+
+      // The rules the browser can check. "Too common" needs the server's
+      // list, so that item is only ever marked by a post.
+      var check = function (password) {
+        return {
+          short: Array.from(password).length < minLength,
+          numeric: /^\p{Nd}+$/u.test(password),
+          similar: password !== "" && tooSimilar(password),
+        };
+      };
+
+      var clearServerErrors = function (label) {
+        label.classList.remove("field--invalid");
+        label.querySelectorAll(".field__error").forEach(function (error) { error.remove(); });
+      };
+
+      var paint = function () {
+        var a = first.value;
+        var b = second.value;
+        var rules = check(a);
+        var passes = !rules.short && !rules.numeric && !rules.similar;
+        var show = touched && a !== "";
+
+        if (edited) firstLabel.classList.toggle("field--invalid", show && !passes);
+        var met = {
+          password_too_short: !rules.short,
+          password_entirely_numeric: !rules.numeric,
+          password_too_similar: !rules.similar,
+        };
+        checklist.querySelectorAll("[data-rule]").forEach(function (item) {
+          var ok = met[item.dataset.rule];
+          var isMet = a !== "" && ok === true;
+          // A rule only the server checks keeps the last post's mark until
+          // the password is changed.
+          var isFailed = ok === undefined ? item.classList.contains("is-failed") && !edited
+            : show && !ok;
+          item.classList.toggle("is-met", isMet);
+          item.classList.toggle("is-failed", isFailed);
+          var status = item.querySelector("[data-rule-status]");
+          var text = isMet ? wording.textMet : isFailed ? wording.textUnmet : "";
+          if (status && status.textContent !== text) status.textContent = text;
+        });
+
+        var state = "";
+        var fill = 0;
+        if (b && a === b) {
+          state = passes ? "match" : "fix";
+          fill = 1;
+        } else if (b && a.indexOf(b) === 0) {
+          fill = b.length / a.length;
+        } else if (b) {
+          state = "mismatch";
+          fill = 1;
+        }
+        confirmBox.classList.toggle("is-match", state === "match");
+        confirmBox.classList.toggle("is-mismatch", state === "mismatch");
+        matchStatus.style.setProperty("--pw-fill", String(fill));
+        var message = {
+          match: wording.textMatch,
+          mismatch: wording.textMismatch,
+          fix: wording.textFix,
+        }[state] || "";
+        if (matchText.textContent !== message) matchText.textContent = message;
+      };
+
+      first.addEventListener("input", function () {
+        if (!edited) clearServerErrors(firstLabel);
+        edited = true;
+        paint();
+      });
+      first.addEventListener("blur", function () {
+        touched = true;
+        paint();
+      });
+      second.addEventListener("input", function () {
+        clearServerErrors(secondLabel);
+        touched = true;
+        paint();
+      });
+      ["full_name", "email"].forEach(function (name) {
+        var input = signupForm.elements[name];
+        if (input) input.addEventListener("input", paint);
+      });
+
+      // Stop a post the server would only send back, which would also empty
+      // both password fields. Similarity is left to the server to be safe.
+      signupForm.addEventListener("submit", function (event) {
+        var a = first.value;
+        var rules = check(a);
+        var badPassword = a !== "" && (rules.short || rules.numeric);
+        var mismatch = second.value !== "" && a !== second.value;
+        if (!badPassword && !mismatch) return;
+        event.preventDefault();
+        touched = true;
+        edited = true;
+        paint();
+        (badPassword ? first : second).focus();
+      });
+
+      matchStatus.hidden = false;
+      // Autofill or going back can leave values in both fields already.
+      if (first.value) touched = true;
+      paint();
+    }
+  }
+
   /* -- Video position --------------------------------------------------- */
 
   // Saves where the student paused, so "Resume" is accurate, and how many

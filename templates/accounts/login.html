@@ -31,8 +31,48 @@
       {% if mode == 'register' %}
         {% include "includes/field.html" with field=form.full_name %}
         {% include "includes/field.html" with field=form.email %}
-        {% include "includes/field.html" with field=form.password1 %}
-        {% include "includes/field.html" with field=form.password2 %}
+        {% comment %}The rule list is plain text without JS (a rule the
+           last post broke is marked); site.js ticks rules as they are met
+           and fills in the match line. The server runs every check either
+           way.{% endcomment %}
+        <div class="stack u-gap-16" data-password-match
+             data-text-match="{% translate 'Passwords match' %}"
+             data-text-mismatch="{% translate 'Passwords do not match yet' %}"
+             data-text-fix="{% translate 'Fix the password above first' %}"
+             data-text-met="{% translate 'Done' %}"
+             data-text-unmet="{% translate 'Not met yet' %}">
+          <div>
+            {% include "includes/field.html" with field=form.password1 %}
+            <ul class="pw-checklist" data-password-checklist>
+              {% for rule in form.password_rules %}
+                <li class="pw-checklist__item{% if rule.failed %} is-failed{% endif %}" data-rule="{{ rule.code }}">
+                  <span class="pw-checklist__mark" aria-hidden="true">
+                    <svg class="pw-checklist__tick" viewBox="0 0 16 16" width="16" height="16" focusable="false">
+                      <path d="M3 8.5l3.2 3L13 4.5" pathLength="1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <svg class="pw-checklist__cross" viewBox="0 0 16 16" width="16" height="16" focusable="false">
+                      <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span>{{ rule.text }}</span>
+                  <span class="visually-hidden" data-rule-status>{% if rule.failed %}{% translate "Not met yet" %}{% endif %}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="pw-confirm">
+            {% include "includes/field.html" with field=form.password2 %}
+            <div class="pw-match" data-password-match-status hidden>
+              <span class="pw-match__track"><span class="pw-match__bar"></span></span>
+              <span class="pw-match__note" aria-live="polite">
+                <svg class="pw-match__tick" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+                  <path d="M3 8.5l3.2 3L13 4.5" pathLength="1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span data-password-match-text></span>
+              </span>
+            </div>
+          </div>
+        </div>
       {% else %}
         {% include "includes/field.html" with field=form.username %}
         {% include "includes/field.html" with field=form.password %}

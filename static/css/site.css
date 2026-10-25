@@ -1587,10 +1587,204 @@ select {
   color: var(--err);
 }
 
+/* `.field.` so this outranks `.field input[type="…"]` above. */
 .field--invalid .field__input,
-.field--invalid input,
-.field--invalid textarea {
+.field.field--invalid input,
+.field.field--invalid textarea {
   border-color: var(--err);
+}
+
+/* Registration: a line under "Confirm password" that fills as the student
+ * types, then turns green with a tick when both passwords agree. site.js sets
+ * the state classes on `.pw-confirm` and `--pw-fill` (0 to 1) for the line. */
+.pw-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pw-match {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 30px;
+}
+
+.pw-match[hidden] {
+  display: none;
+}
+
+.pw-match__track {
+  display: block;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+
+.pw-match__bar {
+  display: block;
+  height: 100%;
+  background: var(--text-faint);
+  transform: scaleX(var(--pw-fill, 0));
+  transform-origin: left center;
+}
+
+.pw-match__note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.pw-match__tick {
+  display: none;
+  flex: none;
+}
+
+.pw-match__tick path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.pw-confirm.is-match input {
+  border-color: var(--ok);
+}
+
+.pw-confirm.is-match .pw-match__bar {
+  background: var(--ok);
+}
+
+.pw-confirm.is-match .pw-match__note {
+  color: var(--ok);
+  font-weight: 700;
+}
+
+.pw-confirm.is-match .pw-match__tick {
+  display: block;
+}
+
+.pw-confirm.is-match .pw-match__tick path {
+  stroke-dashoffset: 0;
+}
+
+.pw-confirm.is-mismatch .pw-match__bar {
+  background: var(--err);
+}
+
+.pw-confirm.is-mismatch .pw-match__note {
+  color: var(--err);
+}
+
+/* The password rules under "Password": a dot while untested, a green tick
+ * once met, a red cross once the student has left the field without it. */
+.pw-checklist {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.pw-checklist__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pw-checklist__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.pw-checklist__mark::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line-field);
+}
+
+.pw-checklist__tick,
+.pw-checklist__cross {
+  display: none;
+}
+
+.pw-checklist__tick path {
+  stroke-dasharray: 1;
+}
+
+.pw-checklist__item.is-met {
+  color: var(--ok);
+}
+
+.pw-checklist__item.is-failed {
+  color: var(--err);
+}
+
+.pw-checklist__item.is-met .pw-checklist__mark::before,
+.pw-checklist__item.is-failed .pw-checklist__mark::before {
+  display: none;
+}
+
+.pw-checklist__item.is-met .pw-checklist__tick,
+.pw-checklist__item.is-failed .pw-checklist__cross {
+  display: block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pw-checklist__item {
+    transition: color var(--slow) var(--ease);
+  }
+
+  .pw-checklist__item.is-met .pw-checklist__tick {
+    animation: pw-tick-in var(--slow) var(--ease);
+  }
+
+  .pw-checklist__item.is-met .pw-checklist__tick path {
+    animation: pw-tick-draw 0.4s var(--ease) 0.1s backwards;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pw-match__bar {
+    transition: transform var(--slow) var(--ease), background-color var(--slow) var(--ease);
+  }
+
+  .pw-confirm.is-match .pw-match__tick {
+    animation: pw-tick-in var(--slow) var(--ease);
+  }
+
+  /* The tick goes from display: none to shown, which a transition cannot
+     follow, so the stroke draws with keyframes instead. */
+  .pw-confirm.is-match .pw-match__tick path {
+    animation: pw-tick-draw 0.4s var(--ease) 0.1s backwards;
+  }
+}
+
+@keyframes pw-tick-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes pw-tick-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* The anti-spam sum: a small panel so it reads as one quick step, not one
