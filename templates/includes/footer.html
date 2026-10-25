@@ -5,7 +5,7 @@
       <div class="stack u-gap-14" style="max-width:320px">
         <img src="{% static 'img/logo-text-light.svg' %}" alt="{{ site.name }}"
              width="122" height="30" style="height:30px;align-self:flex-start" loading="lazy" decoding="async">
-        <p class="u-fs-15" style="line-height:1.6">{{ site.tagline }}</p>
+        <p class="u-fs-15" style="line-height:1.6">{% blocktranslate with name=site.name instructor=site.instructor %}{{ name }} by {{ instructor }}{% endblocktranslate %}</p>
       </div>
 
       <nav class="site-footer__links" aria-label="{% translate 'Footer' %}">
@@ -17,8 +17,7 @@
         </div>
         <div class="site-footer__group">
           <span class="site-footer__label">{{ site.name }}</span>
-          <a href="{% url 'pages:about' %}">{% translate "About" %}</a>
-          <a href="{% url 'pages:about' %}#contact">{% translate "Contact" %}</a>
+          <a href="{% url 'pages:contact' %}">{% translate "Contact" %}</a>
           {% if user.is_authenticated %}
             <a href="{% url 'courses:dashboard' %}">{% translate "My courses" %}</a>
           {% else %}

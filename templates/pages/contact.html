@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<section class="shell shell--narrow" style="padding-block:40px 80px">
+  {% include "includes/breadcrumbs.html" %}
+
+  <div class="stack u-gap-22" style="margin-top:24px">
+    <p class="eyebrow">{% translate "Contact" %}</p>
+    <h1 class="display-2">{% translate "Send a message" %}</h1>
+    <p class="lede">{% translate "Questions about the course, payment or your account? We reply within two working days." %}</p>
+
+    <form method="post" class="stack u-gap-16" novalidate>
+      {% csrf_token %}
+      {% include "includes/form_errors.html" %}
+      {{ form.website }}
+      {% include "includes/field.html" with field=form.name %}
+      {% include "includes/field.html" with field=form.email %}
+      {% include "includes/field.html" with field=form.message %}
+      {% include "includes/captcha_field.html" %}
+      <button class="btn" type="submit" style="align-self:flex-start">{% translate "Send message" %}</button>
+    </form>
+
+    <address class="u-fs-16" style="border-top:1px solid var(--line);padding-top:18px;line-height:1.7;font-style:normal">
+      <a href="mailto:{{ site.email }}">{{ site.email }}</a><br>{{ site.location }}
+    </address>
+  </div>
+</section>
+{% endblock %}

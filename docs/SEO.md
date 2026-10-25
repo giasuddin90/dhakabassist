@@ -52,7 +52,7 @@ than sitting in unconnected blocks:
 | --- | --- |
 | Home | `EducationalOrganization`, `Course` (with `Offer` and `CourseInstance`), `FAQPage` |
 | Course | `EducationalOrganization`, `Course`, `BreadcrumbList` |
-| About | `EducationalOrganization`, `Person`, `BreadcrumbList` |
+| Contact | `EducationalOrganization`, `BreadcrumbList` |
 | FAQ | `EducationalOrganization`, `FAQPage`, `BreadcrumbList` |
 | Legal | `EducationalOrganization`, `Article`, `BreadcrumbList` |
 

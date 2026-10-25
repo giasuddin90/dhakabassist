@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load static i18n %}
 
 {% block content %}
 {% if course %}
@@ -10,19 +10,20 @@
       <h1 class="display-1" id="hero-title">{% translate "Learn to read, hear and understand music." %}</h1>
       <p class="lede">{{ course.summary }}</p>
       <div class="cluster" style="margin-top:6px">
-        <a class="btn" href="{% url 'accounts:register' %}">{% blocktranslate with number=course.free_module.number_plain|default:'1' %}Start Module {{ number }} free{% endblocktranslate %}</a>
+        <a class="btn" href="{% url 'accounts:register' %}">{% blocktranslate with number=course.free_module.number_plain|default:'1' %}Start Module {{ number }}{% endblocktranslate %}</a>
         <a class="btn btn--outline" href="{% url 'orders:checkout' course.slug %}">{% translate "Enroll now" %}</a>
       </div>
       <p class="meta-row" style="margin-top:8px">
         <span>{% blocktranslate count count=course.module_count %}{{ count }} module{% plural %}{{ count }} modules{% endblocktranslate %}</span>
-        {% if course.free_module %}<span>{% blocktranslate with number=course.free_module.number_plain %}Module {{ number }} free{% endblocktranslate %}</span>{% endif %}
         <span>{% translate "Video, audio and notation" %}</span>
       </p>
     </div>
 
     <div style="position:relative;max-width:520px;justify-self:end;width:100%">
       <div class="media media--square">
-        {% include "includes/instructor_photo.html" with author=course.author name=course.author_name sizes="(max-width: 768px) 92vw, 520px" priority=True %}
+        <img src="{% static 'img/circle-of-fifths.svg' %}" width="1200" height="1200"
+             alt="{% translate 'The circle of fifths: the twelve major keys and their key signatures' %}"
+             fetchpriority="high" decoding="async">
       </div>
       {% if course.trailer_embed_url %}
         <a class="trailer-cta" href="{{ course.get_absolute_url }}#trailer">
@@ -99,7 +100,6 @@
           step-by-step path through the theory every musician uses.
         {% endblocktranslate %}</p>
       {% endif %}
-      <a class="btn-link" href="{% url 'pages:about' %}" style="align-self:flex-start">{% blocktranslate with name=course.author_name %}More about {{ name }}{% endblocktranslate %}</a>
     </div>
   </section>
 
@@ -151,7 +151,7 @@
         {% if user.is_authenticated %}
           <a class="btn btn--light btn--block" href="{{ free.get_absolute_url }}">{% blocktranslate with number=free.number_plain %}Open Module {{ number }}{% endblocktranslate %}</a>
         {% else %}
-          <a class="btn btn--light btn--block" href="{% url 'accounts:register' %}">{% blocktranslate with number=free.number_plain %}Start Module {{ number }} free{% endblocktranslate %}</a>
+          <a class="btn btn--light btn--block" href="{% url 'accounts:register' %}">{% blocktranslate with number=free.number_plain %}Start Module {{ number }}{% endblocktranslate %}</a>
           <p class="free-card__note">{% translate "Already have an account?" %} <a href="{% url 'accounts:login' %}">{% translate "Log in" %}</a></p>
         {% endif %}
       </article>
@@ -183,7 +183,7 @@
   <section class="shell section section--loose stack u-gap-18">
     <h1 class="display-2">{{ site.name }}</h1>
     <p class="lede">{{ site.tagline }} {% translate "The first course is being prepared and will be published shortly." %}</p>
-    <a class="btn" href="{% url 'pages:about' %}" style="align-self:flex-start">{% translate "Get in touch" %}</a>
+    <a class="btn" href="{% url 'pages:contact' %}" style="align-self:flex-start">{% translate "Get in touch" %}</a>
   </section>
 {% endif %}
 {% endblock %}

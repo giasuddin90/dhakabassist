@@ -34,10 +34,10 @@
         </tbody>
       </table>
     </div>
-    {% url 'pages:about' as about_url %}
+    {% url 'pages:contact' as contact_url %}
     <p class="u-fs-14 muted">{% blocktranslate trimmed %}
       Receipts are emailed at the time of payment. Need one again?
-      <a href="{{ about_url }}#contact">Ask us</a>.
+      <a href="{{ contact_url }}">Ask us</a>.
     {% endblocktranslate %}</p>
   {% else %}
     {% url 'courses:list' as list_url %}

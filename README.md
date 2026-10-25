@@ -30,7 +30,7 @@ cp .env.example .env && .venv/bin/python manage.py migrate
 `import_library` loads the diagrams and audio from `MEDIA_ROOT/markup_media`;
 `seed_course` then loads the course from the Bangla and English Markdown in
 `MEDIA_ROOT/markup_content`: the nine modules, their lessons and quizzes, the
-course author (bio and photo, which the home and About pages show), plus the
+course author (bio and photo, which the home and course pages show), plus the
 FAQs and the three legal pages in both languages from
 [pages/seed_content.py](pages/seed_content.py). It is idempotent, so re-running
 it updates rather than duplicates; it never replaces an author photo uploaded in
@@ -40,7 +40,7 @@ the panel. Add `--dry-run` to check the files without saving.
 
 | App | What lives there |
 | --- | --- |
-| `pages` | Home, about, contact, FAQ, legal pages, SEO helpers, sitemap, `robots.txt`, `llms.txt` |
+| `pages` | Home, contact, FAQ, legal pages, SEO helpers, sitemap, `robots.txt`, `llms.txt` |
 | `courses` | Course, module, media, quiz, enrolment, progress — plus the access rules and course media |
 | `accounts` | Email-keyed user, registration, login, password reset, account settings |
 | `orders` | Checkout, payment gateways, orders, receipts |

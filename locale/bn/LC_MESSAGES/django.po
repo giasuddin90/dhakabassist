@@ -88,8 +88,8 @@ msgid "Date"
 msgstr "তারিখ"
 
 #, python-format
-msgid "Receipts are emailed at the time of payment. Need one again? <a href=\"%(about_url)s#contact\">Ask us</a>."
-msgstr "পেমেন্টের সময়ই রসিদ ইমেইলে পাঠানো হয়। আবার দরকার? <a href=\"%(about_url)s#contact\">আমাদের জানান</a>।"
+msgid "Receipts are emailed at the time of payment. Need one again? <a href=\"%(contact_url)s\">Ask us</a>."
+msgstr "পেমেন্টের সময়ই রসিদ ইমেইলে পাঠানো হয়। আবার দরকার? <a href=\"%(contact_url)s\">আমাদের জানান</a>।"
 
 #, python-format
 msgid "You have no orders yet. <a href=\"%(list_url)s\">Browse the course</a>."
@@ -135,8 +135,8 @@ msgid "If an account exists for that address, a reset link is on its way. The li
 msgstr "ওই ঠিকানায় কোনো অ্যাকাউন্ট থাকলে রিসেট লিংক পাঠানো হচ্ছে। লিংকটি সীমিত সময়ের জন্য বৈধ।"
 
 #, python-format
-msgid "Nothing arrived? Check your spam folder, or <a href=\"%(about_url)s#contact\">contact us</a>."
-msgstr "কিছু আসেনি? স্প্যাম ফোল্ডার দেখুন, অথবা <a href=\"%(about_url)s#contact\">আমাদের সঙ্গে যোগাযোগ করুন</a>।"
+msgid "Nothing arrived? Check your spam folder, or <a href=\"%(contact_url)s\">contact us</a>."
+msgstr "কিছু আসেনি? স্প্যাম ফোল্ডার দেখুন, অথবা <a href=\"%(contact_url)s\">আমাদের সঙ্গে যোগাযোগ করুন</a>।"
 
 msgid "Save changes"
 msgstr "পরিবর্তন সংরক্ষণ করুন"
@@ -459,9 +459,6 @@ msgstr "মূল্য"
 msgid "FAQ"
 msgstr "প্রশ্নোত্তর"
 
-msgid "About"
-msgstr "পরিচিতি"
-
 msgid "Contact"
 msgstr "যোগাযোগ"
 
@@ -595,13 +592,6 @@ msgstr "কিছু একটা সমস্যা হয়েছে"
 msgid "The error has been logged. Please try again in a moment — your progress and any completed payment are safe."
 msgstr "ত্রুটিটি লিপিবদ্ধ করা হয়েছে। একটু পরে আবার চেষ্টা করুন — আপনার অগ্রগতি ও সম্পন্ন পেমেন্ট নিরাপদ আছে।"
 
-#, python-format
-msgid "%(name)s is an independent musician and music educator based in Dhaka, Bangladesh. He teaches bass and music theory to students of all ages."
-msgstr "%(name)s ঢাকা, বাংলাদেশভিত্তিক একজন স্বাধীন সংগীতশিল্পী ও সংগীত শিক্ষক। তিনি সব বয়সের শিক্ষার্থীদের বেস ও সংগীত তত্ত্ব শেখান।"
-
-msgid "Foundations of Music brings his classroom approach online: short lessons, clear notation, real audio examples and quizzes that make sure each idea is understood before moving on."
-msgstr "সংগীতের ভিত্তি তাঁর শ্রেণিকক্ষের পদ্ধতিকে অনলাইনে নিয়ে এসেছে: ছোট পাঠ, স্পষ্ট স্বরলিপি, আসল অডিও উদাহরণ আর কুইজ, যাতে এগোনোর আগে প্রতিটি ধারণা পরিষ্কার হয়।"
-
 msgid "Send a message"
 msgstr "বার্তা পাঠান"
 
@@ -621,15 +611,11 @@ msgid "No questions have been published yet."
 msgstr "এখনও কোনো প্রশ্ন প্রকাশিত হয়নি।"
 
 #, python-format
-msgid "Still unsure? <a href=\"%(about_url)s#contact\">Send a message</a> and we will reply within two working days."
-msgstr "এখনও নিশ্চিত নন? <a href=\"%(about_url)s#contact\">বার্তা পাঠান</a>, দুই কর্মদিবসের মধ্যে আমরা উত্তর দেব।"
+msgid "Still unsure? <a href=\"%(contact_url)s\">Send a message</a> and we will reply within two working days."
+msgstr "এখনও নিশ্চিত নন? <a href=\"%(contact_url)s\">বার্তা পাঠান</a>, দুই কর্মদিবসের মধ্যে আমরা উত্তর দেব।"
 
 msgid "Learn to read, hear and understand music."
 msgstr "সংগীত পড়তে, শুনতে ও বুঝতে শিখুন।"
-
-#, python-format
-msgid "Start Module %(number)s free"
-msgstr "বিনামূল্যে মডিউল %(number)s শুরু করুন"
 
 msgid "Video, audio and notation"
 msgstr "ভিডিও, অডিও ও স্বরলিপি"
@@ -658,10 +644,6 @@ msgstr "আপনার শিক্ষক"
 #, python-format
 msgid "An independent musician and music educator based in Dhaka. %(title)s is the course he wished existed when he started: a clear, step-by-step path through the theory every musician uses."
 msgstr "ঢাকাভিত্তিক একজন স্বাধীন সংগীতশিল্পী ও সংগীত শিক্ষক। %(title)s সেই কোর্স, যা তিনি শুরুর দিনগুলোতে চেয়েছিলেন: প্রত্যেক সংগীতশিল্পীর ব্যবহৃত তত্ত্বের এক স্পষ্ট, ধাপে ধাপে পথ।"
-
-#, python-format
-msgid "More about %(name)s"
-msgstr "%(name)s সম্পর্কে আরও"
 
 msgid "One payment. Lifetime access."
 msgstr "একবার পরিশোধ। আজীবন অ্যাক্সেস।"
@@ -1434,10 +1416,6 @@ msgstr "পাতা পাওয়া যায়নি"
 msgid "The page you asked for does not exist."
 msgstr "আপনি যে পাতাটি চেয়েছেন সেটি নেই।"
 
-#, python-format
-msgid "%(name)s is an independent musician and music educator based in Dhaka, teaching bass and music theory to students of all ages."
-msgstr "%(name)s ঢাকাভিত্তিক একজন স্বাধীন সংগীতশিল্পী ও সংগীত শিক্ষক, যিনি সব বয়সের শিক্ষার্থীদের বেস ও সংগীত তত্ত্ব শেখান।"
-
 msgid "Learn to read, hear and understand music"
 msgstr "সংগীত পড়তে, শুনতে ও বুঝতে শিখুন"
 
@@ -1449,10 +1427,6 @@ msgstr "কোর্স নিয়ে প্রশ্নোত্তর"
 
 msgid "Answers on prior knowledge, the free module, payment methods, access and refunds for Foundations of Music."
 msgstr "সংগীতের ভিত্তি কোর্সের পূর্বজ্ঞান, বিনামূল্যের মডিউল, পেমেন্ট পদ্ধতি, অ্যাক্সেস ও রিফান্ড নিয়ে উত্তর।"
-
-#, python-format
-msgid "About %(name)s"
-msgstr "%(name)s সম্পর্কে"
 
 # Signup email confirmation
 msgid "Confirm your email address before logging in. We sent you a link when you created your account."
@@ -1563,3 +1537,19 @@ msgstr "সংখ্যা দুটি যোগ করুন। এতে স�
 
 msgid "Quick check"
 msgstr "ছোট্ট যাচাই"
+
+#, python-format
+msgid "%(name)s by %(instructor)s"
+msgstr "%(instructor)s-এর %(name)s"
+
+msgid "The circle of fifths: the twelve major keys and their key signatures"
+msgstr "পঞ্চম বৃত্ত: বারোটি মেজর কী ও তাদের কী সিগনেচার"
+
+msgid "Contact us"
+msgstr "যোগাযোগ করুন"
+
+msgid "Questions about Foundations of Music, payment or your account? Send a message and we reply within two working days."
+msgstr "সংগীতের ভিত্তি, পেমেন্ট বা আপনার অ্যাকাউন্ট নিয়ে প্রশ্ন আছে? বার্তা পাঠান, দুই কর্মদিবসের মধ্যে আমরা উত্তর দেব।"
+
+msgid "Questions about the course, payment or your account? We reply within two working days."
+msgstr "কোর্স, পেমেন্ট বা আপনার অ্যাকাউন্ট নিয়ে প্রশ্ন আছে? দুই কর্মদিবসের মধ্যে আমরা উত্তর দিই।"

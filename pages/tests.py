@@ -7,6 +7,7 @@ from unittest import mock
 from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import translation
 
 from core.testing import EnglishPagesMixin
 from courses.models import Course, Module
@@ -128,6 +129,59 @@ class PublicPageTests(EnglishPagesMixin, TestCase):
         self.assertContains(response, 'aria-label="Breadcrumb"')
         self.assertContains(response, "BreadcrumbList")
 
+    def test_home_hero_shows_the_circle_of_fifths_and_plain_cta(self):
+        """The hero shows the diagram and "Start Module 1", with no "free" note."""
+        response = self.client.get(reverse("pages:home"))
+        self.assertContains(response, "img/circle-of-fifths.svg")
+        self.assertContains(response, "Start Module 1</a>", count=2)
+        self.assertNotContains(response, "Start Module 1 free")
+        self.assertNotContains(response, "<span>Module 1 free</span>")
+
+    def test_course_nav_link_goes_straight_to_the_course(self):
+        """"Course" in the header opens the course page, in its own language."""
+        pages = (
+            ("en", "/en/courses/foundations-of-music/"),
+            ("bn", "/courses/foundations-of-music/"),
+        )
+        for language, url in pages:
+            with self.subTest(language=language), translation.override(language):
+                response = self.client.get(reverse("pages:home"))
+                nav = response.content.decode().split('id="primary-nav"')[1].split("</nav>")[0]
+                self.assertIn(f'<a href="{url}"', nav)
+
+    def test_about_is_hidden_in_both_languages(self):
+        """No link to About, and its old address redirects to the contact form."""
+        for language in ("en", "bn"):
+            with self.subTest(language=language), translation.override(language):
+                response = self.client.get(reverse("pages:home"))
+                self.assertNotContains(response, "/about/")
+                redirect = self.client.get(f"{reverse('pages:home')}about/")
+                self.assertRedirects(redirect, reverse("pages:contact"), status_code=301)
+
+    def test_footer_names_the_site_and_instructor(self):
+        """The footer line reads "DhakaBassist by Tanveer Haque" in both languages."""
+        response = self.client.get(reverse("pages:home"))
+        self.assertContains(response, "DhakaBassist by Tanveer Haque")
+        with translation.override("bn"):
+            response = self.client.get(reverse("pages:home"))
+        self.assertContains(response, "তানভীর হক-এর DhakaBassist")
+
+    def test_contact_page_seo(self):
+        """Title, canonical URL, robots directive and JSON-LD types."""
+        response = self.client.get(reverse("pages:contact"))
+        self.assertContains(response, "<title>Contact us · DhakaBassist</title>")
+        self.assertContains(
+            response, f'<link rel="canonical" href="{settings.SITE["base_url"]}/en/contact/">'
+        )
+        self.assertContains(response, '<meta name="robots" content="index, follow">')
+        body = response.content.decode()
+        start = body.index('<script type="application/ld+json">') + len(
+            '<script type="application/ld+json">'
+        )
+        payload = json.loads(body[start : body.index("</script>", start)])
+        types = {node["@type"] for node in payload["@graph"]}
+        self.assertEqual(types, {"EducationalOrganization", "BreadcrumbList"})
+
     def test_404_page_uses_the_site_layout(self):
         response = self.client.get("/en/no-such-page/")
         self.assertEqual(response.status_code, 404)
@@ -173,7 +227,7 @@ class DiscoveryFileTests(TestCase):
 class ContactFormTests(EnglishPagesMixin, TestCase):
     def captcha(self):
         """The token and right answer from a fresh contact form."""
-        form = self.client.get(reverse("pages:about")).context["form"]
+        form = self.client.get(reverse("pages:contact")).context["form"]
         return form["captcha_token"].value(), sum(form.captcha_operands)
 
     def post(self, **fields):
@@ -186,7 +240,7 @@ class ContactFormTests(EnglishPagesMixin, TestCase):
             "captcha": answer,
             **fields,
         }
-        return self.client.post(reverse("pages:about"), data, follow=True)
+        return self.client.post(reverse("pages:contact"), data, follow=True)
 
     def test_a_valid_message_is_saved(self):
         response = self.post()
@@ -194,7 +248,7 @@ class ContactFormTests(EnglishPagesMixin, TestCase):
         self.assertContains(response, "your message has been sent")
 
     def test_the_question_is_on_the_page(self):
-        response = self.client.get(reverse("pages:about"))
+        response = self.client.get(reverse("pages:contact"))
         first, second = response.context["form"].captcha_operands
         self.assertContains(response, f"What is {first} + {second}?")
         self.assertContains(response, 'name="captcha_token"')

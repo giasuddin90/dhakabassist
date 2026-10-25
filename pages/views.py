@@ -7,7 +7,6 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import translation
 from django.utils.decorators import method_decorator
-from django.utils.text import Truncator
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.decorators.cache import cache_control
@@ -60,14 +59,6 @@ def primary_course():
     )
 
 
-def primary_author():
-    """The author of the home page's course: the instructor the About page introduces."""
-    course = (
-        Course.published.select_related("author").order_by(*Course.HOME_ORDERING).first()
-    )
-    return course.author if course else None
-
-
 class HomeView(TemplateView):
     template_name = "pages/home.html"
 
@@ -96,14 +87,14 @@ class HomeView(TemplateView):
         return context
 
 
-class AboutView(FormView):
-    """About the instructor, with the contact form on the same page."""
+class ContactView(FormView):
+    """The contact form."""
 
-    template_name = "pages/about.html"
+    template_name = "pages/contact.html"
     form_class = ContactForm
 
     def get_success_url(self):
-        return reverse("pages:about") + "#contact"
+        return reverse("pages:contact")
 
     def form_valid(self, form):
         message = form.save()
@@ -126,31 +117,14 @@ class AboutView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        author = primary_author()
-        name = author.name if author else settings.SITE["instructor"]
-        if author and author.bio:
-            description = Truncator(author.bio_text).chars(155)
-        else:
-            description = _(
-                "%(name)s is an independent musician and music educator based in "
-                "Dhaka, teaching bass and music theory to students of all ages."
-            ) % {"name": name}
-        person = (
-            seo.author_person(author, description)
-            if author
-            else seo.person(name, description)
-        )
-        context.update(
-            author=author,
-            author_name=name,
-            seo=seo.SEO(
-                title=_("About %(name)s") % {"name": name},
-                description=description,
-                canonical_path=reverse("pages:about"),
-                kind="profile",
-                breadcrumbs=[seo.Breadcrumb(_("Home"), "/"), seo.Breadcrumb(_("About"))],
-                schemas=[person],
+        context["seo"] = seo.SEO(
+            title=_("Contact us"),
+            description=_(
+                "Questions about Foundations of Music, payment or your account? "
+                "Send a message and we reply within two working days."
             ),
+            canonical_path=reverse("pages:contact"),
+            breadcrumbs=[seo.Breadcrumb(_("Home"), "/"), seo.Breadcrumb(_("Contact"))],
         )
         return context
 

@@ -21,9 +21,9 @@
     {% endfor %}
   </div>
 
-  {% url 'pages:about' as about_url %}
+  {% url 'pages:contact' as contact_url %}
   <p class="u-fs-16">{% blocktranslate trimmed %}
-    Still unsure? <a href="{{ about_url }}#contact">Send a message</a> and we will reply within two working days.
+    Still unsure? <a href="{{ contact_url }}">Send a message</a> and we will reply within two working days.
   {% endblocktranslate %}</p>
 </section>
 {% endblock %}

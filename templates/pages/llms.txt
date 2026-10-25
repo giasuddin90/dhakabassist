@@ -47,8 +47,8 @@ Every public page exists in Bangla, the primary language, and in English. The li
 
 - [Home]({{ base_url }}{% url 'pages:home' %}): course overview, curriculum summary, pricing and FAQ
 - [Courses]({{ base_url }}{% url 'courses:list' %}): every published course
-- [About {{ site.instructor }}]({{ base_url }}{% url 'pages:about' %}): instructor background and the contact form
 - [FAQ]({{ base_url }}{% url 'pages:faq' %}): answers on prior knowledge, the free module, payment, access and refunds
+- [Contact]({{ base_url }}{% url 'pages:contact' %}): the contact form
 - [Terms & Conditions]({{ base_url }}{% url 'pages:legal' 'terms' %})
 - [Privacy Policy]({{ base_url }}{% url 'pages:legal' 'privacy' %})
 - [Refund Policy]({{ base_url }}{% url 'pages:legal' 'refunds' %})

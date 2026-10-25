@@ -111,7 +111,7 @@ class AuthorProfileTests(EnglishPagesMixin, TestCase):
 
 @override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))
 class AuthorOnPublicPagesTests(EnglishPagesMixin, TestCase):
-    """The home and About pages show the promoted course's author."""
+    """The home page shows the promoted course's author."""
 
     @classmethod
     def setUpTestData(cls):
@@ -135,21 +135,9 @@ class AuthorOnPublicPagesTests(EnglishPagesMixin, TestCase):
         self.assertContains(response, "<strong>harmony</strong>")
         self.assertNotContains(response, f'src="{static("img/instructor-640.jpg")}"')
 
-    def test_about_introduces_the_author(self):
-        """Heading, photo, title, meta description and Person schema all follow the author."""
-        response = self.client.get(reverse("pages:about"))
-        self.assertContains(response, "<h1 class=\"display-2\">Rumana Akter</h1>", html=True)
-        self.assertContains(response, self.author.photo_url)
-        self.assertContains(response, "<title>About Rumana Akter")
-        self.assertContains(
-            response, '<meta name="description" content="Teaches harmony in Chattogram'
-        )
-        self.assertContains(response, '"name": "Rumana Akter"')
-
     def test_without_an_author_the_pages_fall_back_to_the_site_instructor(self):
         """A course with no author still shows a name and a photo."""
         Course.objects.filter(pk=self.course.pk).update(author=None)
-        for name in ("pages:home", "pages:about"):
-            response = self.client.get(reverse(name))
-            self.assertContains(response, settings.SITE["instructor"])
-            self.assertContains(response, f'src="{static("img/instructor-640.jpg")}"')
+        response = self.client.get(reverse("pages:home"))
+        self.assertContains(response, settings.SITE["instructor"])
+        self.assertContains(response, f'src="{static("img/instructor-640.jpg")}"')
