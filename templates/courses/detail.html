@@ -45,13 +45,6 @@
     <div class="stack u-gap-18" id="curriculum">
       <div class="split" style="align-items:baseline">
         <h2 class="display-4">{% translate "Curriculum" %}</h2>
-        <p class="u-fs-15 muted">{% blocktranslate trimmed with number=course.free_numbers|default:'1' count count=course.free_modules|length|default:1 %}
-          Module {{ number }} is free. Each module unlocks
-          when you pass the previous quiz with 100%.
-        {% plural %}
-          Module {{ number }} are free. Each module unlocks
-          when you pass the previous quiz with 100%.
-        {% endblocktranslate %}</p>
       </div>
 
       <div class="ruled" data-accordion>

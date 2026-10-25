@@ -210,12 +210,6 @@ msgstr "লেখক পরিচিতি"
 msgid "Curriculum"
 msgstr "পাঠ্যক্রম"
 
-#, python-format
-msgid "Module %(number)s is free. Each module unlocks when you pass the previous quiz with 100%%."
-msgid_plural "Module %(number)s are free. Each module unlocks when you pass the previous quiz with 100%%."
-msgstr[0] "মডিউল %(number)s বিনামূল্যে। আগের কুইজে 100%% পেলে পরের মডিউল খুলে যায়।"
-msgstr[1] "মডিউল %(number)s বিনামূল্যে। আগের কুইজে 100%% পেলে পরের মডিউল খুলে যায়।"
-
 msgid "FREE"
 msgstr "বিনামূল্যে"
 
