@@ -590,7 +590,7 @@ class CoursePageTests(EnglishPagesMixin, TestCase):
     @override_settings(SITE={**settings.SITE, "course_banner_placeholder": "img/logo-full.svg"})
     def test_without_a_banner_the_placeholder_from_settings_shows(self):
         response = self.client.get(self.course.get_absolute_url())
-        self.assertContains(response, 'src="/static/img/logo-full.svg"')
+        self.assertContains(response, 'src="/static/img/logo-full.svg?v=')
 
 
 @override_settings(MEDIA_ROOT=Path(tempfile.mkdtemp()))

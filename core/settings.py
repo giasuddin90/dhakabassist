@@ -149,18 +149,21 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 # Hashed filenames let static files be cached for a year, but they need a
-# manifest from `collectstatic`, so development and tests serve files as-is.
+# manifest from `collectstatic`. Development and tests serve files as-is,
+# with the modification time in the URL so an edit is never served stale.
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
         "BACKEND": (
             "whitenoise.storage.CompressedManifestStaticFilesStorage"
             if PRODUCTION
-            else "django.contrib.staticfiles.storage.StaticFilesStorage"
+            else "core.storage.VersionedStaticFilesStorage"
         )
     },
 }
-WHITENOISE_MAX_AGE = 31536000
+# Hashed files are cached forever whatever this says; it covers the
+# unhashed ones, which must be rechecked or a change never reaches browsers.
+WHITENOISE_MAX_AGE = 60 if PRODUCTION else 0
 
 # Every upload is course material, so nothing under MEDIA_ROOT is served
 # directly: `courses.views.protected_asset` streams it after an enrolment

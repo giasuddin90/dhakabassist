@@ -51,7 +51,11 @@ Confirm with `manage.py check --deploy`, which must report no issues.
 ```
 
 `collectstatic` hashes and gzips every static file; with `DJANGO_DEBUG=0` it
-writes the manifest WhiteNoise needs, so skipping it breaks the site.
+writes the manifest WhiteNoise needs, so skipping it breaks the site. The
+hashed names (`site.3f2a9c1b.css`) change whenever a file does, so browsers
+cache them for a year and still pick up every deploy. In development `{% static %}`
+adds the file's modification time instead (`site.css?v=1761465600`), so an
+edit shows on the next reload without `collectstatic`.
 
 Then restart gunicorn.
 
