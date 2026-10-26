@@ -2184,6 +2184,22 @@ select {
   opacity: 0.8;
 }
 
+/* A quiet developer credit under the copyright row. The link keeps a 44px
+   tap target without making the text any bigger. */
+.site-footer__credit {
+  margin: -32px 0 -12px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.site-footer__credit a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* --------------------------------------------------------------- learning */
 
 .learn {
