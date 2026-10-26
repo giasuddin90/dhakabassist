@@ -384,7 +384,7 @@ def quiz_answer(request, slug, module_slug):
 @require_POST
 def quiz_advance(request, slug, module_slug):
     """Move to the next question, or finish the quiz and unlock what follows."""
-    _, module, _, quiz = load_quiz(request.user, slug, module_slug)
+    _, module, access, quiz = load_quiz(request.user, slug, module_slug)
     attempt = open_attempt(request.user, quiz)
     quiz_url = reverse("courses:quiz", kwargs={"slug": slug, "module_slug": module_slug})
 
@@ -420,7 +420,12 @@ def quiz_advance(request, slug, module_slug):
 
     progress, _ = ModuleProgress.objects.get_or_create(student=request.user, module=module)
     progress.mark_complete()
-    return redirect(quiz_url)
+    # Straight on to the next module, as `mark_module_complete` does. Going
+    # back to the quiz page would open a fresh attempt at question 1, since
+    # this one is now complete. A next module the student has not paid for
+    # shows the paywall.
+    next_state = access.next_state(module)
+    return redirect((next_state.module if next_state else module).get_absolute_url())
 
 
 @login_required

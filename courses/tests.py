@@ -315,6 +315,18 @@ class QuizTests(TestCase):
         self.assertIsNotNone(progress.completed_at)
         self.assertEqual(QuizAttempt.objects.get().score_percent, 100)
 
+    def test_finishing_the_quiz_goes_to_the_next_module(self):
+        Enrollment.objects.create(student=self.student, course=self.course)
+        right = self.question.choices.get(position=2)
+        self.client.post(
+            reverse("courses:quiz_answer", kwargs=self.kwargs),
+            {"question": self.question.pk, "choice": right.pk},
+        )
+        response = self.client.post(reverse("courses:quiz_advance", kwargs=self.kwargs))
+        self.assertRedirects(response, self.modules[1].get_absolute_url())
+        self.assertTemplateUsed(self.client.get(response.url), "courses/lesson.html")
+        self.assertEqual(QuizAttempt.objects.count(), 1, "no fresh attempt was opened")
+
     def test_the_quiz_cannot_be_finished_with_a_question_unsolved(self):
         self.client.get(reverse("courses:quiz", kwargs=self.kwargs))
         self.client.post(reverse("courses:quiz_advance", kwargs=self.kwargs))
