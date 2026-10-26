@@ -105,8 +105,9 @@ DJANGO_DEBUG=0 .venv/bin/python manage.py check --deploy
 
 ## Notes on choices
 
-**Django 5.2 LTS.** Pinned as `Django>=5.2,<6` in `requirements.txt`; it needs
-Python 3.10+ and the project targets 3.12+. Security support runs into 2028.
+**Django 6.1.** Pinned as `Django==6.1.2` in `requirements.txt`; it needs
+Python 3.12+ and PostgreSQL 15+. It is not an LTS release, so plan to move to
+the next LTS (6.2) once it ships.
 
 **Two admin interfaces.** `/manage/` is the custom panel from the design and
 covers the day-to-day work the brief lists. Django's own admin stays at

@@ -88,6 +88,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='mediaasset',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('file_bn', ''), _negated=True), models.Q(('file_en', ''), _negated=True), _connector='OR'), name='mediaasset_file_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('file_bn', ''), _negated=True), models.Q(('file_en', ''), _negated=True), _connector='OR'), name='mediaasset_file_in_some_language'),
         ),
     ]

@@ -239,42 +239,42 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='author',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('name_bn', ''), _negated=True), models.Q(('name_en', ''), _negated=True), _connector='OR'), name='author_name_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('name_bn', ''), _negated=True), models.Q(('name_en', ''), _negated=True), _connector='OR'), name='author_name_in_some_language'),
         ),
         migrations.AddConstraint(
             model_name='choice',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('text_bn', ''), _negated=True), models.Q(('text_en', ''), _negated=True), _connector='OR'), name='choice_text_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('text_bn', ''), _negated=True), models.Q(('text_en', ''), _negated=True), _connector='OR'), name='choice_text_in_some_language'),
         ),
         migrations.AddConstraint(
             model_name='course',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('title_bn', ''), _negated=True), models.Q(('title_en', ''), _negated=True), _connector='OR'), name='course_title_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('title_bn', ''), _negated=True), models.Q(('title_en', ''), _negated=True), _connector='OR'), name='course_title_in_some_language'),
         ),
         migrations.AddConstraint(
             model_name='course',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('summary_bn', ''), _negated=True), models.Q(('summary_en', ''), _negated=True), _connector='OR'), name='course_summary_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('summary_bn', ''), _negated=True), models.Q(('summary_en', ''), _negated=True), _connector='OR'), name='course_summary_in_some_language'),
         ),
         migrations.AddConstraint(
             model_name='course',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('description_bn', ''), _negated=True), models.Q(('description_en', ''), _negated=True), _connector='OR'), name='course_description_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('description_bn', ''), _negated=True), models.Q(('description_en', ''), _negated=True), _connector='OR'), name='course_description_in_some_language'),
         ),
         migrations.AddConstraint(
             model_name='lesson',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('title_bn', ''), _negated=True), models.Q(('title_en', ''), _negated=True), _connector='OR'), name='lesson_title_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('title_bn', ''), _negated=True), models.Q(('title_en', ''), _negated=True), _connector='OR'), name='lesson_title_in_some_language'),
         ),
         migrations.AddConstraint(
             model_name='libraryfile',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('title_bn', ''), _negated=True), models.Q(('title_en', ''), _negated=True), _connector='OR'), name='libraryfile_title_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('title_bn', ''), _negated=True), models.Q(('title_en', ''), _negated=True), _connector='OR'), name='libraryfile_title_in_some_language'),
         ),
         migrations.AddConstraint(
             model_name='mediaasset',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('title_bn', ''), _negated=True), models.Q(('title_en', ''), _negated=True), _connector='OR'), name='mediaasset_title_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('title_bn', ''), _negated=True), models.Q(('title_en', ''), _negated=True), _connector='OR'), name='mediaasset_title_in_some_language'),
         ),
         migrations.AddConstraint(
             model_name='module',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('title_bn', ''), _negated=True), models.Q(('title_en', ''), _negated=True), _connector='OR'), name='module_title_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('title_bn', ''), _negated=True), models.Q(('title_en', ''), _negated=True), _connector='OR'), name='module_title_in_some_language'),
         ),
         migrations.AddConstraint(
             model_name='question',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('text_bn', ''), _negated=True), models.Q(('text_en', ''), _negated=True), _connector='OR'), name='question_text_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('text_bn', ''), _negated=True), models.Q(('text_en', ''), _negated=True), _connector='OR'), name='question_text_in_some_language'),
         ),
     ]

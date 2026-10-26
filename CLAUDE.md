@@ -6,7 +6,7 @@ DhakaBassist: a learning platform where students study a nine-module music theor
 
 ## Stack
 
-Python 3.12+ · Django 5.2 · Bootstrap 5.3 · vanilla JavaScript · SQLite (dev) / PostgreSQL (prod).
+Python 3.12+ · Django 6.1 · Bootstrap 5.3 · vanilla JavaScript · SQLite (dev) / PostgreSQL (prod).
 
 - Server-rendered templates. No SPA, no npm, no build step.
 - Bootstrap and icons are vendored in `static/vendor/`. No CDN links.

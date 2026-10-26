@@ -1,7 +1,7 @@
 # Direct dependencies. Transitive packages are resolved by pip.
 #
-# Django 5.2 LTS (needs Python 3.10+; the project targets 3.12+).
-Django>=5.2,<6
+# Django 6.1 (needs Python 3.12+ and PostgreSQL 15+).
+Django==6.1.2
 
 # Lesson notes and legal pages are authored in Markdown and sanitised before
 # they are rendered.

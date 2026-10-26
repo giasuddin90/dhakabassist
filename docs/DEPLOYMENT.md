@@ -8,8 +8,8 @@ arrangement intact: nothing under `/media/` is served directly.
 
 | Piece | Choice | Why |
 | --- | --- | --- |
-| Python | 3.12 | Supported, and allows Django 5.2 LTS |
-| Django | 5.2 LTS | Security support into 2028 |
+| Python | 3.12 | The minimum Django 6.1 supports |
+| Django | 6.1 | Pinned to 6.1.2; move to 6.2 LTS when it ships |
 | Database | PostgreSQL 16 | Real backups, concurrent writes |
 | App server | gunicorn, 3 workers | Simple and dependable |
 | Web server | nginx | TLS, static files, course media |

@@ -62,18 +62,18 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='faq',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('question_bn', ''), _negated=True), models.Q(('question_en', ''), _negated=True), _connector='OR'), name='faq_question_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('question_bn', ''), _negated=True), models.Q(('question_en', ''), _negated=True), _connector='OR'), name='faq_question_in_some_language'),
         ),
         migrations.AddConstraint(
             model_name='faq',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('answer_bn', ''), _negated=True), models.Q(('answer_en', ''), _negated=True), _connector='OR'), name='faq_answer_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('answer_bn', ''), _negated=True), models.Q(('answer_en', ''), _negated=True), _connector='OR'), name='faq_answer_in_some_language'),
         ),
         migrations.AddConstraint(
             model_name='legalpage',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('title_bn', ''), _negated=True), models.Q(('title_en', ''), _negated=True), _connector='OR'), name='legalpage_title_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('title_bn', ''), _negated=True), models.Q(('title_en', ''), _negated=True), _connector='OR'), name='legalpage_title_in_some_language'),
         ),
         migrations.AddConstraint(
             model_name='legalpage',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('body_markdown_bn', ''), _negated=True), models.Q(('body_markdown_en', ''), _negated=True), _connector='OR'), name='legalpage_body_markdown_in_some_language'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('body_markdown_bn', ''), _negated=True), models.Q(('body_markdown_en', ''), _negated=True), _connector='OR'), name='legalpage_body_markdown_in_some_language'),
         ),
     ]
