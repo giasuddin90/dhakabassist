@@ -705,6 +705,107 @@ select {
   border-color: var(--text-faint);
 }
 
+/* ------------------------------------------------------------ pagination */
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.pager__pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pager__page,
+.pager__step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease);
+}
+
+a.pager__page:hover,
+a.pager__step:hover {
+  border-color: var(--ink);
+}
+
+.pager__page.is-current {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--parchment);
+}
+
+.pager__step.is-disabled {
+  color: var(--text-faint);
+  border-color: var(--line-soft);
+}
+
+.pager__gap {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  color: var(--text-muted);
+}
+
+/* On a phone the page numbers drop to their own row under Previous / Next. */
+@media (max-width: 575.98px) {
+  .pager__pages {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ------------------------------------------------------------- file tags */
+
+/* A file's type as a small tag, in the panel's library and on downloads. */
+.file-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 32px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--panel);
+  border: 1px solid var(--line-muted);
+  border-radius: var(--radius-xs);
+}
+
+.file-tag--audio {
+  color: var(--ok);
+  background: var(--ok-bg);
+  border-color: var(--ok);
+}
+
+.file-tag--image {
+  color: var(--ink);
+  background: var(--highlight);
+  border-color: var(--line-field);
+}
+
 /* ------------------------------------------------------------------ cards */
 
 .panel {
@@ -2463,6 +2564,10 @@ select {
 }
 
 /* Keeps a button its own width inside a column `.stack`. */
+.u-self-center {
+  align-self: center;
+}
+
 .u-self-start {
   align-self: flex-start;
 }
@@ -2658,4 +2763,83 @@ select {
   body {
     background: #fff;
   }
+}
+
+/* -------------------------------------------------------------- downloads */
+
+/* One card a row on a phone, two from tablets, three on wide screens. */
+.download-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .download-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .download-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.download-grid > li {
+  display: flex;
+}
+
+.download-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 24px;
+}
+
+.download-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.download-card__title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.download-card__meta {
+  gap: 4px 16px;
+}
+
+.download-card__text {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Pinned to the bottom, so buttons line up across a row of cards. */
+.download-card__action {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.download-filters {
+  --cluster-gap: 8px;
+}
+
+/* Tap-sized filter pills. */
+.download-filters .pill {
+  min-height: 44px;
 }

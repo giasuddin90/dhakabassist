@@ -143,6 +143,16 @@ links to a file makes it public. Library URLs carry a random key, so they
 cannot be found by counting. SVG files are served with a sandboxing
 Content-Security-Policy, so an SVG opened on its own cannot run script.
 
+Downloads (`downloads.Download`) are sold separately from the course and have
+nothing to do with the media library. Their files live under
+`media/downloads/<slug>/` and go out only through `downloads.views.download_file`,
+which asks `Download.is_available_to`: staff always; any signed-in account for
+a published free download; otherwise only a student with a paid order for it.
+Access is read from the order, so refunding it, or changing its status in
+`/manage/`, closes the file again with nothing else to update. A buyer keeps
+the file if staff later unpublish it. A download with orders cannot be
+deleted (`on_delete=PROTECT`).
+
 With Cloudflare Stream configured, playback uses a token signed per request
 that expires (two hours by default), so a copied URL stops working. The page
 contains only the token, never the video ID. This holds only for videos with

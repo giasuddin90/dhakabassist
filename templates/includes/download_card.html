@@ -1,0 +1,34 @@
+{% comment %}
+One download as a card. Pass `download`; the button follows whether it is
+free, bought (`download.pk` in `owned`, or `mine` on My downloads) or for sale.
+{% endcomment %}
+{% load i18n money %}
+<article class="panel download-card" id="download-{{ download.slug }}">
+  <div class="download-card__head">
+    <span class="file-tag{% if download.kind == 'audio' %} file-tag--audio{% endif %}" aria-hidden="true">{{ download.extension|upper|truncatechars:5 }}</span>
+    {% if download.is_free %}
+      <span class="badge badge--status badge--ok">{% translate "Free" %}</span>
+    {% else %}
+      <span class="badge badge--status badge--current">{{ download.price|taka }}</span>
+    {% endif %}
+  </div>
+
+  <h2 class="download-card__title">{{ download.title }}</h2>
+  <p class="meta-row download-card__meta"><span>{{ download.get_kind_display }}</span><span>{{ download.detail_line }}</span></p>
+  {% if download.description %}<p class="download-card__text">{{ download.description }}</p>{% endif %}
+
+  <div class="download-card__action">
+    {% if mine or download.pk in owned %}
+      <a class="btn btn--block" href="{{ download.get_file_url }}">{% translate "Download" %}<span class="visually-hidden"> {{ download.title }}</span></a>
+      <span class="u-fs-14 muted u-center">{% translate "Bought · download again at any time" %}</span>
+    {% elif download.is_free %}
+      <a class="btn btn--block" href="{{ download.get_file_url }}">
+        {% if user.is_authenticated %}{% translate "Download free" %}{% else %}{% translate "Log in to download" %}{% endif %}<span class="visually-hidden"> {{ download.title }}</span>
+      </a>
+    {% else %}
+      <a class="btn btn--block" href="{{ download.get_buy_url }}">
+        {% blocktranslate with price=download.price|taka %}Buy for {{ price }}{% endblocktranslate %}<span class="visually-hidden"> {{ download.title }}</span>
+      </a>
+    {% endif %}
+  </div>
+</article>

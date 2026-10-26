@@ -215,7 +215,7 @@
             <tr>
               <th scope="row">
                 <span class="dtable__name">{{ order.reference }}</span>
-                <span class="dtable__sub">{{ order.course.title }}{% if order.course.subtitle %} · {{ order.course.subtitle }}{% endif %} · {{ order.get_method_display }}</span>
+                <span class="dtable__sub">{{ order.item_title }}{% if order.course.subtitle %} · {{ order.course.subtitle }}{% endif %} · {{ order.get_method_display }}</span>
               </th>
               <td class="u-nowrap">{{ order.amount_display }}</td>
               <td>

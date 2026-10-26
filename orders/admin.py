@@ -11,13 +11,15 @@ class OrderAdmin(admin.ModelAdmin):
     there first, then record it.
     """
 
-    list_display = ("reference", "student", "course", "amount", "method", "status", "created_at")
-    list_filter = ("status", "method", "course")
+    list_display = (
+        "reference", "student", "course", "download", "amount", "method", "status", "created_at",
+    )
+    list_filter = ("status", "method", "course", "download")
     search_fields = ("reference", "gateway_reference", "student__email", "student__full_name")
     autocomplete_fields = ("student",)
     readonly_fields = ("reference", "callback_token", "created_at", "updated_at", "paid_at")
     fields = (
-        "reference", "student", "course", "amount", "method", "status",
+        "reference", "student", "course", "download", "amount", "method", "status",
         "gateway", "gateway_reference", "failure_reason",
         "paid_at", "created_at", "updated_at", "callback_token",
     )

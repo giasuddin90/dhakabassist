@@ -209,6 +209,40 @@ def faq_schema(faqs):
     }
 
 
+def downloads_schema(downloads, path):
+    """The downloads listed on the page at `path` as an `ItemList`, each with
+    its price, so free and paid items read the same as on the page."""
+    page_url = absolute(localized(path))
+    return {
+        "@type": "ItemList",
+        "url": page_url,
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": index,
+                "item": {
+                    "@type": "AudioObject" if item.kind == "audio" else "DigitalDocument",
+                    "name": item.title,
+                    "description": item.description,
+                    "url": f"{page_url}#download-{item.slug}",
+                    "encodingFormat": item.extension,
+                    "inLanguage": translation.get_language(),
+                    "isAccessibleForFree": item.is_free,
+                    "provider": {"@id": absolute("/") + "#organization"},
+                    "offers": {
+                        "@type": "Offer",
+                        "price": f"{item.price:.0f}",
+                        "priceCurrency": settings.SITE["currency"],
+                        "availability": "https://schema.org/InStock",
+                        "category": "Free" if item.is_free else "Paid",
+                    },
+                },
+            }
+            for index, item in enumerate(downloads, start=1)
+        ],
+    }
+
+
 def article_schema(title, description, path, updated=None):
     return {
         "@type": "Article",

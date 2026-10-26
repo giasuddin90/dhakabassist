@@ -1,4 +1,4 @@
-"""Purchases and the enrolment they unlock.
+"""Purchases and what they unlock: a course enrolment, or a download.
 
 No card data is stored. An order keeps only what is needed to reconcile with
 the gateway: the method chosen, the gateway's own reference, and the amount.
@@ -8,10 +8,12 @@ import secrets
 
 from django.conf import settings
 from django.db import models, transaction
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from courses.models import Course, Enrollment, TimeStampedModel
+from downloads.models import Download
 
 
 class PaymentMethod(models.TextChoices):
@@ -55,8 +57,22 @@ class Order(TimeStampedModel):
         on_delete=models.PROTECT,
         related_name="orders",
     )
+    # An order buys one thing: a course or a download.
     course = models.ForeignKey(
-        Course, verbose_name=_("course"), on_delete=models.PROTECT, related_name="orders"
+        Course,
+        verbose_name=_("course"),
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="orders",
+    )
+    download = models.ForeignKey(
+        Download,
+        verbose_name=_("download"),
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="orders",
     )
     amount = models.DecimalField(_("amount (BDT)"), max_digits=10, decimal_places=2)
     method = models.CharField(
@@ -80,6 +96,15 @@ class Order(TimeStampedModel):
         verbose_name_plural = _("orders")
         ordering = ("-created_at",)
         indexes = [models.Index(fields=("status", "-created_at"))]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(course__isnull=False, download__isnull=True)
+                    | models.Q(course__isnull=True, download__isnull=False)
+                ),
+                name="order_buys_one_item",
+            )
+        ]
 
     def __str__(self):
         return f"{self.reference} · {self.student} · {self.get_status_display()}"
@@ -90,6 +115,22 @@ class Order(TimeStampedModel):
         while Order.objects.filter(reference=self.reference).exclude(pk=self.pk).exists():
             self.reference = generate_reference()
         super().save(*args, **kwargs)
+
+    @property
+    def item(self):
+        """What the order buys: its course or its download."""
+        return self.course or self.download
+
+    @property
+    def item_title(self):
+        return self.item.title
+
+    @property
+    def checkout_url(self):
+        """Where to try paying again."""
+        if self.download_id:
+            return self.download.get_buy_url()
+        return reverse("orders:checkout", kwargs={"slug": self.course.slug})
 
     @property
     def amount_display(self):
@@ -121,7 +162,10 @@ class Order(TimeStampedModel):
         return True
 
     def enrol(self):
-        """Open the course this order paid for."""
+        """Open the course this order paid for. A download needs nothing:
+        its access is read from the paid order itself."""
+        if not self.course_id:
+            return
         Enrollment.objects.update_or_create(
             student=self.student,
             course=self.course,
@@ -133,7 +177,7 @@ class Order(TimeStampedModel):
 
         Closing it keeps the order paid, e.g. while a payment is disputed.
         """
-        if self.status != self.Status.PAID:
+        if self.status != self.Status.PAID or not self.course_id:
             return
         if enabled:
             self.enrol()
@@ -181,8 +225,10 @@ class Order(TimeStampedModel):
         """Close the enrolment this order paid for.
 
         Kept when a manual grant or another paid order for the same course
-        still covers it.
+        still covers it. A download closes with the order's status alone.
         """
+        if not self.course_id:
+            return
         still_paid = (
             Order.objects.filter(
                 student_id=self.student_id, course_id=self.course_id, status=self.Status.PAID

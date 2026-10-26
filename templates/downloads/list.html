@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load i18n manage_tags %}
+
+{% block content %}
+<section class="shell section section--tight stack u-gap-40">
+  <div class="stack u-gap-16">
+    {% include "includes/breadcrumbs.html" %}
+    <h1 class="display-2">{% translate "Downloads" %}</h1>
+    <p class="lede">{% blocktranslate trimmed %}
+      Worksheets, PDFs, audio and ZIP bundles to practise with. Free ones need
+      only an account. Paid ones are a one-time payment in BDT and stay in My
+      downloads.
+    {% endblocktranslate %}</p>
+  </div>
+
+  <nav class="cluster download-filters" aria-label="{% translate 'Filter downloads by type' %}">
+    {% for value, label in filters %}
+      <a class="pill{% if value == kind %} is-active{% endif %}" href="{% querystring type=value page=None %}"{% if value == kind %} aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+
+  {% if downloads %}
+    <ul class="download-grid">
+      {% for download in downloads %}
+        <li>{% include "includes/download_card.html" %}</li>
+      {% endfor %}
+    </ul>
+    {% include "includes/pagination.html" with page=page_obj %}
+  {% else %}
+    <p class="u-fs-17">{% translate "No downloads of this type yet." %}</p>
+  {% endif %}
+
+  {% if user.is_authenticated %}
+    <p class="u-fs-15"><a href="{% url 'downloads:mine' %}">{% translate "My downloads" %}</a></p>
+  {% endif %}
+</section>
+{% endblock %}

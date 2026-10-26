@@ -33,6 +33,7 @@ from courses.models import (
     Question,
     Quiz,
 )
+from downloads.models import Download
 from orders.models import Order
 from pages.models import ContactMessage, Faq, LegalPage
 from pages.seo import noindex
@@ -96,6 +97,7 @@ def nav_counts():
         "courses": Course.objects.count(),
         "authors": Author.objects.count(),
         "library": LibraryFile.objects.count(),
+        "downloads": Download.objects.count(),
         "students": User.objects.filter(is_staff=False).count(),
         "orders": Order.objects.filter(status=Order.Status.PENDING).count(),
         "messages": ContactMessage.objects.filter(is_handled=False).count(),
@@ -809,7 +811,7 @@ class StudentDetailView(ManageBase):
             courses=[course_progress(c, enrollments.get(c.pk), progress) for c in courses],
             grantable=payment_form.fields["course"].queryset,
             payment_form=payment_form,
-            orders=student.orders.select_related("course")[:20],
+            orders=student.orders.select_related("course", "download")[:20],
             attempts=student.quiz_attempts.select_related("quiz__module")[:10],
         )
         return context
@@ -905,7 +907,7 @@ class OrdersView(ManageBase):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         chosen = self.request.GET.get("status", "all")
-        orders = Order.objects.select_related("student", "course")
+        orders = Order.objects.select_related("student", "course", "download")
         if chosen in Order.Status.values:
             orders = orders.filter(status=chosen)
         context.update(

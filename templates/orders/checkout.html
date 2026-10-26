@@ -42,26 +42,26 @@
       <div class="cluster" style="--cluster-gap:16px">
         <img src="{% static 'img/logo-mark.svg' %}" alt="" width="56" height="56" style="width:56px;height:56px;flex:none">
         <span class="stack u-gap-6">
-          <span class="u-serif" style="font-size:20px;font-weight:600">{{ course.title }}{% if course.subtitle %} · {{ course.subtitle }}{% endif %}</span>
-          <span class="u-fs-14 muted">{% blocktranslate count count=course.module_count %}{{ count }} module · lifetime access{% plural %}{{ count }} modules · lifetime access{% endblocktranslate %}</span>
+          <span class="u-serif" style="font-size:20px;font-weight:600">{{ summary.title }}</span>
+          <span class="u-fs-14 muted">{{ summary.detail }}</span>
         </span>
       </div>
 
       <div class="stack u-gap-10" style="border-top:1px solid var(--line);padding-top:16px;font-size:16px">
         <div class="split" style="align-items:baseline">
-          <span>{% translate "Course" %}</span><span>{{ course.price|taka:2 }}</span>
+          <span>{{ summary.label }}</span><span>{{ summary.price|taka:2 }}</span>
         </div>
         <div class="split muted" style="align-items:baseline">
           <span>{% translate "Gateway fee" %}</span><span>{% translate "Included" %}</span>
         </div>
         <div class="split u-bold u-fs-19"
              style="align-items:baseline;border-top:1px solid var(--ink);padding-top:12px;margin-top:4px">
-          <span>{% translate "Total" %}</span><span>{{ course.price|taka:2 }}</span>
+          <span>{% translate "Total" %}</span><span>{{ summary.price|taka:2 }}</span>
         </div>
       </div>
 
       <button class="btn btn--block" type="submit">
-        {% blocktranslate with price=course.price|taka %}Pay {{ price }}{% endblocktranslate %}
+        {% blocktranslate with price=summary.price|taka %}Pay {{ price }}{% endblocktranslate %}
       </button>
 
       {% url 'pages:legal' 'terms' as terms_url %}{% url 'pages:legal' 'refunds' as refunds_url %}

@@ -12,6 +12,7 @@
       </div>
       <div class="cluster" style="--cluster-gap:20px;font-size:15px">
         <a href="{% url 'accounts:settings' %}">{% translate "Account settings" %}</a>
+        <a href="{% url 'downloads:mine' %}">{% translate "My downloads" %}</a>
         <a href="{% url 'accounts:orders' %}">{% translate "Order history" %}</a>
         <form method="post" action="{% url 'accounts:logout' %}" style="display:contents">
           {% csrf_token %}

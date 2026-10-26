@@ -297,7 +297,9 @@ class OrderHistoryView(LoginRequiredMixin, ListView):
     context_object_name = "orders"
 
     def get_queryset(self):
-        return Order.objects.filter(student=self.request.user).select_related("course")
+        return Order.objects.filter(student=self.request.user).select_related(
+            "course", "download"
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

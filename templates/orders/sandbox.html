@@ -15,7 +15,7 @@
 
     <div class="panel stack u-gap-10">
       <div class="split" style="align-items:baseline"><span class="muted">{% translate "Order" %}</span><span>{{ order.reference }}</span></div>
-      <div class="split" style="align-items:baseline"><span class="muted">{% translate "Course" %}</span><span>{{ order.course.title }}</span></div>
+      <div class="split" style="align-items:baseline"><span class="muted">{% if order.download %}{% translate "Download" %}{% else %}{% translate "Course" %}{% endif %}</span><span>{{ order.item_title }}</span></div>
       <div class="split" style="align-items:baseline"><span class="muted">{% translate "Method" %}</span><span>{{ method_label }}</span></div>
       <div class="split u-bold" style="align-items:baseline;border-top:1px solid var(--ink);padding-top:10px">
         <span>{% translate "Total" %}</span><span>{{ order.amount|taka:2 }}</span>

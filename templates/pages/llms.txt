@@ -47,6 +47,7 @@ Every public page exists in Bangla, the primary language, and in English. The li
 
 - [Home]({{ base_url }}{% url 'pages:home' %}): course overview, curriculum summary, pricing and FAQ
 - [Courses]({{ base_url }}{% url 'courses:list' %}): every published course
+- [Downloads]({{ base_url }}{% url 'downloads:list' %}): worksheets, PDFs, audio and ZIP bundles sold separately from the course; free ones need a registered account, paid ones are a one-time payment in BDT
 - [FAQ]({{ base_url }}{% url 'pages:faq' %}): answers on prior knowledge, the free module, payment, access and refunds
 - [Contact]({{ base_url }}{% url 'pages:contact' %}): the contact form
 - [Terms & Conditions]({{ base_url }}{% url 'pages:legal' 'terms' %})
@@ -59,4 +60,4 @@ Email: {{ site.email }} — replies within two working days.
 
 ## Not available to crawlers
 
-Lesson pages, videos, audio, worksheets, quizzes, student dashboards and order records require a signed-in account and are excluded in robots.txt. Please do not represent their contents.
+Lesson pages, videos, audio, worksheets, download files, quizzes, student dashboards and order records require a signed-in account and are excluded in robots.txt. Please do not represent their contents.

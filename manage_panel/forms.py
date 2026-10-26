@@ -28,6 +28,8 @@ from courses.models import (
     Question,
     Quiz,
 )
+from downloads.models import EXTENSIONS as DOWNLOAD_EXTENSIONS
+from downloads.models import Download
 from orders.models import MANUAL_GATEWAY, Order, PaymentMethod
 from pages.models import Faq, LegalPage
 
@@ -180,6 +182,48 @@ class AuthorForm(ImageUploadMixin, BilingualFormMixin, forms.ModelForm):  # pyli
             "photo": IMAGE_INPUT,
             **bilingual_widgets(bio=forms.Textarea(attrs={"rows": 12, "class": "editor-area"})),
         }
+
+
+class DownloadForm(BilingualFormMixin, forms.ModelForm):
+    """A worksheet, PDF, audio file or ZIP for the downloads page, free or paid."""
+
+    bilingual_fields = ("title", "description", "file")
+    required_bilingual = ("title", "file")
+    MAX_BYTES = 100 * 1024 * 1024
+
+    class Meta:
+        model = Download
+        fields = (
+            *bilingual("title"), "slug", "kind", *bilingual("description", "file"),
+            "price", "status", "position",
+        )
+        widgets = bilingual_widgets(
+            description=forms.Textarea(attrs={"rows": 3}),
+            file=forms.FileInput(
+                attrs={"accept": ",".join(f".{ext}" for ext in DOWNLOAD_EXTENSIONS)}
+            ),
+        )
+
+    def clean(self):
+        cleaned = super().clean()
+        for column in columns("file"):
+            upload = self.files.get(column)
+            if upload and upload.size > self.MAX_BYTES:
+                self.add_error(column, f"“{upload.name}” is larger than 100 MB.")
+        return cleaned
+
+    def save(self, commit=True):
+        """Save, and remove a file that a new upload replaced."""
+        replaced = [
+            self.initial[column]
+            for column in columns("file")
+            if column in self.changed_data and self.initial.get(column)
+        ]
+        download = super().save(commit)
+        if commit:
+            for old in replaced:
+                old.storage.delete(old.name)
+        return download
 
 
 class ModuleForm(BilingualFormMixin, forms.ModelForm):
@@ -699,6 +743,8 @@ class ManualPaymentForm(OrderFieldsForm):
             )
         course.to_field_name = "slug"
         course.empty_label = None
+        # Optional on the model, which also takes download orders.
+        course.required = True
         course.label_from_instance = lambda c: " · ".join(filter(None, (c.title, c.subtitle)))
         self.fields["amount"].required = False
         self.fields["gateway_reference"].required = True
@@ -801,13 +847,17 @@ class OrderForm(OrderFieldsForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["status"].initial = self.instance.status
-        # Ticked by default, so setting an order to Paid enrols the student.
-        self.fields["course_access"].initial = (
-            self.instance.status != Order.Status.PAID
-            or self.instance.student.enrollments.filter(
-                course=self.instance.course, is_active=True
-            ).exists()
-        )
+        if not self.instance.course_id:
+            # A download opens and closes with the status alone.
+            del self.fields["course_access"]
+        else:
+            # Ticked by default, so setting an order to Paid enrols the student.
+            self.fields["course_access"].initial = (
+                self.instance.status != Order.Status.PAID
+                or self.instance.student.enrollments.filter(
+                    course=self.instance.course, is_active=True
+                ).exists()
+            )
         self.order_fields(("status", *self.Meta.fields))
 
     @transaction.atomic
@@ -817,7 +867,8 @@ class OrderForm(OrderFieldsForm):
         # loaded (a gateway callback), and `change_status` reads it afresh.
         order.save(update_fields=[*self.Meta.fields, "updated_at"])
         order.change_status(self.cleaned_data["status"])
-        order.set_course_access(self.cleaned_data["course_access"])
+        if "course_access" in self.cleaned_data:
+            order.set_course_access(self.cleaned_data["course_access"])
         return order
 
 

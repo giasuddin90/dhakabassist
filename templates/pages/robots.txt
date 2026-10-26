@@ -29,6 +29,12 @@ Disallow: /module/
 Disallow: /en/module/
 Disallow: /asset/
 Disallow: /en/asset/
+# The downloads list is public; the files, checkout and a student's bought
+# downloads are not.
+Disallow: /downloads/*/
+Disallow: /en/downloads/*/
+Disallow: /my-downloads/
+Disallow: /en/my-downloads/
 
 # AI answer engines: the public pages and llms.txt are the intended source.
 User-agent: GPTBot
@@ -36,6 +42,8 @@ Allow: /$
 Allow: /en/$
 Allow: /courses
 Allow: /en/courses
+Allow: /downloads/
+Allow: /en/downloads/
 Allow: /about
 Allow: /en/about
 Allow: /faq
@@ -49,12 +57,18 @@ Disallow: /my-courses/
 Disallow: /en/my-courses/
 Disallow: /account/
 Disallow: /en/account/
+Disallow: /downloads/*/
+Disallow: /en/downloads/*/
+Disallow: /my-downloads/
+Disallow: /en/my-downloads/
 
 User-agent: ClaudeBot
 Allow: /$
 Allow: /en/$
 Allow: /courses
 Allow: /en/courses
+Allow: /downloads/
+Allow: /en/downloads/
 Allow: /about
 Allow: /en/about
 Allow: /faq
@@ -68,12 +82,18 @@ Disallow: /my-courses/
 Disallow: /en/my-courses/
 Disallow: /account/
 Disallow: /en/account/
+Disallow: /downloads/*/
+Disallow: /en/downloads/*/
+Disallow: /my-downloads/
+Disallow: /en/my-downloads/
 
 User-agent: PerplexityBot
 Allow: /$
 Allow: /en/$
 Allow: /courses
 Allow: /en/courses
+Allow: /downloads/
+Allow: /en/downloads/
 Allow: /about
 Allow: /en/about
 Allow: /faq
@@ -87,5 +107,9 @@ Disallow: /my-courses/
 Disallow: /en/my-courses/
 Disallow: /account/
 Disallow: /en/account/
+Disallow: /downloads/*/
+Disallow: /en/downloads/*/
+Disallow: /my-downloads/
+Disallow: /en/my-downloads/
 
 Sitemap: {{ base_url }}/sitemap.xml

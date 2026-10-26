@@ -1,0 +1,68 @@
+{% extends "manage_panel/base.html" %}
+{% load static money %}
+
+{% block extra_js %}<script src="{% static 'js/manage.js' %}" defer></script>{% endblock %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <h1>Downloads</h1>
+    <p class="manage-head__date">Worksheets, PDFs, audio and ZIPs on the public
+      <a href="{% url 'downloads:list' %}">downloads page</a>. A price of 0 makes one free
+      for any signed-in account; a paid one is unlocked by its order.</p>
+  </div>
+  <a class="btn btn--sm" href="{% url 'manage:download_new' %}">New download</a>
+</header>
+
+<section class="panel" aria-label="Downloads">
+  {% if page.object_list %}
+    <div class="table-wrap">
+      <table class="dtable dtable--wide">
+        <caption class="visually-hidden">Downloads in listing order</caption>
+        <thead>
+          <tr>
+            <th scope="col">Download</th>
+            <th scope="col">Type</th>
+            <th scope="col">Price</th>
+            <th scope="col">Status</th>
+            <th scope="col">Sold</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for download in page.object_list %}
+            <tr>
+              <th scope="row">
+                <a class="dtable__name" href="{% url 'manage:download_edit' download.slug %}">{{ download.title }}</a>
+                <span class="dtable__sub">{{ download.detail_line }}</span>
+              </th>
+              <td class="u-nowrap">{{ download.get_kind_display }}</td>
+              <td class="u-nowrap">{% if download.is_free %}Free{% else %}{{ download.price|taka }}{% endif %}</td>
+              <td>
+                <span class="badge badge--status {% if download.status == 'published' %}badge--ok{% else %}badge--neutral{% endif %}">{{ download.get_status_display }}</span>
+              </td>
+              <td class="u-nowrap">{{ download.sales }}</td>
+              <td>
+                <span class="cluster">
+                  <a class="btn-link btn-link--sm" href="{% url 'manage:download_edit' download.slug %}">Edit<span class="visually-hidden"> {{ download.title }}</span></a>
+                  {% if not download.sales %}
+                    <form method="post" action="{% url 'manage:download_delete' download.slug %}"
+                          data-confirm="Delete “{{ download.title }}” and its files? This cannot be undone.">
+                      {% csrf_token %}
+                      <button class="btn-link btn-link--sm" type="submit">Delete<span class="visually-hidden"> {{ download.title }}</span></button>
+                    </form>
+                  {% endif %}
+                </span>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="panel__body muted">No downloads yet. <a href="{% url 'manage:download_new' %}">Add the first one</a>.</p>
+  {% endif %}
+</section>
+
+{% include "includes/pagination.html" %}
+{% endblock %}

@@ -17,6 +17,7 @@ admin.site.index_title = "Database administration"
 urlpatterns = i18n_patterns(
     path("", include("pages.urls")),
     path("", include("courses.urls")),
+    path("", include("downloads.urls")),
     path("", include("accounts.urls")),
     path("", include("orders.urls")),
     prefix_default_language=False,

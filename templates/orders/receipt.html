@@ -9,7 +9,7 @@
     </span>
 
     <h1 class="display-2" style="font-size:44px">
-      {% if order.status == 'paid' %}{% translate "You are enrolled" %}{% else %}{% blocktranslate with status=order.get_status_display|lower %}Order {{ status }}{% endblocktranslate %}{% endif %}
+      {% if order.status == 'paid' %}{% if order.download %}{% translate "Your download is ready" %}{% else %}{% translate "You are enrolled" %}{% endif %}{% else %}{% blocktranslate with status=order.get_status_display|lower %}Order {{ status }}{% endblocktranslate %}{% endif %}
     </h1>
 
     {% if order.status == 'paid' %}
@@ -29,10 +29,13 @@
       {% endif %}
     </div>
 
-    {% if order.status == 'paid' and first_module %}
+    {% if order.status == 'paid' and order.download %}
+      <a class="btn u-self-center" href="{{ order.download.get_file_url }}">{% translate "Download now" %}</a>
+      <a class="btn-link btn-link--sm" href="{% url 'downloads:mine' %}">{% translate "My downloads" %}</a>
+    {% elif order.status == 'paid' and first_module %}
       <a class="btn" href="{{ first_module.get_absolute_url }}" style="align-self:center">{% blocktranslate with number=first_module.number_plain %}Start Module {{ number }}{% endblocktranslate %}</a>
     {% else %}
-      <a class="btn" href="{% url 'orders:checkout' order.course.slug %}" style="align-self:center">{% translate "Try again" %}</a>
+      <a class="btn" href="{{ order.checkout_url }}" style="align-self:center">{% translate "Try again" %}</a>
     {% endif %}
 
     <a class="btn-link btn-link--sm" href="{% url 'accounts:orders' %}">{% translate "Order history" %}</a>

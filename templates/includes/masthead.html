@@ -16,6 +16,7 @@
     <nav class="nav" id="primary-nav" aria-label="{% translate 'Main' %}">
       {# One course for now, so "Course" goes straight to it. #}
       <a href="{% if primary_course %}{{ primary_course.get_absolute_url }}{% else %}{% url 'courses:list' %}{% endif %}"{% if nav_active == 'course' %} aria-current="page"{% endif %}>{% translate "Course" %}</a>
+      <a href="{% url 'downloads:list' %}"{% if nav_active == 'downloads' %} aria-current="page"{% endif %}>{% translate "Downloads" %}</a>
       <a href="{% url 'pages:faq' %}"{% if nav_active == 'faq' %} aria-current="page"{% endif %}>{% translate "FAQ" %}</a>
       <a href="{% url 'pages:contact' %}"{% if nav_active == 'contact' %} aria-current="page"{% endif %}>{% translate "Contact" %}</a>
     </nav>

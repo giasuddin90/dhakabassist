@@ -6,6 +6,7 @@ app_name = "orders"
 
 urlpatterns = [
     path("enroll/<slug:slug>/", views.checkout, name="checkout"),
+    path("downloads/<slug:slug>/buy/", views.download_checkout, name="download_checkout"),
     path("payment/<str:reference>/", views.sandbox, name="sandbox"),
     path(
         "payment/<str:reference>/complete/",

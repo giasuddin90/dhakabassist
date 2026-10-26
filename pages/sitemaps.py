@@ -28,6 +28,7 @@ class StaticViewSitemap(BilingualSitemap):
         return [
             ("pages:home", 1.0),
             ("courses:list", 0.8),
+            ("downloads:list", 0.6),
             ("pages:contact", 0.4),
             ("pages:faq", 0.6),
         ]

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import enrolment_views, views
+from . import download_views, enrolment_views, views
 
 app_name = "manage"
 
@@ -26,6 +26,13 @@ urlpatterns = [
     path("library/", views.LibraryView.as_view(), name="library"),
     path("library/upload/", views.library_upload, name="library_upload"),
     path("library/<int:pk>/delete/", views.library_delete, name="library_delete"),
+    # Downloads
+    path("downloads/", download_views.DownloadsView.as_view(), name="downloads"),
+    path("downloads/new/", download_views.download_edit, name="download_new"),
+    path("downloads/<slug:slug>/edit/", download_views.download_edit, name="download_edit"),
+    path(
+        "downloads/<slug:slug>/delete/", download_views.download_delete, name="download_delete"
+    ),
     # Quizzes
     path("quizzes/", views.QuizIndexView.as_view(), name="quizzes"),
     path(

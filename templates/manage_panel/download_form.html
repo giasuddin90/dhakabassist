@@ -1,0 +1,52 @@
+{% extends "manage_panel/base.html" %}
+{% load static %}
+
+{% block extra_js %}<script src="{% static 'js/manage.js' %}" defer></script>{% endblock %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <nav class="manage-head__crumbs" aria-label="Breadcrumb">
+      <a href="{% url 'manage:downloads' %}">Downloads</a> / {% if download %}{{ download.title }}{% else %}New download{% endif %}
+    </nav>
+    <h1>{% if download %}Edit download{% else %}New download{% endif %}</h1>
+  </div>
+  <button class="btn btn--sm" type="submit" form="download-form">
+    {% if download %}Save changes{% else %}Create download{% endif %}
+  </button>
+</header>
+
+<form method="post" enctype="multipart/form-data" id="download-form" class="stack u-gap-20" novalidate>
+  {% csrf_token %}
+  {% include "includes/form_errors.html" %}
+
+  <section class="panel panel--padded stack u-gap-16" aria-label="Details">
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.title %}
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.description %}
+    <div class="field-grid">
+      {% include "includes/field.html" with field=form.kind %}
+      {% include "includes/field.html" with field=form.slug %}
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="files-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="files-title">Files</h2>
+    </div>
+    <div class="panel__body stack u-gap-12">
+      {% include "includes/bilingual_field.html" with pair=form.bilingual.file help="PDF, ZIP, MP3, M4A, WAV, DOC or DOCX, up to 100 MB." %}
+      {% if download.file %}
+        <p class="form-note">Current: <a href="{{ download.get_file_url }}">{{ download.filename }}</a> ({{ download.detail_line }}).
+          Upload a new file to replace it.</p>
+      {% endif %}
+      <p class="form-note">Upload one file for both languages, or one per language.</p>
+    </div>
+  </section>
+
+  <section class="panel panel--padded field-grid" aria-label="Price and listing">
+    {% include "includes/field.html" with field=form.price %}
+    {% include "includes/field.html" with field=form.status %}
+    {% include "includes/field.html" with field=form.position %}
+  </section>
+</form>
+{% endblock %}

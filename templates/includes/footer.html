@@ -13,6 +13,7 @@
           <span class="site-footer__label">{% translate "Course" %}</span>
           <a href="{% url 'courses:list' %}">{% translate "Curriculum" %}</a>
           {% if primary_course %}<a href="{{ primary_course.get_absolute_url }}#pricing">{% translate "Pricing" %}</a>{% endif %}
+          <a href="{% url 'downloads:list' %}">{% translate "Downloads" %}</a>
           <a href="{% url 'pages:faq' %}">{% translate "FAQ" %}</a>
         </div>
         <div class="site-footer__group">

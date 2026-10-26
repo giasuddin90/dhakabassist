@@ -595,33 +595,6 @@ body.manage {
   display: none;
 }
 
-.file-tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 32px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  background: var(--panel);
-  border: 1px solid var(--line-muted);
-  border-radius: var(--radius-xs);
-}
-
-.file-tag--audio {
-  color: var(--ok);
-  background: var(--ok-bg);
-  border-color: var(--ok);
-}
-
-.file-tag--image {
-  color: var(--ink);
-  background: var(--highlight);
-  border-color: var(--line-field);
-}
-
 .asset-row {
   display: flex;
   justify-content: space-between;
@@ -1059,75 +1032,6 @@ body.manage {
   justify-content: space-between;
   align-items: center;
   gap: 8px 16px;
-}
-
-.pager {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  padding-top: 8px;
-}
-
-.pager__pages {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.pager__page,
-.pager__step {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0 12px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--ink);
-  text-decoration: none;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
-  transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease);
-}
-
-a.pager__page:hover,
-a.pager__step:hover {
-  border-color: var(--ink);
-}
-
-.pager__page.is-current {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--parchment);
-}
-
-.pager__step.is-disabled {
-  color: var(--text-faint);
-  border-color: var(--line-soft);
-}
-
-.pager__gap {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 4px;
-  color: var(--text-muted);
-}
-
-/* On a phone the page numbers drop to their own row under Previous / Next. */
-@media (max-width: 575.98px) {
-  .pager__pages {
-    order: 3;
-    width: 100%;
-    justify-content: center;
-  }
 }
 
 /* Cards fill the column: one on a phone, two or three as room allows. */

@@ -1,17 +1,20 @@
 {% load money %}Hello {{ order.student.get_short_name }},
 
-Your payment has been received and your enrolment is active.
+Your payment has been received and {% if order.download %}your download is ready{% else %}your enrolment is active{% endif %}.
 
 Order:    {{ order.reference }}
-Course:   {{ order.course.title }}
+{% if order.download %}Download: {{ order.download.title }}{% else %}Course:   {{ order.course.title }}{% endif %}
 Amount:   {{ order.amount|taka }} BDT
 Method:   {{ order.get_method_display }}
 Date:     {{ order.paid_at|date:"j F Y" }}
 
-Start studying: {{ base_url }}{% url 'courses:dashboard' %}
+{% if order.download %}Download it: {{ base_url }}{% url 'downloads:mine' %}
+
+It stays in My downloads, so you can download it again at any time. If you
+need a copy of this receipt later, it is always in your order history.{% else %}Start studying: {{ base_url }}{% url 'courses:dashboard' %}
 
 You have lifetime access to every module. If you need a copy of this receipt
-later, it is always in your order history.
+later, it is always in your order history.{% endif %}
 
 — DhakaBassist
 Music theory courses by Tanveer Haque.

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DhakaBassist\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-26 10:18+0600\n"
+"POT-Creation-Date: 2026-10-27 00:19+0600\n"
 "Language: bn\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -198,7 +198,7 @@ msgstr "পাসওয়ার্ড বদলানো হয়েছে"
 msgid "Reset your password"
 msgstr "পাসওয়ার্ড রিসেট করুন"
 
-#: accounts/urls.py:66 accounts/views.py:157
+#: accounts/urls.py:66 accounts/views.py:158
 msgid "Check your email"
 msgstr "আপনার ইমেইল দেখুন"
 
@@ -214,23 +214,23 @@ msgstr "আপনার পাসওয়ার্ড সেট হয়েছ
 msgid "Please wait until the timer ends before asking for another link."
 msgstr "আরেকটি লিংক চাওয়ার আগে টাইমার শেষ হওয়া পর্যন্ত অপেক্ষা করুন।"
 
-#: accounts/views.py:87 templates/accounts/confirm_email.html:15
+#: accounts/views.py:88 templates/accounts/confirm_email.html:15
 #: templates/accounts/login.html:18 templates/accounts/login.html:87
 #: templates/accounts/password_reset_complete.html:6
-#: templates/includes/footer.html:24 templates/includes/masthead.html:33
+#: templates/includes/footer.html:25 templates/includes/masthead.html:34
 #: templates/pages/home.html:140 templates/pages/home.html:197
 msgid "Log in"
 msgstr "লগ ইন"
 
-#: accounts/views.py:88
+#: accounts/views.py:89
 msgid "Sign in to continue your music theory course."
 msgstr "আপনার সংগীত তত্ত্বের কোর্স চালিয়ে যেতে সাইন ইন করুন।"
 
-#: accounts/views.py:135 templates/accounts/login.html:13
+#: accounts/views.py:136 templates/accounts/login.html:13
 msgid "Create your account"
 msgstr "আপনার অ্যাকাউন্ট খুলুন"
 
-#: accounts/views.py:137
+#: accounts/views.py:138
 msgid ""
 "Create a free DhakaBassist account and study Module 1 of Foundations of "
 "Music at no cost."
@@ -238,38 +238,38 @@ msgstr ""
 "বিনামূল্যে DhakaBassist অ্যাকাউন্ট খুলুন এবং সংগীতের ভিত্তি কোর্সের মডিউল 1 বিনা "
 "খরচে পড়ুন।"
 
-#: accounts/views.py:180 templates/accounts/confirm_sent.html:15
+#: accounts/views.py:181 templates/accounts/confirm_sent.html:15
 #: templates/accounts/login.html:28
 msgid "Send a new confirmation link"
 msgstr "নতুন নিশ্চিতকরণ লিংক পাঠান"
 
-#: accounts/views.py:222
+#: accounts/views.py:223
 msgid "Your email is confirmed. Module 1 is yours to study."
 msgstr "আপনার ইমেইল নিশ্চিত হয়েছে। মডিউল ১ এখন আপনার জন্য খোলা।"
 
-#: accounts/views.py:230
+#: accounts/views.py:231
 msgid "Confirm your email"
 msgstr "আপনার ইমেইল নিশ্চিত করুন"
 
-#: accounts/views.py:232
+#: accounts/views.py:233
 msgid "Your email is already confirmed"
 msgstr "আপনার ইমেইল আগেই নিশ্চিত করা হয়েছে"
 
-#: accounts/views.py:234 templates/accounts/password_reset_confirm.html:4
+#: accounts/views.py:235 templates/accounts/password_reset_confirm.html:4
 msgid "This link has expired"
 msgstr "এই লিংকের মেয়াদ শেষ হয়ে গেছে"
 
-#: accounts/views.py:283
+#: accounts/views.py:284
 msgid "Your account details have been saved."
 msgstr "আপনার অ্যাকাউন্টের তথ্য সংরক্ষণ করা হয়েছে।"
 
-#: accounts/views.py:289 templates/courses/dashboard.html:14
+#: accounts/views.py:290 templates/courses/dashboard.html:14
 msgid "Account settings"
 msgstr "অ্যাকাউন্ট সেটিংস"
 
-#: accounts/views.py:304 templates/accounts/orders.html:7
-#: templates/accounts/settings.html:19 templates/courses/dashboard.html:15
-#: templates/orders/receipt.html:38
+#: accounts/views.py:307 templates/accounts/orders.html:7
+#: templates/accounts/settings.html:19 templates/courses/dashboard.html:16
+#: templates/downloads/mine.html:10 templates/orders/receipt.html:41
 msgid "Order history"
 msgstr "অর্ডারের ইতিহাস"
 
@@ -281,7 +281,7 @@ msgstr "সম্পূর্ণ"
 msgid "In progress"
 msgstr "চলছে"
 
-#: courses/access.py:35 templates/courses/dashboard.html:93
+#: courses/access.py:35 templates/courses/dashboard.html:94
 #: templates/courses/paywall.html:43
 msgid "Locked"
 msgstr "বন্ধ"
@@ -313,6 +313,7 @@ msgid "name (English)"
 msgstr ""
 
 #: courses/models.py:89 courses/models.py:172 courses/models.py:415
+#: downloads/models.py:65
 msgid "slug"
 msgstr ""
 
@@ -348,23 +349,23 @@ msgstr ""
 msgid "authors"
 msgstr ""
 
-#: courses/models.py:167 courses/models.py:399
+#: courses/models.py:167 courses/models.py:399 downloads/models.py:59
 msgid "Draft"
 msgstr ""
 
-#: courses/models.py:168 courses/models.py:400
+#: courses/models.py:168 courses/models.py:400 downloads/models.py:60
 msgid "Published"
 msgstr ""
 
 #: courses/models.py:170 courses/models.py:413 courses/models.py:665
 #: courses/models.py:713 courses/models.py:867 courses/models.py:963
-#: pages/models.py:51
+#: downloads/models.py:62 pages/models.py:51
 msgid "title (Bangla)"
 msgstr ""
 
 #: courses/models.py:171 courses/models.py:414 courses/models.py:666
 #: courses/models.py:714 courses/models.py:868 courses/models.py:964
-#: pages/models.py:52
+#: downloads/models.py:63 pages/models.py:52
 msgid "title (English)"
 msgstr ""
 
@@ -388,7 +389,7 @@ msgstr ""
 msgid "summary (English)"
 msgstr ""
 
-#: courses/models.py:186
+#: courses/models.py:186 downloads/models.py:72
 msgid "description (Bangla)"
 msgstr ""
 
@@ -396,7 +397,7 @@ msgstr ""
 msgid "Markdown. Shown on the course page."
 msgstr ""
 
-#: courses/models.py:189
+#: courses/models.py:189 downloads/models.py:77
 msgid "description (English)"
 msgstr ""
 
@@ -408,11 +409,12 @@ msgstr ""
 msgid "level (English)"
 msgstr ""
 
-#: courses/models.py:194
+#: courses/models.py:194 downloads/models.py:100
 msgid "price (BDT)"
 msgstr ""
 
-#: courses/models.py:197 courses/models.py:432 orders/models.py:66
+#: courses/models.py:197 courses/models.py:432 downloads/models.py:108
+#: orders/models.py:82
 msgid "status"
 msgstr ""
 
@@ -463,7 +465,8 @@ msgid "Students must own this course first."
 msgstr ""
 
 #: courses/models.py:250 courses/models.py:667 courses/models.py:740
-#: courses/models.py:1003 courses/models.py:1070 pages/models.py:21
+#: courses/models.py:1003 courses/models.py:1070 downloads/models.py:111
+#: pages/models.py:21
 msgid "position"
 msgstr ""
 
@@ -494,7 +497,7 @@ msgid "meta description (English)"
 msgstr ""
 
 #: courses/models.py:298 courses/models.py:403 courses/models.py:1118
-#: orders/models.py:59
+#: orders/models.py:63
 msgid "course"
 msgstr ""
 
@@ -578,7 +581,7 @@ msgstr ""
 msgid "English video has English subtitles"
 msgstr ""
 
-#: courses/models.py:473
+#: courses/models.py:473 downloads/models.py:122
 msgid "downloads"
 msgstr ""
 
@@ -606,7 +609,8 @@ msgstr "ভিডিও %(duration)s"
 msgid "Reading"
 msgstr "পাঠ"
 
-#: courses/models.py:649 templates/courses/lesson.html:86
+#: courses/models.py:649 downloads/models.py:55
+#: templates/courses/lesson.html:86
 msgid "Audio"
 msgstr "অডিও"
 
@@ -641,11 +645,11 @@ msgstr ""
 msgid "kind"
 msgstr ""
 
-#: courses/models.py:717
+#: courses/models.py:717 downloads/models.py:86
 msgid "Bangla file"
 msgstr ""
 
-#: courses/models.py:720
+#: courses/models.py:720 downloads/models.py:93
 msgid "English file"
 msgstr ""
 
@@ -820,7 +824,7 @@ msgid "answer options"
 msgstr ""
 
 #: courses/models.py:1112 courses/models.py:1160 courses/models.py:1242
-#: orders/models.py:54
+#: orders/models.py:56
 msgid "student"
 msgstr ""
 
@@ -919,8 +923,8 @@ msgid ""
 msgstr ""
 "তানভীর হকের অনলাইন সংগীত তত্ত্বের কোর্স: শব্দের মূল কথা থেকে পঞ্চম বৃত্ত পর্যন্ত।"
 
-#: courses/views.py:68 courses/views.py:109 pages/views.py:124
-#: pages/views.py:144 pages/views.py:169
+#: courses/views.py:68 courses/views.py:109 downloads/views.py:82
+#: pages/views.py:124 pages/views.py:144 pages/views.py:169
 msgid "Home"
 msgstr "হোম"
 
@@ -928,7 +932,7 @@ msgstr "হোম"
 msgid "Courses"
 msgstr "কোর্স"
 
-#: courses/views.py:94 templates/courses/dashboard.html:69
+#: courses/views.py:94 templates/courses/dashboard.html:70
 msgid "Modules"
 msgstr "মডিউল"
 
@@ -950,9 +954,9 @@ msgstr "মডিউল %(number)s"
 msgid "Level"
 msgstr "স্তর"
 
-#: courses/views.py:147 templates/accounts/orders.html:8
-#: templates/courses/dashboard.html:11 templates/includes/footer.html:22
-#: templates/includes/masthead.html:30
+#: courses/views.py:147 templates/accounts/orders.html:9
+#: templates/courses/dashboard.html:11 templates/downloads/mine.html:9
+#: templates/includes/footer.html:23 templates/includes/masthead.html:31
 msgid "My courses"
 msgstr "আমার কোর্স"
 
@@ -960,139 +964,235 @@ msgstr "আমার কোর্স"
 msgid "Your enrolled courses and progress."
 msgstr "আপনার ভর্তি হওয়া কোর্স ও অগ্রগতি।"
 
-#: courses/views.py:185 templates/courses/dashboard.html:45
+#: courses/views.py:185 templates/courses/dashboard.html:46
 #: templates/courses/quiz.html:38
 msgid "Enroll to continue"
 msgstr "চালিয়ে যেতে ভর্তি হোন"
 
-#: orders/models.py:18
+#: downloads/models.py:53
+msgid "Worksheet"
+msgstr "ওয়ার্কশিট"
+
+#: downloads/models.py:54
+msgid "PDF"
+msgstr "PDF"
+
+#: downloads/models.py:56
+msgid "ZIP bundle"
+msgstr "ZIP বান্ডেল"
+
+#: downloads/models.py:69
+msgid "Left blank, it is made from the English title."
+msgstr "ফাঁকা রাখলে ইংরেজি শিরোনাম থেকে তৈরি হয়।"
+
+#: downloads/models.py:74 downloads/models.py:79
+msgid "One or two sentences on what is inside."
+msgstr "ভেতরে কী আছে, এক বা দুই বাক্যে।"
+
+#: downloads/models.py:82
+msgid "type"
+msgstr "ধরন"
+
+#: downloads/models.py:105
+msgid "0 makes it free for any signed-in account."
+msgstr "0 দিলে যেকোনো সাইন-ইন করা অ্যাকাউন্টের জন্য ফ্রি।"
+
+#: downloads/models.py:111
+msgid "Lower numbers are listed first."
+msgstr "ছোট সংখ্যা আগে দেখানো হয়।"
+
+#: downloads/models.py:121 orders/models.py:71
+msgid "download"
+msgstr "ডাউনলোড"
+
+#: downloads/views.py:68
+msgid "Downloads: worksheets, PDFs and audio"
+msgstr "ডাউনলোড: ওয়ার্কশিট, PDF ও অডিও"
+
+#: downloads/views.py:70
+#, python-format
+msgid "%(title)s, page %(number)s"
+msgstr "%(title)s, পৃষ্ঠা %(number)s"
+
+#: downloads/views.py:74
+msgid "All"
+msgstr "সব"
+
+#: downloads/views.py:78
+msgid ""
+"Music theory worksheets, PDFs, audio and ZIP bundles. Free ones need only an "
+"account; paid ones are a one-time payment in BDT."
+msgstr "মিউজিক থিওরির ওয়ার্কশিট, PDF, অডিও ও ZIP বান্ডেল। ফ্রিগুলোর জন্য শুধু একটি অ্যাকাউন্ট লাগে; পেইডগুলো টাকায় এককালীন পেমেন্ট।"
+
+#: downloads/views.py:82 templates/courses/lesson.html:90
+#: templates/downloads/list.html:8 templates/includes/footer.html:16
+#: templates/includes/masthead.html:19
+msgid "Downloads"
+msgstr "ডাউনলোড"
+
+#: downloads/views.py:101 templates/accounts/orders.html:10
+#: templates/courses/dashboard.html:15 templates/downloads/list.html:34
+#: templates/downloads/mine.html:7 templates/orders/receipt.html:34
+msgid "My downloads"
+msgstr "আমার ডাউনলোড"
+
+#: downloads/views.py:111
+msgid "Buy this download to get the file."
+msgstr "ফাইলটি পেতে এই ডাউনলোডটি কিনুন।"
+
+#: orders/models.py:20
 msgid "bKash"
 msgstr "বিকাশ"
 
-#: orders/models.py:19
+#: orders/models.py:21
 msgid "Nagad"
 msgstr "নগদ"
 
-#: orders/models.py:20
+#: orders/models.py:22
 msgid "Visa or Mastercard"
 msgstr "ভিসা বা মাস্টারকার্ড"
 
-#: orders/models.py:21
+#: orders/models.py:23
 msgid "International card"
 msgstr "আন্তর্জাতিক কার্ড"
 
-#: orders/models.py:25
+#: orders/models.py:27
 msgid "Pay from your bKash wallet"
 msgstr "আপনার বিকাশ ওয়ালেট থেকে পরিশোধ করুন"
 
-#: orders/models.py:26
+#: orders/models.py:28
 msgid "Pay from your Nagad wallet"
 msgstr "আপনার নগদ ওয়ালেট থেকে পরিশোধ করুন"
 
-#: orders/models.py:27
+#: orders/models.py:29
 msgid "Bangladeshi debit and credit cards"
 msgstr "বাংলাদেশি ডেবিট ও ক্রেডিট কার্ড"
 
-#: orders/models.py:28
+#: orders/models.py:30
 msgid "Cards issued outside Bangladesh, charged in BDT"
 msgstr "বাংলাদেশের বাইরে ইস্যু করা কার্ড, টাকায় চার্জ করা হয়"
 
-#: orders/models.py:44
+#: orders/models.py:46
 msgid "Pending"
 msgstr "অপেক্ষমাণ"
 
-#: orders/models.py:45
+#: orders/models.py:47
 msgid "Paid"
 msgstr "পরিশোধিত"
 
-#: orders/models.py:46
+#: orders/models.py:48
 msgid "Failed"
 msgstr "ব্যর্থ"
 
-#: orders/models.py:47
+#: orders/models.py:49
 msgid "Refunded"
 msgstr "ফেরত দেওয়া হয়েছে"
 
-#: orders/models.py:50
+#: orders/models.py:52
 msgid "order number"
 msgstr ""
 
-#: orders/models.py:61
+#: orders/models.py:77
 msgid "amount (BDT)"
 msgstr ""
 
-#: orders/models.py:63
+#: orders/models.py:79
 msgid "payment method"
 msgstr ""
 
-#: orders/models.py:68
+#: orders/models.py:84
 msgid "gateway"
 msgstr ""
 
-#: orders/models.py:70
+#: orders/models.py:86
 msgid "gateway reference"
 msgstr ""
 
-#: orders/models.py:74
+#: orders/models.py:90
 msgid "callback token"
 msgstr ""
 
-#: orders/models.py:75
+#: orders/models.py:91
 msgid "paid at"
 msgstr ""
 
-#: orders/models.py:76
+#: orders/models.py:92
 msgid "failure reason"
 msgstr ""
 
-#: orders/models.py:79
+#: orders/models.py:95
 msgid "order"
 msgstr ""
 
-#: orders/models.py:80
+#: orders/models.py:96
 msgid "orders"
 msgstr ""
 
-#: orders/views.py:45
+#: orders/views.py:43
+msgid "Choose a payment method to continue."
+msgstr "চালিয়ে যেতে একটি পেমেন্ট পদ্ধতি বেছে নিন।"
+
+#: orders/views.py:60
+msgid "The payment gateway could not be reached. Please try again."
+msgstr "পেমেন্ট গেটওয়েতে পৌঁছানো যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।"
+
+#: orders/views.py:75 templates/orders/checkout.html:10
+msgid "Checkout"
+msgstr "চেকআউট"
+
+#: orders/views.py:90
 msgid "You already have access to this course."
 msgstr "এই কোর্সে আপনার আগে থেকেই অ্যাক্সেস আছে।"
 
-#: orders/views.py:52
+#: orders/views.py:97
 #, python-format
 msgid "%(course)s is required before this course."
 msgstr "এই কোর্সের আগে %(course)s করা প্রয়োজন।"
 
-#: orders/views.py:60
-msgid "Choose a payment method to continue."
-msgstr "চালিয়ে যেতে একটি পেমেন্ট পদ্ধতি বেছে নিন।"
+#: orders/views.py:112
+#, python-format
+msgid "%(count)s module · lifetime access"
+msgid_plural "%(count)s modules · lifetime access"
+msgstr[0] "%(count)sটি মডিউল · আজীবন অ্যাক্সেস"
+msgstr[1] "%(count)sটি মডিউল · আজীবন অ্যাক্সেস"
 
-#: orders/views.py:77
-msgid "The payment gateway could not be reached. Please try again."
-msgstr "পেমেন্ট গেটওয়েতে পৌঁছানো যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।"
+#: orders/views.py:117 templates/includes/footer.html:13
+#: templates/includes/masthead.html:18 templates/orders/sandbox.html:19
+msgid "Course"
+msgstr "কোর্স"
 
-#: orders/views.py:88 templates/orders/checkout.html:10
-msgid "Checkout"
-msgstr "চেকআউট"
+#: orders/views.py:133
+msgid "You already own this download."
+msgstr "এই ডাউনলোডটি আপনি আগেই কিনেছেন।"
 
-#: orders/views.py:113
+#: orders/views.py:146 templates/courses/lesson.html:126
+#: templates/includes/download_card.html:22 templates/orders/sandbox.html:19
+msgid "Download"
+msgstr "ডাউনলোড"
+
+#: orders/views.py:172
 msgid "Payment"
 msgstr "পেমেন্ট"
 
-#: orders/views.py:127 orders/views.py:168
+#: orders/views.py:186 orders/views.py:229
 msgid "The payment did not complete."
 msgstr "পেমেন্ট সম্পন্ন হয়নি।"
 
-#: orders/views.py:157
+#: orders/views.py:218
 msgid "That payment could not be matched to an order."
 msgstr "এই পেমেন্টের সঙ্গে কোনো অর্ডার মেলানো যায়নি।"
 
-#: orders/views.py:162
+#: orders/views.py:223
 msgid "Payment failed."
 msgstr "পেমেন্ট ব্যর্থ হয়েছে।"
 
-#: orders/views.py:163
+#: orders/views.py:224
 msgid "Payment cancelled."
 msgstr "পেমেন্ট বাতিল করা হয়েছে।"
+
+#: orders/views.py:275 templates/orders/receipt.html:12
+msgid "Your download is ready"
+msgstr "আপনার ডাউনলোড প্রস্তুত"
 
 #: pages/captcha.py:23
 msgid "That answer is not right. Try the new question."
@@ -1131,8 +1231,8 @@ msgstr "বার্তাটি পাঠানো যায়নি।"
 msgid "published"
 msgstr ""
 
-#: pages/models.py:30 pages/views.py:144 templates/includes/footer.html:16
-#: templates/includes/masthead.html:19
+#: pages/models.py:30 pages/views.py:144 templates/includes/footer.html:17
+#: templates/includes/masthead.html:20
 msgid "FAQ"
 msgstr "প্রশ্নোত্তর"
 
@@ -1140,15 +1240,15 @@ msgstr "প্রশ্নোত্তর"
 msgid "FAQs"
 msgstr ""
 
-#: pages/models.py:46 templates/includes/footer.html:29
+#: pages/models.py:46 templates/includes/footer.html:30
 msgid "Terms & Conditions"
 msgstr "শর্তাবলি"
 
-#: pages/models.py:47 templates/includes/footer.html:30
+#: pages/models.py:47 templates/includes/footer.html:31
 msgid "Privacy Policy"
 msgstr "গোপনীয়তা নীতি"
 
-#: pages/models.py:48 templates/includes/footer.html:31
+#: pages/models.py:48 templates/includes/footer.html:32
 msgid "Refund Policy"
 msgstr "রিফান্ড নীতি"
 
@@ -1284,8 +1384,8 @@ msgstr ""
 "সংগীতের ভিত্তি, পেমেন্ট বা আপনার অ্যাকাউন্ট নিয়ে প্রশ্ন আছে? বার্তা পাঠান, দুই "
 "কর্মদিবসের মধ্যে আমরা উত্তর দেব।"
 
-#: pages/views.py:124 templates/includes/footer.html:20
-#: templates/includes/masthead.html:20 templates/pages/contact.html:9
+#: pages/views.py:124 templates/includes/footer.html:21
+#: templates/includes/masthead.html:21 templates/pages/contact.html:9
 msgid "Contact"
 msgstr "যোগাযোগ"
 
@@ -1419,39 +1519,37 @@ msgstr ""
 "href=\"%(terms_url)s\">শর্তাবলি</a> ও <a href=\"%(privacy_url)s\">গোপনীয়তা "
 "নীতি</a> মেনে নিচ্ছেন।"
 
-#: templates/accounts/orders.html:14
+#: templates/accounts/orders.html:17
 msgid "Your orders"
 msgstr "আপনার অর্ডার"
 
-#: templates/accounts/orders.html:16 templates/orders/receipt.html:24
+#: templates/accounts/orders.html:19 templates/orders/receipt.html:24
 #: templates/orders/sandbox.html:18
 msgid "Order"
 msgstr "অর্ডার"
 
-#: templates/accounts/orders.html:16 templates/includes/footer.html:13
-#: templates/includes/masthead.html:18 templates/orders/checkout.html:52
-#: templates/orders/sandbox.html:19
-msgid "Course"
-msgstr "কোর্স"
+#: templates/accounts/orders.html:19
+msgid "Item"
+msgstr "আইটেম"
 
-#: templates/accounts/orders.html:16
+#: templates/accounts/orders.html:19
 msgid "Amount"
 msgstr "পরিমাণ"
 
-#: templates/accounts/orders.html:17 templates/orders/receipt.html:25
+#: templates/accounts/orders.html:20 templates/orders/receipt.html:25
 #: templates/orders/sandbox.html:20
 msgid "Method"
 msgstr "পদ্ধতি"
 
-#: templates/accounts/orders.html:17
+#: templates/accounts/orders.html:20
 msgid "Status"
 msgstr "অবস্থা"
 
-#: templates/accounts/orders.html:17 templates/orders/receipt.html:26
+#: templates/accounts/orders.html:20 templates/orders/receipt.html:26
 msgid "Date"
 msgstr "তারিখ"
 
-#: templates/accounts/orders.html:38
+#: templates/accounts/orders.html:41
 #, python-format
 msgid ""
 "Receipts are emailed at the time of payment. Need one again? <a "
@@ -1460,7 +1558,7 @@ msgstr ""
 "পেমেন্টের সময়ই রসিদ ইমেইলে পাঠানো হয়। আবার দরকার? <a "
 "href=\"%(contact_url)s\">আমাদের জানান</a>।"
 
-#: templates/accounts/orders.html:44
+#: templates/accounts/orders.html:47
 #, python-format
 msgid "You have no orders yet. <a href=\"%(list_url)s\">Browse the course</a>."
 msgstr "আপনার এখনও কোনো অর্ডার নেই। <a href=\"%(list_url)s\">কোর্সটি দেখুন</a>।"
@@ -1543,49 +1641,49 @@ msgstr "মূল অংশে যান"
 msgid "Welcome back, %(name)s"
 msgstr "আবার স্বাগতম, %(name)s"
 
-#: templates/courses/dashboard.html:18
+#: templates/courses/dashboard.html:19
 msgid "Log out"
 msgstr "লগ আউট"
 
-#: templates/courses/dashboard.html:32
+#: templates/courses/dashboard.html:33
 msgid "Continue where you left off"
 msgstr "যেখানে থেমেছিলেন সেখান থেকে শুরু করুন"
 
-#: templates/courses/dashboard.html:32
+#: templates/courses/dashboard.html:33
 msgid "Start here"
 msgstr "এখান থেকে শুরু করুন"
 
-#: templates/courses/dashboard.html:36
+#: templates/courses/dashboard.html:37
 #, python-format
 msgid "Module %(number)s · %(title)s"
 msgstr "মডিউল %(number)s · %(title)s"
 
-#: templates/courses/dashboard.html:41
+#: templates/courses/dashboard.html:42
 msgid "Resume lesson"
 msgstr "পাঠ আবার শুরু করুন"
 
-#: templates/courses/dashboard.html:41 templates/courses/quiz.html:38
-#: templates/orders/receipt.html:33 templates/pages/home.html:14
+#: templates/courses/dashboard.html:42 templates/courses/quiz.html:38
+#: templates/orders/receipt.html:36 templates/pages/home.html:14
 #: templates/pages/home.html:139
 #, python-format
 msgid "Start Module %(number)s"
 msgstr "মডিউল %(number)s শুরু করুন"
 
-#: templates/courses/dashboard.html:53
+#: templates/courses/dashboard.html:54
 #, python-format
 msgid "Resume Module %(number)s"
 msgstr "মডিউল %(number)s আবার শুরু করুন"
 
-#: templates/courses/dashboard.html:62
+#: templates/courses/dashboard.html:63
 #, python-format
 msgid "Resume at %(time)s"
 msgstr "%(time)s থেকে আবার শুরু"
 
-#: templates/courses/dashboard.html:106
+#: templates/courses/dashboard.html:107
 msgid "You have not enrolled yet"
 msgstr "আপনি এখনও ভর্তি হননি"
 
-#: templates/courses/dashboard.html:107
+#: templates/courses/dashboard.html:108
 msgid ""
 "Your free account gives you Module 1. Enroll once to unlock every module, "
 "with lifetime access."
@@ -1593,7 +1691,7 @@ msgstr ""
 "বিনামূল্যের অ্যাকাউন্টে আপনি মডিউল 1 পাবেন। একবার ভর্তি হলেই সব মডিউল খুলে যাবে, "
 "আজীবন অ্যাক্সেসসহ।"
 
-#: templates/courses/dashboard.html:111 templates/pages/404.html:13
+#: templates/courses/dashboard.html:112 templates/pages/404.html:13
 msgid "Browse the course"
 msgstr "কোর্সটি দেখুন"
 
@@ -1694,10 +1792,6 @@ msgstr "ইংরেজি সাবটাইটেল"
 msgid "Lesson notes"
 msgstr "পাঠের নোট"
 
-#: templates/courses/lesson.html:90
-msgid "Downloads"
-msgstr "ডাউনলোড"
-
 #: templates/courses/lesson.html:98
 msgid "Notes for this module are being prepared."
 msgstr "এই মডিউলের নোট তৈরি হচ্ছে।"
@@ -1705,10 +1799,6 @@ msgstr "এই মডিউলের নোট তৈরি হচ্ছে।"
 #: templates/courses/lesson.html:109 templates/courses/quiz.html:71
 msgid "Download the audio"
 msgstr "অডিওটি ডাউনলোড করুন"
-
-#: templates/courses/lesson.html:126
-msgid "Download"
-msgstr "ডাউনলোড"
 
 #: templates/courses/lesson.html:138
 #, python-format
@@ -1848,7 +1938,7 @@ msgid "Correct"
 msgstr "সঠিক"
 
 #: templates/courses/quiz.html:6 templates/courses/quiz.html:93
-#: templates/orders/receipt.html:35
+#: templates/orders/receipt.html:38
 msgid "Try again"
 msgstr "আবার চেষ্টা করুন"
 
@@ -1911,9 +2001,52 @@ msgstr "এই কুইজে এখনও কোনো প্রশ্ন ন�
 msgid "Back to the lesson"
 msgstr "পাঠে ফিরে যান"
 
+#: templates/downloads/list.html:9
+msgid ""
+"Worksheets, PDFs, audio and ZIP bundles to practise with. Free ones need "
+"only an account. Paid ones are a one-time payment in BDT and stay in My "
+"downloads."
+msgstr "অনুশীলনের জন্য ওয়ার্কশিট, PDF, অডিও ও ZIP বান্ডেল। ফ্রিগুলোর জন্য শুধু একটি অ্যাকাউন্ট লাগে। পেইডগুলো টাকায় এককালীন পেমেন্ট, এবং কেনার পর আমার ডাউনলোডে থেকে যায়।"
+
+#: templates/downloads/list.html:16
+msgid "Filter downloads by type"
+msgstr "ধরন অনুযায়ী ডাউনলোড বাছাই"
+
+#: templates/downloads/list.html:30
+msgid "No downloads of this type yet."
+msgstr "এই ধরনের কোনো ডাউনলোড এখনও নেই।"
+
+#: templates/downloads/mine.html:23
+#, python-format
+msgid ""
+"You have not bought any downloads yet. <a href=\"%(list_url)s\">Browse the "
+"downloads</a>; the free ones need no purchase."
+msgstr "আপনি এখনও কোনো ডাউনলোড কেনেননি। <a href=\"%(list_url)s\">ডাউনলোডগুলো দেখুন</a>; ফ্রিগুলো কিনতে হয় না।"
+
 #: templates/includes/captcha_field.html:10
 msgid "Quick check"
 msgstr "ছোট্ট যাচাই"
+
+#: templates/includes/download_card.html:10
+msgid "Free"
+msgstr "ফ্রি"
+
+#: templates/includes/download_card.html:23
+msgid "Bought · download again at any time"
+msgstr "কেনা হয়েছে · যেকোনো সময় আবার ডাউনলোড করুন"
+
+#: templates/includes/download_card.html:26
+msgid "Download free"
+msgstr "ফ্রি ডাউনলোড"
+
+#: templates/includes/download_card.html:26
+msgid "Log in to download"
+msgstr "ডাউনলোড করতে লগ ইন করুন"
+
+#: templates/includes/download_card.html:30
+#, python-format
+msgid "Buy for %(price)s"
+msgstr "%(price)s দিয়ে কিনুন"
 
 #: templates/includes/footer.html:8
 #, python-format
@@ -1928,16 +2061,16 @@ msgstr "ফুটার"
 msgid "Pricing"
 msgstr "মূল্য"
 
-#: templates/includes/footer.html:28
+#: templates/includes/footer.html:29
 msgid "Legal"
 msgstr "আইনি তথ্য"
 
-#: templates/includes/footer.html:37
+#: templates/includes/footer.html:38
 #, python-format
 msgid "%(name)s. All rights reserved."
 msgstr "%(name)s। সর্বস্বত্ব সংরক্ষিত।"
 
-#: templates/includes/footer.html:38
+#: templates/includes/footer.html:39
 msgid "Payments secured by SSLCOMMERZ"
 msgstr "SSLCOMMERZ দ্বারা সুরক্ষিত পেমেন্ট"
 
@@ -1949,13 +2082,30 @@ msgstr "মেনু"
 msgid "Main"
 msgstr "প্রধান"
 
-#: templates/includes/masthead.html:27
+#: templates/includes/masthead.html:28
 msgid "Admin"
 msgstr "অ্যাডমিন"
 
-#: templates/includes/masthead.html:35 templates/includes/masthead.html:37
+#: templates/includes/masthead.html:36 templates/includes/masthead.html:38
 msgid "Enroll"
 msgstr "ভর্তি হোন"
+
+#: templates/includes/pagination.html:8
+msgid "Pages"
+msgstr "পৃষ্ঠা"
+
+#: templates/includes/pagination.html:10 templates/includes/pagination.html:12
+msgid "Previous"
+msgstr "আগের"
+
+#: templates/includes/pagination.html:23
+#, python-format
+msgid "Page %(number)s"
+msgstr "পৃষ্ঠা %(number)s"
+
+#: templates/includes/pagination.html:30 templates/includes/pagination.html:32
+msgid "Next"
+msgstr "পরের"
 
 #: templates/includes/progress.html:11
 #, python-format
@@ -1991,13 +2141,6 @@ msgstr ""
 #: templates/orders/checkout.html:39 templates/orders/checkout.html:40
 msgid "Order summary"
 msgstr "অর্ডারের সারাংশ"
-
-#: templates/orders/checkout.html:46
-#, python-format
-msgid "%(count)s module · lifetime access"
-msgid_plural "%(count)s modules · lifetime access"
-msgstr[0] "%(count)sটি মডিউল · আজীবন অ্যাক্সেস"
-msgstr[1] "%(count)sটি মডিউল · আজীবন অ্যাক্সেস"
 
 #: templates/orders/checkout.html:55
 msgid "Gateway fee"
@@ -2046,6 +2189,10 @@ msgstr "এই অর্ডারের পেমেন্ট হয়নি।
 #: templates/orders/receipt.html:28
 msgid "Gateway reference"
 msgstr "গেটওয়ে রেফারেন্স"
+
+#: templates/orders/receipt.html:33
+msgid "Download now"
+msgstr "এখনই ডাউনলোড করুন"
 
 #: templates/orders/sandbox.html:10
 msgid "Sandbox gateway"

@@ -139,7 +139,7 @@ def order_create(request):
 def order_edit(request, reference):
     """Correct an order's amount, method, transaction ID or status."""
     order = get_object_or_404(
-        Order.objects.select_related("student", "course"), reference=reference
+        Order.objects.select_related("student", "course", "download"), reference=reference
     )
     was_paid = order.status == Order.Status.PAID
     form = OrderForm(request.POST or None, instance=order)

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<section class="shell section section--tight stack u-gap-40">
+  <div class="split">
+    <h1 class="display-2">{% translate "My downloads" %}</h1>
+    <span class="cluster">
+      <a class="btn-link btn-link--sm" href="{% url 'courses:dashboard' %}">{% translate "My courses" %}</a>
+      <a class="btn-link btn-link--sm" href="{% url 'accounts:orders' %}">{% translate "Order history" %}</a>
+    </span>
+  </div>
+
+  {% if downloads %}
+    <ul class="download-grid">
+      {% for download in downloads %}
+        <li>{% include "includes/download_card.html" with mine=True %}</li>
+      {% endfor %}
+    </ul>
+    {% include "includes/pagination.html" with page=page_obj %}
+  {% else %}
+    {% url 'downloads:list' as list_url %}
+    <p class="u-fs-17">{% blocktranslate %}You have not bought any downloads yet. <a href="{{ list_url }}">Browse the downloads</a>; the free ones need no purchase.{% endblocktranslate %}</p>
+  {% endif %}
+</section>
+{% endblock %}

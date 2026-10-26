@@ -106,7 +106,7 @@ class SSLCommerzGateway(BaseGateway):
             "cus_name": order.student.get_full_name(),
             "cus_email": order.student.email,
             "cus_phone": "N/A",
-            "product_name": order.course.title,
+            "product_name": order.item_title,
             "product_category": "Education",
             "product_profile": "non-physical-goods",
             "shipping_method": "NO",

@@ -5,7 +5,10 @@
 <section class="shell shell--narrow section section--tight stack u-gap-24">
   <div class="split">
     <h1 class="display-3">{% translate "Order history" %}</h1>
-    <a class="btn-link btn-link--sm" href="{% url 'courses:dashboard' %}">{% translate "My courses" %}</a>
+    <span class="cluster">
+      <a class="btn-link btn-link--sm" href="{% url 'courses:dashboard' %}">{% translate "My courses" %}</a>
+      <a class="btn-link btn-link--sm" href="{% url 'downloads:mine' %}">{% translate "My downloads" %}</a>
+    </span>
   </div>
 
   {% if orders %}
@@ -13,14 +16,14 @@
       <table class="dtable">
         <caption class="visually-hidden">{% translate "Your orders" %}</caption>
         <thead>
-          <tr><th scope="col">{% translate "Order" %}</th><th scope="col">{% translate "Course" %}</th><th scope="col">{% translate "Amount" %}</th>
+          <tr><th scope="col">{% translate "Order" %}</th><th scope="col">{% translate "Item" %}</th><th scope="col">{% translate "Amount" %}</th>
               <th scope="col">{% translate "Method" %}</th><th scope="col">{% translate "Status" %}</th><th scope="col">{% translate "Date" %}</th></tr>
         </thead>
         <tbody>
           {% for order in orders %}
             <tr>
               <th scope="row" class="dtable__name">{{ order.reference }}</th>
-              <td>{{ order.course.title }}</td>
+              <td>{% if order.download and order.status == 'paid' %}<a href="{{ order.download.get_file_url }}">{{ order.item_title }}</a>{% else %}{{ order.item_title }}{% endif %}</td>
               <td class="u-nowrap">{{ order.amount_display }}</td>
               <td>{{ order.get_method_display }}</td>
               <td>

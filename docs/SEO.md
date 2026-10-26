@@ -54,6 +54,7 @@ than sitting in unconnected blocks:
 | --- | --- |
 | Home | `EducationalOrganization`, `Course` (with `Offer` and `CourseInstance`), `FAQPage` |
 | Course | `EducationalOrganization`, `Course`, `BreadcrumbList` |
+| Downloads | `EducationalOrganization`, `ItemList` (each item a `DigitalDocument` or `AudioObject` with an `Offer`), `BreadcrumbList` |
 | Contact | `EducationalOrganization`, `BreadcrumbList` |
 | FAQ | `EducationalOrganization`, `FAQPage`, `BreadcrumbList` |
 | Legal | `EducationalOrganization`, `Article`, `BreadcrumbList` |
@@ -71,7 +72,13 @@ contains the expected types, so a template edit cannot silently break it.
 ## URLs, headings and links
 
 URLs are readable and stable: `/courses/foundations-of-music/`,
-`/legal/refunds/`, `/learn/<course>/<module>/`.
+`/legal/refunds/`, `/learn/<course>/<module>/`, `/downloads/`.
+
+The downloads list is paginated (`?page=2`) and filterable by type
+(`?type=worksheet`). Each of those pages is its own canonical URL with its own
+title, so page 2 is not reported as a duplicate of page 1. Items have no page
+of their own; each card carries an `id` (`#download-<slug>`) that its
+`ItemList` entry points at.
 
 Each page has exactly one `<h1>` and a sensible heading order beneath it.
 Pages are linked to each other on purpose — the home page points at the
@@ -97,7 +104,8 @@ Images carry real alt text. Notation images uploaded by the administrator are
   `llms.txt`.
 - `/llms.txt` — a plain-text brief for answer engines: what the course is, its
   price in BDT, module list, payment methods, refund terms, the FAQs, and an
-  explicit note that lesson content is private and must not be represented.
+  explicit note that lesson content and download files are private and must
+  not be represented. It links the downloads list.
   Always written in English (it ignores `Accept-Language`); it links the
   English pages and explains that the Bangla page is the same address
   without `/en/`.
@@ -107,9 +115,12 @@ stale when the course changes.
 
 ## Keeping private pages private
 
-Dashboards, lessons, quizzes, checkout, receipts and `/manage/` all send
-`noindex, nofollow`, are listed in `robots.txt`, and require a session.
-Course media files additionally send `X-Robots-Tag: noindex, nofollow`.
+Dashboards, lessons, quizzes, checkout, receipts, My downloads
+(`/my-downloads/`) and `/manage/` all send `noindex, nofollow`, are listed in
+`robots.txt`, and require a session. Course media and download files
+additionally send `X-Robots-Tag: noindex, nofollow`; `robots.txt` blocks
+everything below `/downloads/` (`/downloads/*/`: the files and the download
+checkout) while the list itself stays open.
 
 Tests assert that the sitemap excludes them and that lesson pages carry the
 noindex directive.

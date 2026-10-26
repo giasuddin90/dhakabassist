@@ -28,7 +28,7 @@
             {% if order.student.is_staff %}{{ order.student.get_full_name }}{% else %}<a href="{% url 'manage:student_detail' order.student.pk %}">{{ order.student.get_full_name }}</a>{% endif %}
             · {{ order.student.email }}
           </dd>
-          <dt>Course</dt><dd>{{ order.course.title }}{% if order.course.subtitle %} · {{ order.course.subtitle }}{% endif %}</dd>
+          {% if order.download %}<dt>Download</dt><dd>{{ order.download.title }}</dd>{% else %}<dt>Course</dt><dd>{{ order.course.title }}{% if order.course.subtitle %} · {{ order.course.subtitle }}{% endif %}</dd>{% endif %}
           <dt>Placed</dt><dd>{{ order.created_at|date:"j M Y, H:i" }}</dd>
           <dt>Paid</dt><dd>{{ order.paid_at|date:"j M Y, H:i"|default:"—" }}</dd>
           <dt>Gateway</dt><dd>{{ order.gateway|default:"—" }}</dd>

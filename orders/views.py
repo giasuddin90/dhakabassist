@@ -7,12 +7,13 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
-from django.utils.translation import gettext_noop
+from django.utils.translation import gettext_noop, ngettext
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from courses.access import CourseAccess, course_queryset
 from courses.models import Course
+from downloads.models import Download
 from pages import seo
 
 from .emails import send_receipt
@@ -31,6 +32,50 @@ def payment_methods():
         }
         for value, label in PaymentMethod.choices
     ]
+
+
+def start_payment(request, price, **item):
+    """Open a pending order for `item` (`course=` or `download=`) at `price`
+    and send the student to the gateway. Returns None, with a message, when
+    that fails."""
+    selected = request.POST.get("method")
+    if selected not in PaymentMethod.values:
+        messages.error(request, _("Choose a payment method to continue."))
+        return None
+    order = Order.objects.create(
+        student=request.user,
+        amount=price,
+        method=selected,
+        gateway=settings.PAYMENT_GATEWAY,
+        **item,
+    )
+    request.session["pending_order"] = order.reference
+    try:
+        return HttpResponseRedirect(get_gateway().start_url(order, request))
+    except GatewayError as exc:
+        order.mark_failed(str(exc))
+        logger.warning("Checkout failed for %s: %s", order.reference, exc)
+        messages.error(
+            request,
+            _("The payment gateway could not be reached. Please try again."),
+        )
+        return None
+
+
+def render_checkout(request, summary, canonical_path, **context):
+    """The checkout page. `summary` fills the order summary box: the item's
+    `title`, a `detail` line, the `label` beside the price, and the `price`."""
+    return render(
+        request,
+        "orders/checkout.html",
+        {
+            "summary": summary,
+            "methods": payment_methods(),
+            "selected": request.POST.get("method") or PaymentMethod.BKASH,
+            "seo": seo.noindex(_("Checkout"), canonical_path=canonical_path),
+            **context,
+        },
+    )
 
 
 @login_required
@@ -53,42 +98,56 @@ def checkout(request, slug):
         )
         return redirect(prerequisite.get_absolute_url())
 
-    selected = request.POST.get("method") or PaymentMethod.BKASH
+    if request.method == "POST":
+        response = start_payment(request, course.price, course=course)
+        if response:
+            return response
+
+    count = course.module_count
+    return render_checkout(
+        request,
+        {
+            "title": " · ".join(filter(None, (course.title, course.subtitle))),
+            "detail": ngettext(
+                "%(count)s module · lifetime access",
+                "%(count)s modules · lifetime access",
+                count,
+            )
+            % {"count": count},
+            "label": _("Course"),
+            "price": course.price,
+        },
+        reverse("orders:checkout", kwargs={"slug": slug}),
+        course=course,
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def download_checkout(request, slug):
+    """Buy a paid download. A free one, or one already bought, needs no order."""
+    download = get_object_or_404(Download.objects.published(), slug=slug)
+    if download.is_free:
+        return redirect("downloads:list")
+    if download.is_bought_by(request.user):
+        messages.info(request, _("You already own this download."))
+        return redirect("downloads:mine")
 
     if request.method == "POST":
-        if selected not in PaymentMethod.values:
-            messages.error(request, _("Choose a payment method to continue."))
-        else:
-            order = Order.objects.create(
-                student=request.user,
-                course=course,
-                amount=course.price,
-                method=selected,
-                gateway=settings.PAYMENT_GATEWAY,
-            )
-            request.session["pending_order"] = order.reference
-            try:
-                return HttpResponseRedirect(get_gateway().start_url(order, request))
-            except GatewayError as exc:
-                order.mark_failed(str(exc))
-                logger.warning("Checkout failed for %s: %s", order.reference, exc)
-                messages.error(
-                    request,
-                    _("The payment gateway could not be reached. Please try again."),
-                )
+        response = start_payment(request, download.price, download=download)
+        if response:
+            return response
 
-    return render(
+    return render_checkout(
         request,
-        "orders/checkout.html",
         {
-            "course": course,
-            "methods": payment_methods(),
-            "selected": selected,
-            "seo": seo.noindex(
-                _("Checkout"),
-                canonical_path=reverse("orders:checkout", kwargs={"slug": slug}),
-            ),
+            "title": download.title,
+            "detail": f"{download.get_kind_display()} · {download.detail_line}",
+            "label": _("Download"),
+            "price": download.price,
         },
+        download.get_buy_url(),
+        download=download,
     )
 
 
@@ -125,7 +184,7 @@ def _finish(request, order, data):
         return redirect(reverse("orders:receipt", kwargs={"reference": order.reference}))
     order.mark_failed(reason)
     messages.error(request, _(reason) if reason else _("The payment did not complete."))
-    return redirect(reverse("orders:checkout", kwargs={"slug": order.course.slug}))
+    return redirect(order.checkout_url)
 
 
 @login_required
@@ -152,7 +211,9 @@ def callback(request, outcome):
     """
     data = request.POST.dict() or request.GET.dict()
     reference = data.get("tran_id") or request.session.get("pending_order", "")
-    order = Order.objects.filter(reference=reference).select_related("course").first()
+    order = (
+        Order.objects.filter(reference=reference).select_related("course", "download").first()
+    )
     if order is None:
         messages.error(request, _("That payment could not be matched to an order."))
         return redirect("pages:home")
@@ -167,7 +228,7 @@ def callback(request, outcome):
             request,
             _(order.failure_reason) if order.failure_reason else _("The payment did not complete."),
         )
-        return redirect(reverse("orders:checkout", kwargs={"slug": order.course.slug}))
+        return redirect(order.checkout_url)
     return _finish(request, order, data)
 
 
@@ -195,17 +256,23 @@ def ipn(request):
 @login_required
 def receipt(request, reference):
     order = get_object_or_404(
-        Order.objects.select_related("course"), reference=reference, student=request.user
+        Order.objects.select_related("course", "download"),
+        reference=reference,
+        student=request.user,
     )
-    first_module = next(
-        (m for m in order.course.module_list if m.status == "published"), None
-    )
+    first_module = None
+    if order.course:
+        first_module = next(
+            (m for m in order.course.module_list if m.status == "published"), None
+        )
     return render(
         request,
         "orders/receipt.html",
         {
             "order": order,
             "first_module": first_module,
-            "seo": seo.noindex("You are enrolled"),
+            "seo": seo.noindex(
+                _("Your download is ready") if order.download else "You are enrolled"
+            ),
         },
     )
