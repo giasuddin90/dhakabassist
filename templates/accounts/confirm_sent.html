@@ -11,5 +11,7 @@
     <p class="lede">{% translate "We sent you a link. Open it to confirm your address, then log in." %}</p>
   {% endif %}
   <p class="u-fs-15 muted">{% translate "The link is valid for a few days. Nothing arrived? Check your spam folder first." %}</p>
-  <p class="u-fs-15"><a href="{% url 'accounts:confirm_resend' %}">{% translate "Send a new confirmation link" %}</a></p>
+  {% url 'accounts:confirm_resend' as resend_url %}
+  {% translate "Send a new confirmation link" as resend_label %}
+  {% include "includes/resend_link.html" with url=resend_url label=resend_label %}
 {% endblock %}

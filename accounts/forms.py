@@ -1,3 +1,5 @@
+import logging
+
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation
@@ -10,6 +12,7 @@ from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 # Our wording for Django's password validators, by error code. Django ships no
 # Bangla for these.
@@ -159,15 +162,22 @@ class ResendConfirmationForm(forms.Form):
 
 
 class StudentPasswordResetForm(PasswordResetForm):
-    """Django's reset form, with the email in the student's own language.
+    """Django's reset form, with the email in English like every other.
 
     The link is built from `SITE_BASE_URL` rather than the request's Host
-    header, so a forged header cannot point the link at another site.
+    header, so a forged header cannot point the link at another site. Skipped
+    while the last reset email is under `EMAIL_RESEND_SECONDS` old.
     """
 
     def send_mail(self, subject_template_name, email_template_name, context, *args, **kwargs):
+        if not context["user"].claim_password_reset_send():
+            logger.info("Skipped a password reset email to user %s sent too soon",
+                        context["user"].pk)
+            return
         context["base_url"] = settings.SITE["base_url"]
-        with translation.override(context["user"].language):
+        # Django renders this email itself, so it gets English here rather
+        # than through `core.mail.send_email`.
+        with translation.override("en"):
             super().send_mail(
                 subject_template_name, email_template_name, context, *args, **kwargs
             )
@@ -177,15 +187,13 @@ class AccountSettingsForm(forms.ModelForm):
     class Meta:
         model = User
         fields = (
-            "full_name", "email", "profession", "education", "location", "language",
-            "marketing_opt_in",
+            "full_name", "email", "profession", "education", "location", "marketing_opt_in",
         )
         labels = {
             "profession": _("Profession (optional)"),
             "education": _("Education (optional)"),
             "location": _("Location (optional)"),
             "marketing_opt_in": _("Email me when new modules are published"),
-            "language": _("Language for emails"),
         }
         help_texts = {
             "education": _(

@@ -40,9 +40,9 @@ live under `/en/`.
   *Bangla only* or *English only*. It decides which language's lesson page
   lists the file under Downloads. Links you paste into the notes work
   whatever it says, so put Bangla handouts in the Bangla notes.
-- Emails (receipts, welcome links) go out in the student's language, which
-  they choose under Account settings and which starts as the language they
-  signed up in.
+- Emails (receipts, welcome links, confirmations, password resets) are always
+  in English, and their links open the English pages. Their wording lives in
+  the plain-text templates under `templates/*/email/` and is not translated.
 
 ## Editing a module
 

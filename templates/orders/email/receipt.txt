@@ -1,19 +1,17 @@
-{% load i18n money %}{% blocktranslate with name=order.student.get_short_name %}Hello {{ name }},{% endblocktranslate %}
+{% load money %}Hello {{ order.student.get_short_name }},
 
-{% translate "Your payment has been received and your enrolment is active." %}
+Your payment has been received and your enrolment is active.
 
-{% translate "Order" %}:    {{ order.reference }}
-{% translate "Course" %}:   {{ order.course.title }}
-{% translate "Amount" %}:   {{ order.amount|taka }} BDT
-{% translate "Method" %}:   {{ order.get_method_display }}
-{% translate "Date" %}:     {{ order.paid_at|date:"j F Y" }}
+Order:    {{ order.reference }}
+Course:   {{ order.course.title }}
+Amount:   {{ order.amount|taka }} BDT
+Method:   {{ order.get_method_display }}
+Date:     {{ order.paid_at|date:"j F Y" }}
 
-{% translate "Start studying:" %} {{ base_url }}{% url 'courses:dashboard' %}
+Start studying: {{ base_url }}{% url 'courses:dashboard' %}
 
-{% blocktranslate trimmed %}
 You have lifetime access to every module. If you need a copy of this receipt
 later, it is always in your order history.
-{% endblocktranslate %}
 
 — DhakaBassist
-{% translate "Music theory courses by Tanveer Haque." %}
+Music theory courses by Tanveer Haque.

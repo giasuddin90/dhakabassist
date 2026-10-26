@@ -1,0 +1,7 @@
+{% load i18n %}
+{% comment %}A link to ask for another email, held back while `wait_seconds`
+   runs (`EmailCooldownMixin`). Pass `url` and `label`.{% endcomment %}
+<div class="stack u-gap-16" data-countdown="{{ wait_seconds }}">
+  {% include "includes/resend_wait.html" %}
+  <p class="u-fs-15" data-countdown-ready{% if wait_seconds %} hidden{% endif %}><a href="{{ url }}">{{ label }}</a></p>
+</div>

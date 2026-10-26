@@ -56,7 +56,7 @@ Every uploaded file goes in the media folder (`MEDIA_ROOT`, `./media`, set in `c
 - URLs decide the language: Bangla without a prefix, English under `/en/` (`i18n_patterns(prefix_default_language=False)` in `core/urls.py`). `/manage/`, `/django-admin/`, discovery files and `/library/…` links sit outside it; the staff panel is English only (`core/middleware.py`).
 - **Content**: every translatable field is two columns, `<name>_bn` and `<name>_en`, plus `<name> = translated("<name>")` from `courses/i18n.py`, which reads the active language and falls back to the other. Media too (`video_uid_*`, `file_*`, `trailer_url_*`); pass `key=` so a duration follows its video. Query and order by the real columns (`columns("title")`), never the property. Required fields need one language, enforced by `in_some_language(...)` constraints and `BilingualFormMixin` (`manage_panel/forms.py`). Templates render a pair with `includes/bilingual_field.html`.
 - **Wording**: English msgids with `{% translate %}` / `{% blocktranslate %}` and `gettext`; Bangla lives in `locale/bn/LC_MESSAGES/django.po` with the compiled `.mo` committed. Run `makemessages -l bn` / `compilemessages` (needs GNU gettext) after changing wording; see `docs/DEPLOYMENT.md`. JS gets its wording from `data-` attributes the template translates.
-- Western digits in both languages. Emails render in `User.language`.
+- Western digits in both languages. Emails are always English and not translated: send them with `core.mail.send_email`, which renders with English active.
 
 ## Python and Django
 

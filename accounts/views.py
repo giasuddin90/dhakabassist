@@ -2,7 +2,13 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LoginView, LogoutView, PasswordResetConfirmView
+from django.contrib.auth.views import (
+    LoginView,
+    LogoutView,
+    PasswordResetConfirmView,
+    PasswordResetDoneView,
+    PasswordResetView,
+)
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_str
@@ -10,6 +16,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.utils.translation import gettext as _
 from django.views.generic import FormView, ListView, TemplateView, UpdateView
 
+from core.cooldown import SessionCooldown, clock
 from orders.models import Order
 from pages import seo
 
@@ -19,8 +26,47 @@ from .tokens import email_confirmation_token
 
 # Remembers which address the "check your email" page should name.
 CONFIRM_EMAIL_SESSION_KEY = "accounts_confirm_email"
+# When this visitor last asked for each kind of email.
+CONFIRM_SENT_SESSION_KEY = "accounts_confirm_sent"
+RESET_SENT_SESSION_KEY = "accounts_password_reset_sent"
 
 SESSION_UNTIL_CLOSE = 0
+
+
+def email_cooldown(key):
+    """The wait between two emails of one kind, as this visitor sees it."""
+    # Built per call so the setting can change in tests.
+    return SessionCooldown(key, settings.EMAIL_RESEND_SECONDS)
+
+
+class EmailCooldownMixin:
+    """For pages that send an email or offer to send another.
+
+    Gives the template `wait_seconds` and `wait_clock` for the countdown
+    (`includes/resend_wait.html`), and lets `form_valid` refuse an early
+    send. The wait is judged by the session, not the account, so the answer
+    is the same for an address with no account behind it.
+    """
+
+    cooldown_key = ""
+
+    def cooldown(self):
+        """This page's wait, under `cooldown_key` in the session."""
+        return email_cooldown(self.cooldown_key)
+
+    def refuse_early_send(self, form):
+        """Add an error to `form` and return True while the wait is running."""
+        if not self.cooldown().remaining(self.request.session):
+            return False
+        form.add_error(None, _("Please wait until the timer ends before asking for another link."))
+        return True
+
+    def get_context_data(self, **kwargs):
+        """Add the time left before another email may be asked for."""
+        context = super().get_context_data(**kwargs)
+        seconds = self.cooldown().remaining(self.request.session)
+        context.update(wait_seconds=seconds, wait_clock=clock(seconds))
+        return context
 
 
 class StudentLoginView(LoginView):
@@ -75,6 +121,7 @@ class RegisterView(FormView):
     def form_valid(self, form):
         user = form.save()
         send_confirmation(user)
+        email_cooldown(CONFIRM_SENT_SESSION_KEY).start(self.request.session)
         self.request.session[CONFIRM_EMAIL_SESSION_KEY] = user.email
         return super().form_valid(form)
 
@@ -98,10 +145,11 @@ class RegisterView(FormView):
         return context
 
 
-class ConfirmSentView(TemplateView):
+class ConfirmSentView(EmailCooldownMixin, TemplateView):
     """ "Check your email", shown after signing up or asking for a new link."""
 
     template_name = "accounts/confirm_sent.html"
+    cooldown_key = CONFIRM_SENT_SESSION_KEY
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -112,15 +160,19 @@ class ConfirmSentView(TemplateView):
         return context
 
 
-class ResendConfirmationView(FormView):
+class ResendConfirmationView(EmailCooldownMixin, FormView):
     template_name = "accounts/confirm_resend.html"
     form_class = ResendConfirmationForm
     success_url = reverse_lazy("accounts:confirm_sent")
+    cooldown_key = CONFIRM_SENT_SESSION_KEY
 
     def form_valid(self, form):
+        if self.refuse_early_send(form):
+            return self.form_invalid(form)
         user = form.get_user()
         if user is not None:
             send_confirmation(user)
+        self.cooldown().start(self.request.session)
         self.request.session[CONFIRM_EMAIL_SESSION_KEY] = form.cleaned_data["email"]
         return super().form_valid(form)
 
@@ -183,6 +235,24 @@ class ConfirmEmailView(TemplateView):
             title = _("This link has expired")
         context.update(validlink=self.validlink, already_confirmed=already, seo=seo.noindex(title))
         return context
+
+
+class StudentPasswordResetView(EmailCooldownMixin, PasswordResetView):
+    """Django's reset form, one email per wait."""
+
+    cooldown_key = RESET_SENT_SESSION_KEY
+
+    def form_valid(self, form):
+        if self.refuse_early_send(form):
+            return self.form_invalid(form)
+        self.cooldown().start(self.request.session)
+        return super().form_valid(form)
+
+
+class StudentPasswordResetDoneView(EmailCooldownMixin, PasswordResetDoneView):
+    """ "Check your email" after a reset request, with a countdown to the next."""
+
+    cooldown_key = RESET_SENT_SESSION_KEY
 
 
 class StudentPasswordResetConfirmView(PasswordResetConfirmView):

@@ -1,0 +1,10 @@
+{% load i18n %}
+{% comment %}The wait before another email may be asked for. Goes inside a
+   `[data-countdown]` element; site.js ticks the clock and, at 0:00, hides
+   this and reveals the element's `[data-countdown-ready]` parts. Without
+   JavaScript it stays until the page is reloaded.{% endcomment %}
+{% if wait_seconds %}
+  <p class="u-fs-15 muted" data-countdown-wait>{% blocktranslate trimmed with clock=wait_clock %}
+    You can ask for a new link in <span role="timer" data-countdown-clock>{{ clock }}</span>.
+  {% endblocktranslate %}</p>
+{% endif %}

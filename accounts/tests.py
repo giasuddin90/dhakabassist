@@ -1,6 +1,7 @@
 """Registration, login, password reset and account settings."""
 
 import re
+from datetime import timedelta
 from unittest import mock
 
 from django.conf import settings
@@ -28,6 +29,12 @@ def link_in(message):
     return re.search(r"https?://[^/\s]+(/\S+)", message.body).group(1)
 
 
+def later(seconds=61):
+    """The clock moved on by `seconds`, e.g. past the resend wait."""
+    moved = timezone.now() + timedelta(seconds=seconds)
+    return mock.patch("django.utils.timezone.now", return_value=moved)
+
+
 class RegistrationTests(EnglishPagesMixin, TestCase):
     def test_registering_creates_an_account_and_emails_a_confirmation_link(self):
         response = self.client.post(reverse("accounts:register"), SIGNUP)
@@ -44,7 +51,7 @@ class RegistrationTests(EnglishPagesMixin, TestCase):
 
     def test_a_failed_send_still_creates_the_account_and_is_logged(self):
         with (
-            mock.patch("accounts.emails.EmailMessage.send", side_effect=OSError("refused")),
+            mock.patch("core.mail.EmailMessage.send", side_effect=OSError("refused")),
             self.assertLogs("accounts.emails", "ERROR"),
         ):
             response = self.client.post(reverse("accounts:register"), SIGNUP)
@@ -56,11 +63,11 @@ class RegistrationTests(EnglishPagesMixin, TestCase):
         self.assertContains(response, "rafiq@example.com")
         self.assertContains(response, "noindex")
 
-    def test_the_confirmation_email_follows_the_signup_language(self):
+    def test_the_confirmation_email_is_english_after_a_bangla_signup(self):
         with translation.override("bn"):
             self.client.post(reverse("accounts:register"), SIGNUP)
-        self.assertEqual(User.objects.get().language, "bn")
-        self.assertIn("ইমেইল", mail.outbox[0].subject)
+        self.assertEqual(mail.outbox[0].subject, "Confirm your DhakaBassist email")
+        self.assertIn("/en/account/confirm/", mail.outbox[0].body)
 
     def test_a_duplicate_email_is_refused(self):
         User.objects.create_user(email="rafiq@example.com", password=PASSWORD)
@@ -265,9 +272,10 @@ class EmailConfirmationTests(EnglishPagesMixin, TestCase):
         self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_a_new_link_can_be_requested(self):
-        response = self.client.post(
-            reverse("accounts:confirm_resend"), {"email": "RAFIQ@example.com"}
-        )
+        with later():
+            response = self.client.post(
+                reverse("accounts:confirm_resend"), {"email": "RAFIQ@example.com"}
+            )
         self.assertRedirects(response, reverse("accounts:confirm_sent"))
         self.assertEqual(len(mail.outbox), 2)
         self.client.post(link_in(mail.outbox[1]))
@@ -276,11 +284,65 @@ class EmailConfirmationTests(EnglishPagesMixin, TestCase):
 
     def test_asking_for_a_link_reveals_nothing_about_an_address(self):
         self.client.post(self.link)
-        for email in ("nobody@example.com", "rafiq@example.com"):
-            with self.subTest(email=email):
+        for minutes, email in ((2, "nobody@example.com"), (4, "rafiq@example.com")):
+            with self.subTest(email=email), later(minutes * 60):
                 response = self.client.post(reverse("accounts:confirm_resend"), {"email": email})
                 self.assertRedirects(response, reverse("accounts:confirm_sent"))
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_the_sent_page_hides_the_resend_link_for_a_minute(self):
+        response = self.client.get(reverse("accounts:confirm_sent"))
+        self.assertContains(response, 'data-countdown="60"')
+        self.assertContains(response, "You can ask for a new link in")
+        self.assertContains(response, "1:00")
+        self.assertContains(response, "data-countdown-ready hidden")
+        with later():
+            response = self.client.get(reverse("accounts:confirm_sent"))
+        self.assertContains(response, 'data-countdown="0"')
+        self.assertNotContains(response, "You can ask for a new link in")
+        self.assertNotContains(response, "data-countdown-ready hidden")
+
+    def test_asking_again_within_a_minute_is_refused(self):
+        with later(30):
+            response = self.client.post(
+                reverse("accounts:confirm_resend"), {"email": "rafiq@example.com"}
+            )
+        self.assertContains(response, "Please wait until the timer ends")
+        self.assertContains(response, "0:30")
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_an_early_request_is_refused_the_same_for_an_unknown_address(self):
+        with later(30):
+            response = self.client.post(
+                reverse("accounts:confirm_resend"), {"email": "nobody@example.com"}
+            )
+        self.assertContains(response, "Please wait until the timer ends")
+
+    def test_a_new_session_cannot_send_before_the_account_wait_ends(self):
+        # Clearing cookies resets the page's timer, not the account's.
+        self.client.logout()
+        with later(30):
+            response = self.client.post(
+                reverse("accounts:confirm_resend"), {"email": "rafiq@example.com"}
+            )
+        self.assertRedirects(response, reverse("accounts:confirm_sent"))
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_the_wait_starts_again_after_each_new_link(self):
+        with later():
+            self.client.post(reverse("accounts:confirm_resend"), {"email": "rafiq@example.com"})
+        with later(90):
+            response = self.client.post(
+                reverse("accounts:confirm_resend"), {"email": "rafiq@example.com"}
+            )
+        self.assertContains(response, "Please wait until the timer ends")
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_two_claims_at_once_send_one_email(self):
+        twin = User.objects.get(pk=self.user.pk)
+        with later():
+            self.assertTrue(self.user.claim_confirmation_send())
+            self.assertFalse(twin.claim_confirmation_send())
 
     def test_a_password_reset_link_also_confirms_the_email(self):
         self.client.post(reverse("accounts:password_reset"), {"email": "rafiq@example.com"})
@@ -378,10 +440,15 @@ class PasswordResetTests(EnglishPagesMixin, TestCase):
         self.assertNotIn("evil.example", mail.outbox[0].body)
         self.assertIn(settings.SITE["base_url"] + "/", mail.outbox[0].body)
 
-    def test_the_email_follows_the_student_s_language(self):
+    def test_the_email_is_english_from_the_bangla_page(self):
         User.objects.filter(pk=self.user.pk).update(language="bn")
-        self.client.post(reverse("accounts:password_reset"), {"email": "rafiq@example.com"})
-        self.assertIn("পাসওয়ার্ড", mail.outbox[0].subject)
+        with translation.override("bn"):
+            url = reverse("accounts:password_reset")
+        # The Bangla page leaves Bangla active; the next test expects English.
+        self.addCleanup(translation.activate, "en")
+        self.client.post(url, {"email": "rafiq@example.com"})
+        self.assertEqual(mail.outbox[0].subject, "Reset your DhakaBassist password")
+        self.assertIn("/en/password/reset/", mail.outbox[0].body)
 
     def test_a_new_password_works_and_the_link_works_once(self):
         self.client.post(reverse("accounts:password_reset"), {"email": "rafiq@example.com"})
@@ -404,6 +471,68 @@ class PasswordResetTests(EnglishPagesMixin, TestCase):
         self.assertRedirects(response, reverse("accounts:password_reset_done"))
         self.assertEqual(len(mail.outbox), 0)
 
+    def reset(self, email="rafiq@example.com"):
+        return self.client.post(reverse("accounts:password_reset"), {"email": email})
+
+    def test_the_sent_page_offers_another_link_after_a_minute(self):
+        self.reset()
+        response = self.client.get(reverse("accounts:password_reset_done"))
+        self.assertContains(response, "You can ask for a new link in")
+        self.assertContains(response, "data-countdown-ready hidden")
+        with later():
+            response = self.client.get(reverse("accounts:password_reset_done"))
+        self.assertNotContains(response, "You can ask for a new link in")
+        self.assertContains(response, "Send a new reset link")
+        self.assertContains(response, reverse("accounts:password_reset"))
+
+    def test_asking_again_within_a_minute_is_refused(self):
+        self.reset()
+        for email in ("rafiq@example.com", "nobody@example.com"):
+            with self.subTest(email=email), later(30):
+                response = self.reset(email)
+                self.assertContains(response, "Please wait until the timer ends")
+                self.assertContains(response, "0:30")
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_a_new_session_cannot_send_before_the_account_wait_ends(self):
+        self.reset()
+        self.client.logout()
+        with later(30):
+            response = self.reset()
+        self.assertRedirects(response, reverse("accounts:password_reset_done"))
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_another_email_goes_out_after_a_minute(self):
+        self.reset()
+        with later():
+            self.reset()
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_the_reset_wait_is_separate_from_the_confirmation_wait(self):
+        self.user.claim_confirmation_send()
+        self.reset()
+        self.assertEqual(len(mail.outbox), 1)
+
+
+class PasswordPageTitleTests(TestCase):
+    """Django's password pages take their heading from `accounts/urls.py`."""
+
+    PAGES = (
+        ("password_reset", "পাসওয়ার্ড রিসেট করুন", "Reset your password"),
+        ("password_reset_done", "আপনার ইমেইল দেখুন", "Check your email"),
+        ("password_reset_complete", "আপনার পাসওয়ার্ড সেট হয়েছে", "Your password is set"),
+    )
+
+    def test_each_page_is_titled_in_the_language_of_its_address(self):
+        for name, bangla, english in self.PAGES:
+            for language, title in (("bn", bangla), ("en", english)):
+                with self.subTest(page=name, language=language):
+                    with translation.override(language):
+                        url = reverse(f"accounts:{name}")
+                    response = self.client.get(url)
+                    self.assertContains(response, f"<title>{title} · DhakaBassist</title>")
+                    self.assertContains(response, f">{title}</h1>")
+
 
 class AccountSettingsTests(EnglishPagesMixin, TestCase):
     def setUp(self):
@@ -418,7 +547,6 @@ class AccountSettingsTests(EnglishPagesMixin, TestCase):
             {
                 "full_name": "Rafiq A. Ahmed",
                 "email": "rafiq@example.com",
-                "language": "en",
                 "marketing_opt_in": "on",
             },
             follow=True,
@@ -436,7 +564,6 @@ class AccountSettingsTests(EnglishPagesMixin, TestCase):
             "profession": "Software engineer",
             "education": "BSc, University of Dhaka",
             "location": "Dhaka, Bangladesh",
-            "language": "bn",
         }
         self.client.post(url, details)
         self.user.refresh_from_db()

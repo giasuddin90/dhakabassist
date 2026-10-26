@@ -1,9 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
-from django.core.mail import EmailMessage
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import translation
 from django.utils.decorators import method_decorator
@@ -15,6 +13,7 @@ from django.views.generic import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 
+from core.mail import send_email
 from courses.access import course_queryset
 from courses.markup import render_notes
 from courses.models import Course
@@ -104,14 +103,14 @@ class ContactView(FormView):
         return super().form_valid(form)
 
     def _notify(self, message):
-        body = render_to_string("pages/email/contact_notification.txt", {"message": message})
-        email = EmailMessage(
-            subject=f"Website enquiry from {message.name}",
-            body=body,
+        send_email(
+            f"Website enquiry from {message.name}",
+            "pages/email/contact_notification.txt",
+            {"message": message},
             to=[settings.SITE["email"]],
             reply_to=[message.email],
+            fail_silently=True,
         )
-        email.send(fail_silently=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

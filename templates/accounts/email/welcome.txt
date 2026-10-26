@@ -1,16 +1,12 @@
-{% load i18n %}{% blocktranslate with name=user.get_short_name %}Hello {{ name }},{% endblocktranslate %}
+Hello {{ user.get_short_name }},
 
-{% blocktranslate trimmed with name=site.name %}
-An account has been created for you at {{ name }} with this email
+An account has been created for you at {{ site.name }} with this email
 address. Open the link below to choose your password and sign in:
-{% endblocktranslate %}
 
 {{ base_url }}{% url 'accounts:password_reset_confirm' uidb64=uid token=token %}
 
-{% blocktranslate trimmed %}
 The link can be used once and expires after a few days. After that, use
 "Forgot password" on the sign-in page to get a new one.
-{% endblocktranslate %}
 
 — DhakaBassist
-{% translate "Music theory courses by Tanveer Haque." %}
+Music theory courses by Tanveer Haque.

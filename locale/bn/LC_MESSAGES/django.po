@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DhakaBassist\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-26 01:43+0600\n"
+"POT-Creation-Date: 2026-10-26 10:18+0600\n"
 "Language: bn\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -25,65 +25,55 @@ msgstr ""
 msgid "Dates"
 msgstr ""
 
-#: accounts/emails.py:40
-#, python-format
-msgid "Your %(site)s account"
-msgstr "আপনার %(site)s অ্যাকাউন্ট"
-
-#: accounts/emails.py:62
-#, python-format
-msgid "Confirm your %(site)s email"
-msgstr "আপনার %(site)s ইমেইল নিশ্চিত করুন"
-
-#: accounts/forms.py:17
+#: accounts/forms.py:20
 #, python-format
 msgid "Use at least %(min_length)d characters."
 msgstr "কমপক্ষে %(min_length)dটি অক্ষর দিন।"
 
-#: accounts/forms.py:18
+#: accounts/forms.py:21
 msgid "Use at least one letter or symbol, not only numbers."
 msgstr "শুধু সংখ্যা নয়, অন্তত একটি অক্ষর বা চিহ্ন দিন।"
 
-#: accounts/forms.py:19
+#: accounts/forms.py:22
 msgid "This password is too common. Choose one that is harder to guess."
 msgstr "এই পাসওয়ার্ডটি খুব সাধারণ। অনুমান করা কঠিন এমন একটি বেছে নিন।"
 
-#: accounts/forms.py:20
+#: accounts/forms.py:23
 msgid "This password is too close to your name or email."
 msgstr "এই পাসওয়ার্ডটি আপনার নাম বা ইমেইলের খুব কাছাকাছি।"
 
-#: accounts/forms.py:26
+#: accounts/forms.py:29
 #, python-format
 msgid "At least %(min_length)d characters"
 msgstr "কমপক্ষে %(min_length)dটি অক্ষর"
 
-#: accounts/forms.py:27
+#: accounts/forms.py:30
 msgid "Not only numbers"
 msgstr "শুধু সংখ্যা নয়"
 
-#: accounts/forms.py:28
+#: accounts/forms.py:31
 msgid "Not too similar to your name or email"
 msgstr "আপনার নাম বা ইমেইলের খুব কাছাকাছি নয়"
 
-#: accounts/forms.py:29
+#: accounts/forms.py:32
 msgid "Not a common password"
 msgstr "খুব সাধারণ পাসওয়ার্ড নয়"
 
-#: accounts/forms.py:37 accounts/forms.py:71 accounts/forms.py:144
+#: accounts/forms.py:40 accounts/forms.py:74 accounts/forms.py:147
 #: templates/pages/home.html:192
 msgid "Email"
 msgstr "ইমেইল"
 
-#: accounts/forms.py:40 templates/accounts/login.html:81
+#: accounts/forms.py:43 templates/accounts/login.html:81
 msgid "Keep me logged in"
 msgstr "আমাকে লগ ইন রাখুন"
 
-#: accounts/forms.py:44
+#: accounts/forms.py:47
 msgid "That email and password do not match an account."
 msgstr "এই ইমেইল ও পাসওয়ার্ডের সঙ্গে কোনো অ্যাকাউন্ট মেলেনি।"
 
 # Signup email confirmation
-#: accounts/forms.py:46
+#: accounts/forms.py:49
 msgid ""
 "Confirm your email address before logging in. We sent you a link when you "
 "created your account."
@@ -91,108 +81,140 @@ msgstr ""
 "লগ ইন করার আগে আপনার ইমেইল ঠিকানা নিশ্চিত করুন। অ্যাকাউন্ট খোলার সময় আমরা আপনাকে "
 "একটি লিংক পাঠিয়েছি।"
 
-#: accounts/forms.py:66
+#: accounts/forms.py:69
 msgid "Full name"
 msgstr "পূর্ণ নাম"
 
-#: accounts/forms.py:82
+#: accounts/forms.py:85
 msgid "Password"
 msgstr "পাসওয়ার্ড"
 
-#: accounts/forms.py:83
+#: accounts/forms.py:86
 msgid "Confirm password"
 msgstr "পাসওয়ার্ড নিশ্চিত করুন"
 
-#: accounts/forms.py:94
+#: accounts/forms.py:97
 msgid "The two passwords do not match."
 msgstr "দুটি পাসওয়ার্ড মেলেনি।"
 
-#: accounts/forms.py:133
+#: accounts/forms.py:136
 msgid "An account with this email already exists."
 msgstr "এই ইমেইল দিয়ে আগেই একটি অ্যাকাউন্ট আছে।"
 
-#: accounts/forms.py:184
+#: accounts/forms.py:193
 msgid "Profession (optional)"
 msgstr "পেশা (ঐচ্ছিক)"
 
-#: accounts/forms.py:185
+#: accounts/forms.py:194
 msgid "Education (optional)"
 msgstr "শিক্ষা (ঐচ্ছিক)"
 
-#: accounts/forms.py:186
+#: accounts/forms.py:195
 msgid "Location (optional)"
 msgstr "অবস্থান (ঐচ্ছিক)"
 
-#: accounts/forms.py:187
+#: accounts/forms.py:196
 msgid "Email me when new modules are published"
 msgstr "নতুন মডিউল প্রকাশ হলে আমাকে ইমেইল করুন"
 
-#: accounts/forms.py:188
-msgid "Language for emails"
-msgstr "ইমেইলের ভাষা"
-
-#: accounts/forms.py:192
+#: accounts/forms.py:200
 msgid ""
 "Highest qualification or where you study, e.g. BSc, University of Dhaka."
 msgstr "সর্বোচ্চ যোগ্যতা বা কোথায় পড়ছেন, যেমন বিএসসি, ঢাকা বিশ্ববিদ্যালয়।"
 
-#: accounts/forms.py:194
+#: accounts/forms.py:202
 msgid "City and country, e.g. Dhaka, Bangladesh."
 msgstr "শহর ও দেশ, যেমন ঢাকা, বাংলাদেশ।"
 
-#: accounts/forms.py:206
+#: accounts/forms.py:214
 msgid "Another account already uses this email."
 msgstr "অন্য একটি অ্যাকাউন্ট এই ইমেইল ব্যবহার করছে।"
 
-#: accounts/models.py:47
+#: accounts/models.py:50
 msgid "email address"
 msgstr "ইমেইল ঠিকানা"
 
-#: accounts/models.py:48
+#: accounts/models.py:51
 msgid "full name"
 msgstr "পূর্ণ নাম"
 
-#: accounts/models.py:52
+#: accounts/models.py:55
 msgid "course access enabled"
 msgstr ""
 
-#: accounts/models.py:54
+#: accounts/models.py:57
 msgid "Turn off to suspend access to paid course material."
 msgstr ""
 
-#: accounts/models.py:56
+#: accounts/models.py:59
 msgid "course news by email"
 msgstr ""
 
-#: accounts/models.py:61
+#: accounts/models.py:64
 msgid "email confirmed"
 msgstr "ইমেইল নিশ্চিত"
 
-#: accounts/models.py:65
+#: accounts/models.py:69
+msgid "confirmation email sent"
+msgstr "নিশ্চিতকরণ ইমেইল পাঠানো হয়েছে"
+
+#: accounts/models.py:72
+msgid "password reset email sent"
+msgstr "পাসওয়ার্ড রিসেট ইমেইল পাঠানো হয়েছে"
+
+#: accounts/models.py:77
 msgid "email language"
 msgstr "ইমেইলের ভাষা"
 
-#: accounts/models.py:71
+#: accounts/models.py:83
 msgid "profession"
 msgstr "পেশা"
 
-#: accounts/models.py:72
+#: accounts/models.py:84
 msgid "education"
 msgstr "শিক্ষা"
 
-#: accounts/models.py:73
+#: accounts/models.py:85
 msgid "location"
 msgstr "অবস্থান"
 
-#: accounts/models.py:81
+#: accounts/models.py:93
 msgid "user"
 msgstr ""
 
-#: accounts/models.py:82
+#: accounts/models.py:94
 msgid "users"
 msgstr ""
 
-#: accounts/views.py:42 templates/accounts/confirm_email.html:15
+#: accounts/urls.py:38 templates/accounts/settings.html:18
+msgid "Change your password"
+msgstr "পাসওয়ার্ড বদলান"
+
+#: accounts/urls.py:46
+msgid "Password changed"
+msgstr "পাসওয়ার্ড বদলানো হয়েছে"
+
+#: accounts/urls.py:58
+msgid "Reset your password"
+msgstr "পাসওয়ার্ড রিসেট করুন"
+
+#: accounts/urls.py:66 accounts/views.py:157
+msgid "Check your email"
+msgstr "আপনার ইমেইল দেখুন"
+
+#: accounts/urls.py:75 templates/accounts/password_reset_confirm.html:4
+msgid "Choose a new password"
+msgstr "নতুন পাসওয়ার্ড বেছে নিন"
+
+#: accounts/urls.py:83
+msgid "Your password is set"
+msgstr "আপনার পাসওয়ার্ড সেট হয়েছে"
+
+#: accounts/views.py:61
+msgid "Please wait until the timer ends before asking for another link."
+msgstr "আরেকটি লিংক চাওয়ার আগে টাইমার শেষ হওয়া পর্যন্ত অপেক্ষা করুন।"
+
+#: accounts/views.py:87 templates/accounts/confirm_email.html:15
 #: templates/accounts/login.html:18 templates/accounts/login.html:87
 #: templates/accounts/password_reset_complete.html:6
 #: templates/includes/footer.html:24 templates/includes/masthead.html:33
@@ -200,15 +222,15 @@ msgstr ""
 msgid "Log in"
 msgstr "লগ ইন"
 
-#: accounts/views.py:43
+#: accounts/views.py:88
 msgid "Sign in to continue your music theory course."
 msgstr "আপনার সংগীত তত্ত্বের কোর্স চালিয়ে যেতে সাইন ইন করুন।"
 
-#: accounts/views.py:89 templates/accounts/login.html:13
+#: accounts/views.py:135 templates/accounts/login.html:13
 msgid "Create your account"
 msgstr "আপনার অ্যাকাউন্ট খুলুন"
 
-#: accounts/views.py:91
+#: accounts/views.py:137
 msgid ""
 "Create a free DhakaBassist account and study Module 1 of Foundations of "
 "Music at no cost."
@@ -216,41 +238,37 @@ msgstr ""
 "বিনামূল্যে DhakaBassist অ্যাকাউন্ট খুলুন এবং সংগীতের ভিত্তি কোর্সের মডিউল 1 বিনা "
 "খরচে পড়ুন।"
 
-#: accounts/views.py:110
-msgid "Check your email"
-msgstr "আপনার ইমেইল দেখুন"
-
-#: accounts/views.py:129 templates/accounts/confirm_sent.html:14
+#: accounts/views.py:180 templates/accounts/confirm_sent.html:15
 #: templates/accounts/login.html:28
 msgid "Send a new confirmation link"
 msgstr "নতুন নিশ্চিতকরণ লিংক পাঠান"
 
-#: accounts/views.py:171
+#: accounts/views.py:222
 msgid "Your email is confirmed. Module 1 is yours to study."
 msgstr "আপনার ইমেইল নিশ্চিত হয়েছে। মডিউল ১ এখন আপনার জন্য খোলা।"
 
-#: accounts/views.py:179
+#: accounts/views.py:230
 msgid "Confirm your email"
 msgstr "আপনার ইমেইল নিশ্চিত করুন"
 
-#: accounts/views.py:181
+#: accounts/views.py:232
 msgid "Your email is already confirmed"
 msgstr "আপনার ইমেইল আগেই নিশ্চিত করা হয়েছে"
 
-#: accounts/views.py:183 templates/accounts/password_reset_confirm.html:4
+#: accounts/views.py:234 templates/accounts/password_reset_confirm.html:4
 msgid "This link has expired"
 msgstr "এই লিংকের মেয়াদ শেষ হয়ে গেছে"
 
-#: accounts/views.py:214
+#: accounts/views.py:283
 msgid "Your account details have been saved."
 msgstr "আপনার অ্যাকাউন্টের তথ্য সংরক্ষণ করা হয়েছে।"
 
-#: accounts/views.py:220 templates/courses/dashboard.html:14
+#: accounts/views.py:289 templates/courses/dashboard.html:14
 msgid "Account settings"
 msgstr "অ্যাকাউন্ট সেটিংস"
 
-#: accounts/views.py:235 templates/accounts/orders.html:7
-#: templates/accounts/settings.html:20 templates/courses/dashboard.html:15
+#: accounts/views.py:304 templates/accounts/orders.html:7
+#: templates/accounts/settings.html:19 templates/courses/dashboard.html:15
 #: templates/orders/receipt.html:38
 msgid "Order history"
 msgstr "অর্ডারের ইতিহাস"
@@ -901,8 +919,8 @@ msgid ""
 msgstr ""
 "তানভীর হকের অনলাইন সংগীত তত্ত্বের কোর্স: শব্দের মূল কথা থেকে পঞ্চম বৃত্ত পর্যন্ত।"
 
-#: courses/views.py:68 courses/views.py:109 pages/views.py:125
-#: pages/views.py:145 pages/views.py:170
+#: courses/views.py:68 courses/views.py:109 pages/views.py:124
+#: pages/views.py:144 pages/views.py:169
 msgid "Home"
 msgstr "হোম"
 
@@ -946,11 +964,6 @@ msgstr "আপনার ভর্তি হওয়া কোর্স ও অ�
 #: templates/courses/quiz.html:38
 msgid "Enroll to continue"
 msgstr "চালিয়ে যেতে ভর্তি হোন"
-
-#: orders/emails.py:22
-#, python-format
-msgid "Your %(site)s receipt · %(reference)s"
-msgstr "আপনার %(site)s রসিদ · %(reference)s"
 
 #: orders/models.py:18
 msgid "bKash"
@@ -1098,10 +1111,7 @@ msgstr "%(first)s + %(second)s = কত?"
 msgid "Add the two numbers. This keeps spam robots out."
 msgstr "সংখ্যা দুটি যোগ করুন। এতে স্প্যাম রোবট দূরে থাকে।"
 
-#: pages/context_processors.py:13 templates/accounts/email/confirm_email.txt:16
-#: templates/accounts/email/password_reset.txt:16
-#: templates/accounts/email/welcome.txt:16
-#: templates/orders/email/receipt.txt:19
+#: pages/context_processors.py:13
 msgid "Music theory courses by Tanveer Haque."
 msgstr "তানভীর হকের সংগীত তত্ত্বের কোর্স।"
 
@@ -1121,7 +1131,7 @@ msgstr "বার্তাটি পাঠানো যায়নি।"
 msgid "published"
 msgstr ""
 
-#: pages/models.py:30 pages/views.py:145 templates/includes/footer.html:16
+#: pages/models.py:30 pages/views.py:144 templates/includes/footer.html:16
 #: templates/includes/masthead.html:19
 msgid "FAQ"
 msgstr "প্রশ্নোত্তর"
@@ -1190,66 +1200,66 @@ msgstr ""
 msgid "contact messages"
 msgstr ""
 
-#: pages/views.py:28
+#: pages/views.py:27
 msgid "A clear, step-by-step learning plan"
 msgstr "ধাপে ধাপে শেখার সহজ ও গোছানো পদ্ধতি"
 
-#: pages/views.py:29
+#: pages/views.py:28
 msgid "Lessons in English and Bangla"
 msgstr "বাংলা ও ইংরেজি—দুই ভাষায় পাঠ"
 
-#: pages/views.py:30
+#: pages/views.py:29
 msgid "26 practice exercises and 8 interactive quizzes"
 msgstr "দক্ষতা বাড়ানোর জন্য 26টি অনুশীলন এবং 8টি ইন্টার‍্যাকটিভ কুইজ"
 
-#: pages/views.py:31
+#: pages/views.py:30
 msgid "Ear training and real music examples"
 msgstr "ইয়ার ট্রেনিং ও বাস্তব মিউজিকের উদাহরণ"
 
-#: pages/views.py:32
+#: pages/views.py:31
 msgid "Covers beginner to intermediate music theory"
 msgstr "একদম শুরু থেকে ইন্টারমিডিয়েট পর্যায় পর্যন্ত মিউজিক থিওরি"
 
-#: pages/views.py:33
+#: pages/views.py:32
 msgid "Learn on any device, at your own pace"
 msgstr "নিজের সুবিধামতো সময়ে, যেকোনো ডিভাইসে শেখার সুযোগ"
 
-#: pages/views.py:34
+#: pages/views.py:33
 msgid "Lifetime access to lessons and study materials"
 msgstr "সব পাঠ ও পড়ার উপকরণে আজীবন অ্যাক্সেস"
 
-#: pages/views.py:35
+#: pages/views.py:34
 msgid "A community of musicians to learn with and ask questions"
 msgstr "অন্য মিউজিশিয়ানদের সঙ্গে শেখা ও প্রশ্ন করার সুযোগ"
 
-#: pages/views.py:39
+#: pages/views.py:38
 msgid "Beginners learning music theory for the first time"
 msgstr "যারা প্রথমবার মিউজিক থিওরি শিখছেন"
 
-#: pages/views.py:40
+#: pages/views.py:39
 msgid "Self-taught musicians who want to fill gaps in their knowledge"
 msgstr "যারা নিজে নিজে মিউজিক শিখেছেন এবং জ্ঞানের ঘাটতি পূরণ করতে চান"
 
-#: pages/views.py:41
+#: pages/views.py:40
 msgid "Performing musicians who want to understand music better"
 msgstr "যারা মিউজিক পরিবেশন করেন এবং মিউজিক আরও ভালোভাবে বুঝতে চান"
 
-#: pages/views.py:43
+#: pages/views.py:42
 msgid ""
 "Songwriters and producers who want to improve their use of melody and harmony"
 msgstr ""
 "যারা গান লেখেন বা মিউজিক তৈরি করেন এবং সুর ও হারমোনি নিয়ে আরও ভালোভাবে কাজ "
 "করতে চান"
 
-#: pages/views.py:45
+#: pages/views.py:44
 msgid "Music students preparing for further study"
 msgstr "যারা ভবিষ্যতে আরও উচ্চ পর্যায়ে মিউজিক শিখতে চান"
 
-#: pages/views.py:76 templates/pages/home.html:10
+#: pages/views.py:75 templates/pages/home.html:10
 msgid "Learn Music Theory the Practical Way"
 msgstr "সহজ ও ব্যবহারিক উপায়ে শিখুন মিউজিক থিওরি"
 
-#: pages/views.py:78
+#: pages/views.py:77
 msgid ""
 "Foundations of Music — a nine-module online music theory course by Tanveer "
 "Haque. Module 1 is free. Lifetime access for ৳3,500."
@@ -1257,16 +1267,16 @@ msgstr ""
 "সংগীতের ভিত্তি — তানভীর হকের নয় মডিউলের অনলাইন সংগীত তত্ত্বের কোর্স। মডিউল 1 "
 "বিনামূল্যে। ৳3,500-তে আজীবন অ্যাক্সেস।"
 
-#: pages/views.py:102
+#: pages/views.py:101
 msgid ""
 "Thank you — your message has been sent. We reply within two working days."
 msgstr "ধন্যবাদ — আপনার বার্তা পাঠানো হয়েছে। আমরা দুই কর্মদিবসের মধ্যে উত্তর দিই।"
 
-#: pages/views.py:119
+#: pages/views.py:118
 msgid "Contact us"
 msgstr "যোগাযোগ করুন"
 
-#: pages/views.py:121
+#: pages/views.py:120
 msgid ""
 "Questions about Foundations of Music, payment or your account? Send a "
 "message and we reply within two working days."
@@ -1274,16 +1284,16 @@ msgstr ""
 "সংগীতের ভিত্তি, পেমেন্ট বা আপনার অ্যাকাউন্ট নিয়ে প্রশ্ন আছে? বার্তা পাঠান, দুই "
 "কর্মদিবসের মধ্যে আমরা উত্তর দেব।"
 
-#: pages/views.py:125 templates/includes/footer.html:20
+#: pages/views.py:124 templates/includes/footer.html:20
 #: templates/includes/masthead.html:20 templates/pages/contact.html:9
 msgid "Contact"
 msgstr "যোগাযোগ"
 
-#: pages/views.py:139
+#: pages/views.py:138
 msgid "Questions about the course"
 msgstr "কোর্স নিয়ে প্রশ্নোত্তর"
 
-#: pages/views.py:141
+#: pages/views.py:140
 msgid ""
 "Answers on prior knowledge, the free module, payment methods, access and "
 "refunds for Foundations of Music."
@@ -1291,15 +1301,15 @@ msgstr ""
 "সংগীতের ভিত্তি কোর্সের পূর্বজ্ঞান, বিনামূল্যের মডিউল, পেমেন্ট পদ্ধতি, অ্যাক্সেস ও "
 "রিফান্ড নিয়ে উত্তর।"
 
-#: pages/views.py:228
+#: pages/views.py:227
 msgid "Page not found"
 msgstr "পাতা পাওয়া যায়নি"
 
-#: pages/views.py:228
+#: pages/views.py:227
 msgid "The page you asked for does not exist."
 msgstr "আপনি যে পাতাটি চেয়েছেন সেটি নেই।"
 
-#: pages/views.py:238 templates/pages/500.html:7
+#: pages/views.py:237 templates/pages/500.html:7
 msgid "Something went wrong"
 msgstr "কিছু একটা সমস্যা হয়েছে"
 
@@ -1336,12 +1346,12 @@ msgstr ""
 "যে ইমেইল ঠিকানা দিয়ে অ্যাকাউন্ট খুলেছেন সেটি লিখুন, আমরা নিশ্চিত করার জন্য একটি "
 "নতুন লিংক পাঠাব।"
 
-#: templates/accounts/confirm_resend.html:10
+#: templates/accounts/confirm_resend.html:12
 msgid "Send link"
 msgstr "লিংক পাঠান"
 
-#: templates/accounts/confirm_resend.html:12
-#: templates/accounts/password_reset.html:12
+#: templates/accounts/confirm_resend.html:14
+#: templates/accounts/password_reset.html:14
 msgid "Back to log in"
 msgstr "লগ ইনে ফিরে যান"
 
@@ -1365,70 +1375,6 @@ msgid ""
 "The link is valid for a few days. Nothing arrived? Check your spam folder "
 "first."
 msgstr "লিংকটি কয়েক দিন কার্যকর থাকবে। কিছু পাননি? প্রথমে স্প্যাম ফোল্ডার দেখুন।"
-
-#: templates/accounts/email/confirm_email.txt:1
-#: templates/accounts/email/welcome.txt:1 templates/orders/email/receipt.txt:1
-#, python-format
-msgid "Hello %(name)s,"
-msgstr "হ্যালো %(name)s,"
-
-#: templates/accounts/email/confirm_email.txt:3
-msgid ""
-"Thanks for creating a DhakaBassist account. Open the link below to confirm "
-"this email address, then you can log in and start Module 1:"
-msgstr ""
-"DhakaBassist-এ অ্যাকাউন্ট খোলার জন্য ধন্যবাদ। এই ইমেইল ঠিকানা নিশ্চিত করতে নিচের "
-"লিংকটি খুলুন, তারপর লগ ইন করে মডিউল ১ শুরু করতে পারবেন:"
-
-#: templates/accounts/email/confirm_email.txt:10
-msgid ""
-"The link expires after a few days. If you did not create an account, ignore "
-"this email and nothing will happen."
-msgstr ""
-"লিংকটির মেয়াদ কয়েক দিন পর শেষ হবে। আপনি অ্যাকাউন্ট না খুলে থাকলে এই ইমেইলটি "
-"উপেক্ষা করুন, কিছুই হবে না।"
-
-#: templates/accounts/email/password_reset.txt:1
-msgid "Hello,"
-msgstr "হ্যালো,"
-
-#: templates/accounts/email/password_reset.txt:3
-msgid ""
-"Someone asked to reset the password for the DhakaBassist account registered "
-"to this email address. If that was you, open the link below to choose a new "
-"one:"
-msgstr ""
-"এই ইমেইল ঠিকানায় নিবন্ধিত DhakaBassist অ্যাকাউন্টের পাসওয়ার্ড রিসেট করার অনুরোধ "
-"এসেছে। অনুরোধটি আপনার হলে নতুন পাসওয়ার্ড বেছে নিতে নিচের লিংকটি খুলুন:"
-
-#: templates/accounts/email/password_reset.txt:10
-msgid ""
-"The link can be used once and expires shortly. If you did not request a "
-"reset, no action is needed and your password stays as it is."
-msgstr ""
-"লিংকটি একবারই ব্যবহার করা যাবে এবং কিছুক্ষণ পর মেয়াদ শেষ হবে। আপনি রিসেটের "
-"অনুরোধ না করে থাকলে কিছু করার দরকার নেই, আপনার পাসওয়ার্ড আগের মতোই থাকবে।"
-
-#: templates/accounts/email/password_reset_subject.txt:1
-msgid "Reset your DhakaBassist password"
-msgstr "আপনার DhakaBassist পাসওয়ার্ড রিসেট করুন"
-
-#: templates/accounts/email/welcome.txt:3
-#, python-format
-msgid ""
-"An account has been created for you at %(name)s with this email address. "
-"Open the link below to choose your password and sign in:"
-msgstr ""
-"এই ইমেইল ঠিকানা দিয়ে %(name)s-এ আপনার জন্য একটি অ্যাকাউন্ট খোলা হয়েছে। পাসওয়ার্ড "
-"বেছে নিয়ে সাইন ইন করতে নিচের লিংকটি খুলুন:"
-
-#: templates/accounts/email/welcome.txt:10
-msgid ""
-"The link can be used once and expires after a few days. After that, use "
-"\"Forgot password\" on the sign-in page to get a new one."
-msgstr ""
-"লিংকটি একবারই ব্যবহার করা যাবে এবং কয়েক দিন পর মেয়াদ শেষ হবে। এরপর নতুন লিংক "
-"পেতে সাইন-ইন পাতায় \"পাসওয়ার্ড ভুলে গেছেন?\" ব্যবহার করুন।"
 
 #: templates/accounts/login.html:13
 msgid "Welcome back"
@@ -1477,23 +1423,23 @@ msgstr ""
 msgid "Your orders"
 msgstr "আপনার অর্ডার"
 
-#: templates/accounts/orders.html:16 templates/orders/email/receipt.txt:5
-#: templates/orders/receipt.html:24 templates/orders/sandbox.html:18
+#: templates/accounts/orders.html:16 templates/orders/receipt.html:24
+#: templates/orders/sandbox.html:18
 msgid "Order"
 msgstr "অর্ডার"
 
 #: templates/accounts/orders.html:16 templates/includes/footer.html:13
 #: templates/includes/masthead.html:18 templates/orders/checkout.html:52
-#: templates/orders/email/receipt.txt:6 templates/orders/sandbox.html:19
+#: templates/orders/sandbox.html:19
 msgid "Course"
 msgstr "কোর্স"
 
-#: templates/accounts/orders.html:16 templates/orders/email/receipt.txt:7
+#: templates/accounts/orders.html:16
 msgid "Amount"
 msgstr "পরিমাণ"
 
-#: templates/accounts/orders.html:17 templates/orders/email/receipt.txt:8
-#: templates/orders/receipt.html:25 templates/orders/sandbox.html:20
+#: templates/accounts/orders.html:17 templates/orders/receipt.html:25
+#: templates/orders/sandbox.html:20
 msgid "Method"
 msgstr "পদ্ধতি"
 
@@ -1501,8 +1447,7 @@ msgstr "পদ্ধতি"
 msgid "Status"
 msgstr "অবস্থা"
 
-#: templates/accounts/orders.html:17 templates/orders/email/receipt.txt:9
-#: templates/orders/receipt.html:26
+#: templates/accounts/orders.html:17 templates/orders/receipt.html:26
 msgid "Date"
 msgstr "তারিখ"
 
@@ -1529,7 +1474,7 @@ msgid "Your new password is active. You stay signed in on this device."
 msgstr "আপনার নতুন পাসওয়ার্ড চালু হয়েছে। এই ডিভাইসে আপনি সাইন ইন থাকবেন।"
 
 #: templates/accounts/password_change_done.html:6
-#: templates/accounts/settings.html:21 templates/courses/quiz.html:35
+#: templates/accounts/settings.html:20 templates/courses/quiz.html:35
 msgid "Back to my courses"
 msgstr "আমার কোর্সে ফিরে যান"
 
@@ -1541,17 +1486,13 @@ msgstr ""
 "আপনার অ্যাকাউন্টের ইমেইল ঠিকানা দিন, নতুন পাসওয়ার্ড দেওয়ার জন্য আমরা একটি লিংক "
 "পাঠাব।"
 
-#: templates/accounts/password_reset.html:10
+#: templates/accounts/password_reset.html:12
 msgid "Send reset link"
 msgstr "রিসেট লিংক পাঠান"
 
 #: templates/accounts/password_reset_complete.html:5
 msgid "You can now log in with your new password."
 msgstr "এখন আপনি নতুন পাসওয়ার্ড দিয়ে লগ ইন করতে পারবেন।"
-
-#: templates/accounts/password_reset_confirm.html:4
-msgid "Choose a new password"
-msgstr "নতুন পাসওয়ার্ড বেছে নিন"
 
 #: templates/accounts/password_reset_confirm.html:12
 msgid "Set new password"
@@ -1580,13 +1521,13 @@ msgstr ""
 "কিছু আসেনি? স্প্যাম ফোল্ডার দেখুন, অথবা <a href=\"%(contact_url)s\">আমাদের সঙ্গে "
 "যোগাযোগ করুন</a>।"
 
-#: templates/accounts/settings.html:15
+#: templates/accounts/password_reset_done.html:14
+msgid "Send a new reset link"
+msgstr "নতুন রিসেট লিংক পাঠান"
+
+#: templates/accounts/settings.html:14
 msgid "Save changes"
 msgstr "পরিবর্তন সংরক্ষণ করুন"
-
-#: templates/accounts/settings.html:19
-msgid "Change your password"
-msgstr "পাসওয়ার্ড বদলান"
 
 #: templates/base.html:24 templates/includes/instructor_photo.html:13
 #, python-format
@@ -2021,6 +1962,15 @@ msgstr "ভর্তি হোন"
 msgid "%(done)s of %(total)s modules complete"
 msgstr "%(total)sটি মডিউলের মধ্যে %(done)sটি সম্পূর্ণ"
 
+#: templates/includes/resend_wait.html:8
+#, python-format
+msgid ""
+"You can ask for a new link in <span role=\"timer\" data-countdown-"
+"clock>%(clock)s</span>."
+msgstr ""
+"<span role=\"timer\" data-countdown-clock>%(clock)s</span> পরে নতুন লিংক "
+"চাইতে পারবেন।"
+
 #: templates/orders/checkout.html:13
 msgid "Account"
 msgstr "অ্যাকাউন্ট"
@@ -2074,22 +2024,6 @@ msgid ""
 msgstr ""
 "পেমেন্ট করে আপনি <a href=\"%(terms_url)s\">শর্তাবলি</a> ও <a "
 "href=\"%(refunds_url)s\">রিফান্ড নীতি</a> মেনে নিচ্ছেন।"
-
-#: templates/orders/email/receipt.txt:3
-msgid "Your payment has been received and your enrolment is active."
-msgstr "আপনার পেমেন্ট পাওয়া গেছে এবং আপনার ভর্তি সক্রিয় হয়েছে।"
-
-#: templates/orders/email/receipt.txt:11
-msgid "Start studying:"
-msgstr "পড়া শুরু করুন:"
-
-#: templates/orders/email/receipt.txt:13
-msgid ""
-"You have lifetime access to every module. If you need a copy of this receipt "
-"later, it is always in your order history."
-msgstr ""
-"প্রতিটি মডিউলে আপনার আজীবন অ্যাক্সেস রয়েছে। পরে এই রসিদের কপি দরকার হলে তা "
-"সবসময় আপনার অর্ডারের ইতিহাসে পাবেন।"
 
 #: templates/orders/receipt.html:12
 msgid "You are enrolled"
@@ -2358,6 +2292,88 @@ msgstr "যোগাযোগ করুন"
 #, python-format
 msgid "Last updated %(date)s"
 msgstr "সর্বশেষ হালনাগাদ %(date)s"
+
+#, python-format
+#~ msgid "Your %(site)s account"
+#~ msgstr "আপনার %(site)s অ্যাকাউন্ট"
+
+#, python-format
+#~ msgid "Confirm your %(site)s email"
+#~ msgstr "আপনার %(site)s ইমেইল নিশ্চিত করুন"
+
+#~ msgid "Language for emails"
+#~ msgstr "ইমেইলের ভাষা"
+
+#, python-format
+#~ msgid "Your %(site)s receipt · %(reference)s"
+#~ msgstr "আপনার %(site)s রসিদ · %(reference)s"
+
+#, python-format
+#~ msgid "Hello %(name)s,"
+#~ msgstr "হ্যালো %(name)s,"
+
+#~ msgid ""
+#~ "Thanks for creating a DhakaBassist account. Open the link below to "
+#~ "confirm this email address, then you can log in and start Module 1:"
+#~ msgstr ""
+#~ "DhakaBassist-এ অ্যাকাউন্ট খোলার জন্য ধন্যবাদ। এই ইমেইল ঠিকানা নিশ্চিত করতে "
+#~ "নিচের লিংকটি খুলুন, তারপর লগ ইন করে মডিউল ১ শুরু করতে পারবেন:"
+
+#~ msgid ""
+#~ "The link expires after a few days. If you did not create an account, "
+#~ "ignore this email and nothing will happen."
+#~ msgstr ""
+#~ "লিংকটির মেয়াদ কয়েক দিন পর শেষ হবে। আপনি অ্যাকাউন্ট না খুলে থাকলে এই ইমেইলটি "
+#~ "উপেক্ষা করুন, কিছুই হবে না।"
+
+#~ msgid "Hello,"
+#~ msgstr "হ্যালো,"
+
+#~ msgid ""
+#~ "Someone asked to reset the password for the DhakaBassist account "
+#~ "registered to this email address. If that was you, open the link below to "
+#~ "choose a new one:"
+#~ msgstr ""
+#~ "এই ইমেইল ঠিকানায় নিবন্ধিত DhakaBassist অ্যাকাউন্টের পাসওয়ার্ড রিসেট করার "
+#~ "অনুরোধ এসেছে। অনুরোধটি আপনার হলে নতুন পাসওয়ার্ড বেছে নিতে নিচের লিংকটি খুলুন:"
+
+#~ msgid ""
+#~ "The link can be used once and expires shortly. If you did not request a "
+#~ "reset, no action is needed and your password stays as it is."
+#~ msgstr ""
+#~ "লিংকটি একবারই ব্যবহার করা যাবে এবং কিছুক্ষণ পর মেয়াদ শেষ হবে। আপনি রিসেটের "
+#~ "অনুরোধ না করে থাকলে কিছু করার দরকার নেই, আপনার পাসওয়ার্ড আগের মতোই থাকবে।"
+
+#~ msgid "Reset your DhakaBassist password"
+#~ msgstr "আপনার DhakaBassist পাসওয়ার্ড রিসেট করুন"
+
+#, python-format
+#~ msgid ""
+#~ "An account has been created for you at %(name)s with this email address. "
+#~ "Open the link below to choose your password and sign in:"
+#~ msgstr ""
+#~ "এই ইমেইল ঠিকানা দিয়ে %(name)s-এ আপনার জন্য একটি অ্যাকাউন্ট খোলা হয়েছে। "
+#~ "পাসওয়ার্ড বেছে নিয়ে সাইন ইন করতে নিচের লিংকটি খুলুন:"
+
+#~ msgid ""
+#~ "The link can be used once and expires after a few days. After that, use "
+#~ "\"Forgot password\" on the sign-in page to get a new one."
+#~ msgstr ""
+#~ "লিংকটি একবারই ব্যবহার করা যাবে এবং কয়েক দিন পর মেয়াদ শেষ হবে। এরপর নতুন "
+#~ "লিংক পেতে সাইন-ইন পাতায় \"পাসওয়ার্ড ভুলে গেছেন?\" ব্যবহার করুন।"
+
+#~ msgid "Your payment has been received and your enrolment is active."
+#~ msgstr "আপনার পেমেন্ট পাওয়া গেছে এবং আপনার ভর্তি সক্রিয় হয়েছে।"
+
+#~ msgid "Start studying:"
+#~ msgstr "পড়া শুরু করুন:"
+
+#~ msgid ""
+#~ "You have lifetime access to every module. If you need a copy of this "
+#~ "receipt later, it is always in your order history."
+#~ msgstr ""
+#~ "প্রতিটি মডিউলে আপনার আজীবন অ্যাক্সেস রয়েছে। পরে এই রসিদের কপি দরকার হলে তা "
+#~ "সবসময় আপনার অর্ডারের ইতিহাসে পাবেন।"
 
 #~ msgid "Watch the trailer"
 #~ msgstr "ট্রেইলার দেখুন"

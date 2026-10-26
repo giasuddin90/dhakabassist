@@ -16,7 +16,7 @@ arrangement intact: nothing under `/media/` is served directly.
 | CDN / DNS | Cloudflare | TLS, caching, rate limiting, DDoS |
 | Video | Cloudflare Stream | Signed playback, no server bandwidth |
 | Payments | SSLCommerz | bKash, Nagad, local and international cards |
-| Email | Resend (HTTP API, `core/mail.py`) | Signup confirmation, password resets, receipts |
+| Email | Resend (HTTP API, `core/mail.py`), sent from a background thread | Signup confirmation, password resets, receipts |
 
 ## Environment
 
@@ -158,6 +158,26 @@ Configure in Cloudflare rather than in the application: limit `/login/`,
 `/register/`, `/password/reset/` and `/account/confirm/resend/` (and their
 `/en/` twins) to roughly 10 requests per minute per IP. Each of the last three
 sends an email, so an unlimited form is a way to spam an inbox.
+
+The application adds one limit of its own: confirmation and password-reset
+emails are each sent at most once every `EMAIL_RESEND_SECONDS` (60) per
+account, and their "check your email" pages show a countdown before they
+offer another link (`EmailCooldownMixin` in `accounts/views.py`).
+
+## Email delivery
+
+`EMAIL_BACKEND` is `core.mail.ThreadedEmailBackend`: a request hands each
+email to a pool of two threads per gunicorn worker and returns at once, so a
+slow mail service never holds a worker. Mail inside a transaction goes out
+only after it commits. `EMAIL_DELIVERY_BACKEND` does the actual sending
+(Resend with `RESEND_API_KEY`, the console without it); failures are logged
+by the `core.mail` logger.
+
+A graceful restart (`kill -HUP`, a deploy) finishes queued mail first. A
+hard kill (`kill -9`, out of memory) loses whatever was still queued. That is
+acceptable for confirmations (the student can ask again) and receipts (they
+stay on the receipt page); if delivery ever has to be guaranteed, move
+sending to a task queue with its own worker.
 
 ## Backups
 

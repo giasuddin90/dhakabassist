@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
@@ -59,8 +62,17 @@ class User(AbstractUser):
     # while it is empty. Kept apart from `is_active`, which staff use to block
     # an account on purpose.
     email_confirmed_at = models.DateTimeField(_("email confirmed"), null=True, blank=True)
-    # Emails are sent outside a request (receipts from a payment callback,
-    # welcomes from the staff panel), so the language has to be stored.
+    # When the last confirmation and password-reset emails went out, so a
+    # student (or someone typing their address) cannot fill the inbox. Empty
+    # until the first one.
+    confirmation_sent_at = models.DateTimeField(
+        _("confirmation email sent"), null=True, blank=True
+    )
+    password_reset_sent_at = models.DateTimeField(
+        _("password reset email sent"), null=True, blank=True
+    )
+    # The language the student signed up in. Emails no longer use it (they
+    # are always English); kept until it is decided whether to drop it.
     language = models.CharField(
         _("email language"),
         max_length=5,
@@ -100,6 +112,35 @@ class User(AbstractUser):
         if self.email_confirmed_at is None:
             self.email_confirmed_at = timezone.now()
             self.save(update_fields=["email_confirmed_at"])
+
+    def claim_confirmation_send(self):
+        """Record a confirmation email about to go out, if one is allowed yet."""
+        return self._claim_email_send("confirmation_sent_at")
+
+    def claim_password_reset_send(self):
+        """Record a password-reset email about to go out, if one is allowed yet."""
+        return self._claim_email_send("password_reset_sent_at")
+
+    def _claim_email_send(self, field):
+        """Stamp `field` with the time now, unless it is too recent.
+
+        False while the last send is younger than `EMAIL_RESEND_SECONDS`.
+        One conditional UPDATE, so two requests at the same moment cannot
+        both pass the check.
+        """
+        now = timezone.now()
+        wait_until = now - timedelta(seconds=settings.EMAIL_RESEND_SECONDS)
+        claimed = (
+            User.objects.filter(pk=self.pk)
+            .filter(
+                models.Q(**{f"{field}__isnull": True})
+                | models.Q(**{f"{field}__lte": wait_until})
+            )
+            .update(**{field: now})
+        )
+        if claimed:
+            setattr(self, field, now)
+        return bool(claimed)
 
     @property
     def initials(self):

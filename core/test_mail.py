@@ -1,13 +1,16 @@
-"""The Resend backend, with the HTTP call replaced by a fake."""
+"""The mail backends: Resend with a fake HTTP call, and the threaded front."""
 
 import io
 import json
+import threading
 import urllib.error
 from unittest import mock
 
+from django.core import mail
 from django.core.mail import EmailMessage, EmailMultiAlternatives
-from django.test import SimpleTestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 
+from core import mail as mail_module
 from core.mail import ResendEmailBackend, ResendError
 
 
@@ -65,3 +68,62 @@ class ResendBackendTests(SimpleTestCase):
         with self.assertLogs("core.mail", "ERROR"):
             sent, _ = self.send(message, urlopen=refused, fail_silently=True)
         self.assertEqual(sent, 0)
+
+
+# Runs submitted work at once, so a test can read the outbox after it.
+INLINE_EXECUTOR = mock.Mock(submit=lambda fn, *args: fn(*args))
+
+
+@override_settings(
+    EMAIL_BACKEND="core.mail.ThreadedEmailBackend",
+    EMAIL_DELIVERY_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+)
+class ThreadedBackendTests(TestCase):
+    """The front backend, delivering through Django's in-memory one."""
+
+    @staticmethod
+    def message():
+        """A minimal email to send."""
+        return EmailMessage("Hi", "Body", "x@example.com", ["a@example.com"])
+
+    def test_mail_waits_for_the_transaction_to_commit(self):
+        with mock.patch("core.mail.EXECUTOR", INLINE_EXECUTOR):
+            with self.captureOnCommitCallbacks(execute=False) as callbacks:
+                self.assertEqual(self.message().send(), 1)
+            self.assertEqual(mail.outbox, [])
+            callbacks[0]()
+        self.assertEqual(mail.outbox[0].subject, "Hi")
+
+    def test_a_failed_delivery_is_logged_not_raised(self):
+        with (
+            mock.patch("core.mail.EXECUTOR", INLINE_EXECUTOR),
+            mock.patch(
+                "django.core.mail.backends.locmem.EmailBackend.send_messages",
+                side_effect=OSError("refused"),
+            ),
+            self.assertLogs("core.mail", "ERROR"),
+            self.captureOnCommitCallbacks(execute=True),
+        ):
+            self.message().send()
+        self.assertEqual(mail.outbox, [])
+
+    def test_delivery_happens_off_the_request_thread(self):
+        threads, futures = [], []
+        submit = mail_module.EXECUTOR.submit
+
+        def record(_backend, messages):
+            threads.append(threading.current_thread().name)
+            return len(messages)
+
+        def keep_future(fn, *args):
+            futures.append(submit(fn, *args))
+            return futures[-1]
+
+        with (
+            mock.patch("django.core.mail.backends.locmem.EmailBackend.send_messages", record),
+            mock.patch.object(mail_module.EXECUTOR, "submit", keep_future),
+        ):
+            with self.captureOnCommitCallbacks(execute=True):
+                self.message().send()
+            futures[0].result(timeout=5)
+        self.assertTrue(threads[0].startswith("mail"))

@@ -329,6 +329,37 @@
     }
   }
 
+  /* -- Resend countdown ------------------------------------------------- */
+
+  // The server renders the wait and refuses an early send; this ticks the
+  // clock and brings the resend option back at 0:00 without a reload.
+  document.querySelectorAll("[data-countdown]").forEach(function (box) {
+    var seconds = parseInt(box.getAttribute("data-countdown"), 10);
+    if (!(seconds > 0)) return;
+    // Counted from a fixed end, so a throttled background tab stays right.
+    var end = Date.now() + seconds * 1000;
+    var clock = box.querySelector("[data-countdown-clock]");
+    var locks = box.querySelectorAll("[data-countdown-lock]");
+    locks.forEach(function (el) { el.disabled = true; });
+
+    var finish = function () {
+      box.querySelectorAll("[data-countdown-wait]").forEach(function (el) { el.hidden = true; });
+      box.querySelectorAll("[data-countdown-ready]").forEach(function (el) { el.hidden = false; });
+      locks.forEach(function (el) { el.disabled = false; });
+    };
+    var tick = function () {
+      var left = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+      if (clock) {
+        clock.textContent = Math.floor(left / 60) + ":" + String(left % 60).padStart(2, "0");
+      }
+      if (left === 0) {
+        window.clearInterval(timer);
+        finish();
+      }
+    };
+    var timer = window.setInterval(tick, 1000);
+  });
+
   /* -- Video position --------------------------------------------------- */
 
   // Saves where the student paused, so "Resume" is accurate, and how many

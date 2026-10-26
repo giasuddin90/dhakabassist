@@ -159,16 +159,15 @@ class EmailLanguageTests(TestCase):
         send_receipt(order)
         return mail.outbox[0]
 
-    def test_a_bangla_student_gets_a_bangla_receipt(self):
-        message = self.receipt_for("bn")
-        self.assertIn("রসিদ", message.subject)
-        self.assertIn("সংগীতের ভিত্তি", message.body)
-
-    def test_an_english_student_gets_an_english_receipt(self):
-        message = self.receipt_for("en")
-        self.assertIn("receipt", message.subject)
-        self.assertIn("Foundations of Music", message.body)
-        self.assertIn("/en/my-courses/", message.body)
+    def test_every_receipt_is_in_english(self):
+        for language in ("bn", "en"):
+            # Sent from a Bangla page either way, as a payment callback may be.
+            with self.subTest(student=language), translation.override("bn"):
+                message = self.receipt_for(language)
+                self.assertIn("receipt", message.subject)
+                self.assertIn("Foundations of Music", message.body)
+                self.assertIn("/en/my-courses/", message.body)
+                self.assertNotIn("সংগীতের ভিত্তি", message.body)
 
     def test_registration_remembers_the_language_signed_up_in(self):
         self.client.post(

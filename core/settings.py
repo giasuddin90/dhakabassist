@@ -176,18 +176,22 @@ MEDIA_INTERNAL_URL = ""
 
 # -- Email ------------------------------------------------------------------
 
-# With a Resend API key, mail goes out through Resend's HTTP API
-# (`core/mail.py`); without one it prints to the console. Tests always use
-# Django's in-memory backend whatever this says.
+# Mail is handed to a background thread (`core/mail.py`), which delivers it
+# through Resend's HTTP API with a Resend API key, or prints it to the
+# console without one. Tests always use Django's in-memory backend whatever
+# this says, so they stay synchronous.
 RESEND_API_KEY = env_str("RESEND_API_KEY")
-EMAIL_BACKEND = (
+EMAIL_BACKEND = "core.mail.ThreadedEmailBackend"
+EMAIL_DELIVERY_BACKEND = (
     "core.mail.ResendEmailBackend"
     if RESEND_API_KEY
     else "django.core.mail.backends.console.EmailBackend"
 )
-# Signup waits on the confirmation email, so a stalled mail service must not
-# hold the request open indefinitely.
+# A stalled mail service must not hold a mail thread indefinitely.
 EMAIL_TIMEOUT = 10
+# How long a student waits before asking for another confirmation or
+# password-reset email.
+EMAIL_RESEND_SECONDS = 60
 DEFAULT_FROM_EMAIL = env_str(
     "DJANGO_DEFAULT_FROM_EMAIL", "DhakaBassist <hello@dhakabassist.com>"
 )
