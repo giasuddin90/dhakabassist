@@ -152,6 +152,17 @@ def course_author(course):
 def course_schema(course):
     """`Course` plus a `CourseInstance`, which search engines expect together."""
     site = settings.SITE
+    offer = {
+        "@type": "Offer",
+        "price": f"{course.current_price:.0f}",
+        "priceCurrency": site["currency"],
+        "availability": "https://schema.org/InStock",
+        "url": absolute(reverse("orders:checkout", kwargs={"slug": course.slug})),
+        "category": "Paid",
+    }
+    if course.current_promotion:
+        # The offer price only holds until the promotion's last day.
+        offer["priceValidUntil"] = course.current_promotion.ends_on.isoformat()
     data = {
         "@type": "Course",
         "@id": absolute(course.get_absolute_url()) + "#course",
@@ -165,14 +176,7 @@ def course_schema(course):
         "provider": {"@id": absolute("/") + "#organization"},
         "instructor": course_author(course),
         "isAccessibleForFree": False,
-        "offers": {
-            "@type": "Offer",
-            "price": f"{course.price:.0f}",
-            "priceCurrency": site["currency"],
-            "availability": "https://schema.org/InStock",
-            "url": absolute(reverse("orders:checkout", kwargs={"slug": course.slug})),
-            "category": "Paid",
-        },
+        "offers": offer,
         "hasCourseInstance": {
             "@type": "CourseInstance",
             "courseMode": "online",

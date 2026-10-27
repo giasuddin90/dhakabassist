@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n money %}
+{% load i18n %}
 
 {% block content %}
 <section class="shell duo duo--start duo--tight" style="max-width:1080px;padding-block:48px 88px">
@@ -48,10 +48,7 @@
 
   <div class="panel panel--framed u-sticky stack u-gap-20">
     <h2 class="u-serif" style="font-size:22px;font-weight:600">{% translate "Unlock the full course" %}</h2>
-    <p class="cluster" style="--cluster-gap:10px;align-items:baseline">
-      <span class="price">{{ course.price|taka }}</span>
-      <span class="muted u-fs-15">{% translate "one-time" %}</span>
-    </p>
+    {% include "includes/course_price.html" %}
     {% include "includes/includes_list.html" %}
     <a class="btn btn--block" href="{% url 'orders:checkout' course.slug %}">{% translate "Enroll and continue" %}</a>
     {% include "includes/payment_chips.html" %}

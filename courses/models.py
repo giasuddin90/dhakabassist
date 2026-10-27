@@ -9,6 +9,8 @@ a module without one, by marking it complete.
 import html
 import re
 import secrets
+from datetime import datetime, time, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 from django.conf import settings
@@ -388,6 +390,147 @@ class Course(TimeStampedModel):
             return ""
         hours, minutes = divmod(round(seconds / 60), 60)
         return f"PT{hours}H{minutes}M" if hours else f"PT{minutes}M"
+
+    @cached_property
+    def current_promotion(self):
+        """The promotion running today, or None.
+
+        Reads `running_promotions` when `course_queryset()` prefetched it. A
+        promotion that would make the course free is skipped, so a later cut
+        to the course price can never send the gateway a zero amount. Should
+        two overlap, the lower price wins.
+        """
+        running = getattr(self, "running_promotions", None)
+        if running is None:
+            running = Promotion.objects.running().filter(course=self)
+        valid = [p for p in running if p.apply(self.price) > 0]
+        return min(valid, key=lambda p: p.apply(self.price), default=None)
+
+    @property
+    def current_price(self):
+        """What the course costs today, after any running promotion."""
+        promotion = self.current_promotion
+        return promotion.apply(self.price) if promotion else self.price
+
+
+class PromotionQuerySet(models.QuerySet):
+    """Promotions by date."""
+
+    def running(self, today=None):
+        """Promotions whose dates include `today` (in Dhaka by default)."""
+        today = today or timezone.localdate()
+        return self.filter(starts_on__lte=today, ends_on__gte=today)
+
+
+class Promotion(TimeStampedModel):
+    """A time-limited discount on one course, e.g. BDT 1000 off for November."""
+
+    class Kind(models.TextChoices):
+        AMOUNT = "amount", _("BDT off")
+        PERCENT = "percent", _("% off")
+
+    course = models.ForeignKey(
+        Course, verbose_name=_("course"), on_delete=models.CASCADE, related_name="promotions"
+    )
+    name = models.CharField(
+        _("name"), max_length=80, help_text=_("For staff only, e.g. “November offer”.")
+    )
+    kind = models.CharField(_("discount"), max_length=10, choices=Kind.choices, default=Kind.AMOUNT)
+    value = models.DecimalField(
+        _("value"),
+        max_digits=10,
+        decimal_places=2,
+        help_text=_("Taka off the price, or the percentage off."),
+    )
+    # Dates, not times: an offer runs whole days in Dhaka time, both ends included.
+    starts_on = models.DateField(_("first day"))
+    ends_on = models.DateField(_("last day"))
+    offer_text_bn = models.CharField(
+        _("offer text (Bangla)"),
+        max_length=160,
+        blank=True,
+        help_text=_("Optional. Shown under the price on the course page."),
+    )
+    offer_text_en = models.CharField(
+        _("offer text (English)"),
+        max_length=160,
+        blank=True,
+        help_text=_("Optional. Shown under the price on the course page."),
+    )
+
+    offer_text = translated("offer_text")
+
+    objects = PromotionQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = _("promotion")
+        verbose_name_plural = _("promotions")
+        ordering = ("-starts_on",)
+        indexes = [models.Index(fields=("course", "ends_on"))]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(value__gt=0), name="promotion_value_positive"
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(kind="percent") | models.Q(value__lte=100),
+                name="promotion_percent_max_100",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(ends_on__gte=F("starts_on")), name="promotion_ends_after_start"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.name} · {self.course}"
+
+    def apply(self, price):
+        """`price` after this discount, in whole taka: pages show no paisa,
+        and the gateway must charge exactly what the page shows."""
+        if self.kind == self.Kind.PERCENT:
+            discounted = price * (100 - self.value) / 100
+        else:
+            discounted = price - self.value
+        return discounted.quantize(Decimal(1), rounding=ROUND_HALF_UP)
+
+    def is_running(self, today=None):
+        """Whether `today` (in Dhaka by default) is one of the offer's days."""
+        today = today or timezone.localdate()
+        return self.starts_on <= today <= self.ends_on
+
+    @property
+    def ends_at(self):
+        """The moment the offer stops: midnight after its last day, in Dhaka."""
+        next_day = self.ends_on + timedelta(days=1)
+        return timezone.make_aware(datetime.combine(next_day, time.min))
+
+    @property
+    def seconds_left(self):
+        """Whole seconds until `ends_at`, for the countdown; 0 once it ended.
+
+        Counted on the server so a visitor's wrong clock cannot skew it."""
+        return max(0, int((self.ends_at - timezone.now()).total_seconds()))
+
+    @property
+    def countdown_text(self):
+        """The time left as the countdown first shows it, e.g. "Ends in 3d 04h 12m 05s"."""
+        days, rest = divmod(self.seconds_left, 86400)
+        hours, rest = divmod(rest, 3600)
+        minutes, seconds = divmod(rest, 60)
+        return gettext("Ends in {d}d {h}h {m}m {s}s").format(
+            d=days, h=f"{hours:02d}", m=f"{minutes:02d}", s=f"{seconds:02d}"
+        )
+
+    @property
+    def sale_price(self):
+        """The course's price under this promotion."""
+        return self.apply(self.course.price)
+
+    @property
+    def discount_label(self):
+        """The discount for staff screens: "৳1,000 off" or "20% off"."""
+        if self.kind == self.Kind.PERCENT:
+            return f"{self.value.normalize():f}% off"
+        return f"{settings.SITE['currency_symbol']}{self.value:,.0f} off"
 
 
 class Module(TimeStampedModel):

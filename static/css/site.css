@@ -508,6 +508,31 @@ select {
   font-size: 44px;
 }
 
+/* A course on offer: the regular price struck through beside today's. */
+.price-row {
+  --cluster-gap: 10px;
+  align-items: baseline;
+}
+
+.price__was {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--text-muted);
+  text-decoration-thickness: 2px;
+}
+
+.price__countdown {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.price__offer {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
 /* The five-line stave rule used as a section divider. */
 .stave {
   display: flex;

@@ -25,6 +25,7 @@ from courses.models import (
     LibraryFile,
     MediaAsset,
     Module,
+    Promotion,
     Question,
     Quiz,
 )
@@ -167,6 +168,53 @@ class CourseForm(ImageUploadMixin, BilingualFormMixin, forms.ModelForm):  # pyli
         self.fields["requires"].queryset = queryset
         self.fields["requires"].empty_label = "No prerequisite"
         self.fields["author"].empty_label = "No author"
+
+
+class PromotionForm(BilingualFormMixin, forms.ModelForm):
+    """A discount on one course for a run of days. The view sets the course."""
+
+    bilingual_fields = ("offer_text",)
+
+    class Meta:
+        model = Promotion
+        fields = ("name", "kind", "value", "starts_on", "ends_on", *bilingual("offer_text"))
+        widgets = {
+            "starts_on": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+            "ends_on": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+        }
+
+    def clean(self):
+        """Field errors for what the database constraints would also refuse,
+        plus the rules that span rows: no overlap, and never free."""
+        cleaned = super().clean()
+        kind, value = cleaned.get("kind"), cleaned.get("value")
+        starts_on, ends_on = cleaned.get("starts_on"), cleaned.get("ends_on")
+        course = self.instance.course
+        if value is not None:
+            if value <= 0:
+                self.add_error("value", "Enter a discount above 0.")
+            elif kind == Promotion.Kind.PERCENT and value > 100:
+                self.add_error("value", "A percentage can be at most 100.")
+            elif kind and Promotion(kind=kind, value=value).apply(course.price) <= 0:
+                self.add_error(
+                    "value", f"That would make the course free. Its price is {course.price:,.0f}."
+                )
+        if starts_on and ends_on:
+            if ends_on < starts_on:
+                self.add_error("ends_on", "The last day must be on or after the first day.")
+            else:
+                clash = (
+                    course.promotions.filter(starts_on__lte=ends_on, ends_on__gte=starts_on)
+                    .exclude(pk=self.instance.pk)
+                    .first()
+                )
+                if clash:
+                    self.add_error(
+                        "starts_on",
+                        f"These dates overlap “{clash.name}” "
+                        f"({clash.starts_on:%d %b} to {clash.ends_on:%d %b %Y}).",
+                    )
+        return cleaned
 
 
 # Django's form classes are seven ancestors deep, so any mixin passes pylint's limit.
@@ -728,7 +776,7 @@ class ManualPaymentForm(OrderFieldsForm):
             "gateway_reference": "Transaction ID",
         }
         help_texts = {
-            "amount": "Leave blank for the course price.",
+            "amount": "Leave blank for today's price, including any running offer.",
             "gateway_reference": "The bKash or Nagad TrxID, or the bank reference.",
         }
 
@@ -750,10 +798,12 @@ class ManualPaymentForm(OrderFieldsForm):
         self.fields["gateway_reference"].required = True
 
     def clean(self):
-        """A blank amount means the student paid the course price."""
+        """A blank amount means the student paid today's price, offer included."""
         cleaned = super().clean()
-        if cleaned.get("amount") is None and cleaned.get("course"):
-            cleaned["amount"] = cleaned["course"].price
+        course = cleaned.get("course")
+        if cleaned.get("amount") is None and course:
+            cleaned["amount"] = course.current_price
+            self.instance.promotion = course.current_promotion
         return cleaned
 
 

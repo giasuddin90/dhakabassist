@@ -360,6 +360,34 @@
     var timer = window.setInterval(tick, 1000);
   });
 
+  /* -- Offer countdown -------------------------------------------------- */
+
+  // The server renders the countdown as at page load, the seconds left and
+  // the translated wording; this ticks it and hides it at the end.
+  document.querySelectorAll("[data-offer-countdown]").forEach(function (box) {
+    var seconds = parseInt(box.getAttribute("data-offer-countdown"), 10);
+    if (!(seconds > 0)) return;
+    // Counted from a fixed end, so a throttled background tab stays right.
+    var end = Date.now() + seconds * 1000;
+    var format = box.getAttribute("data-format");
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    var tick = function () {
+      var left = Math.max(0, Math.floor((end - Date.now()) / 1000));
+      if (left === 0) {
+        window.clearInterval(timer);
+        box.hidden = true;
+        return;
+      }
+      box.textContent = format
+        .replace("{d}", Math.floor(left / 86400))
+        .replace("{h}", pad(Math.floor((left % 86400) / 3600)))
+        .replace("{m}", pad(Math.floor((left % 3600) / 60)))
+        .replace("{s}", pad(left % 60));
+    };
+    var timer = window.setInterval(tick, 1000);
+    tick();
+  });
+
   /* -- Video position --------------------------------------------------- */
 
   // Saves where the student paused, so "Resume" is accurate, and how many

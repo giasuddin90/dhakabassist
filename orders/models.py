@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from courses.models import Course, Enrollment, TimeStampedModel
+from courses.models import Course, Enrollment, Promotion, TimeStampedModel
 from downloads.models import Download
 
 
@@ -75,6 +75,16 @@ class Order(TimeStampedModel):
         related_name="orders",
     )
     amount = models.DecimalField(_("amount (BDT)"), max_digits=10, decimal_places=2)
+    # Which offer sold the course, for reporting; `amount` is the price paid.
+    # PROTECT: an offer that sold something is ended early, not deleted.
+    promotion = models.ForeignKey(
+        Promotion,
+        verbose_name=_("promotion"),
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="orders",
+    )
     method = models.CharField(
         _("payment method"), max_length=12, choices=PaymentMethod.choices
     )

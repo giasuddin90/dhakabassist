@@ -11,6 +11,7 @@ from .models import (
     MediaAsset,
     Module,
     ModuleProgress,
+    Promotion,
     Question,
     Quiz,
     QuizAttempt,
@@ -43,6 +44,14 @@ class CourseAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title_en",)}
     autocomplete_fields = ("author",)
     inlines = [ModuleInline]
+
+
+@admin.register(Promotion)
+class PromotionAdmin(admin.ModelAdmin):
+    list_display = ("name", "course", "kind", "value", "starts_on", "ends_on")
+    list_filter = ("kind", "course")
+    list_select_related = ("course",)
+    date_hierarchy = "starts_on"
 
 
 class LessonInline(admin.TabularInline):

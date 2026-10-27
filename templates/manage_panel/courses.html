@@ -23,6 +23,7 @@
         {{ item.modules_count }} module{{ item.modules_count|pluralize }}
         {% if item.free_module %} · Module {{ item.free_module.number }} free{% endif %}
         · {{ item.price|taka }}
+        {% if item.current_promotion %} · on offer {{ item.current_price|taka }} until {{ item.current_promotion.ends_on|date:"j M" }}{% endif %}
       </span>
     </a>
   {% empty %}

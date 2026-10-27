@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import download_views, enrolment_views, views
+from . import download_views, enrolment_views, promotion_views, views
 
 app_name = "manage"
 
@@ -11,6 +11,15 @@ urlpatterns = [
     path("courses/new/", views.course_edit, name="course_new"),
     path("courses/<slug:slug>/edit/", views.course_edit, name="course_edit"),
     path("courses/<slug:slug>/reorder/", views.module_reorder, name="module_reorder"),
+    path(
+        "courses/<slug:slug>/promotions/new/",
+        promotion_views.promotion_edit,
+        name="promotion_new",
+    ),
+    path("promotions/<int:pk>/edit/", promotion_views.promotion_edit, name="promotion_edit"),
+    path(
+        "promotions/<int:pk>/delete/", promotion_views.promotion_delete, name="promotion_delete"
+    ),
     path("courses/<slug:slug>/modules/new/", views.module_edit, name="module_new"),
     path(
         "courses/<slug:slug>/modules/<slug:module_slug>/",

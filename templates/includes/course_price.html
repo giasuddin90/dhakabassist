@@ -1,0 +1,24 @@
+{% load i18n money %}
+{% comment %}
+A course's price for today: during a promotion the regular price is struck
+through and a countdown shows the time left. Pass `size="sm"` for the
+smaller figure, and `offer_text=True` to add the promotion's own text.
+{% endcomment %}
+{% with promotion=course.current_promotion %}
+  <div class="stack u-gap-6">
+    <p class="cluster price-row">
+      {% if promotion %}
+        <del class="price__was"><span class="visually-hidden">{% translate "Usual price" %}</span> {{ course.price|taka }}</del>
+      {% endif %}
+      <span class="price{% if size %} price--{{ size }}{% endif %}">{{ course.current_price|taka }}</span>
+    </p>
+    {% if promotion %}
+      {# Rendered as at page load, so it reads right without JS; site.js ticks it. #}
+      <p class="price__countdown" data-offer-countdown="{{ promotion.seconds_left }}"
+         data-format="{% translate 'Ends in {d}d {h}h {m}m {s}s' %}">{{ promotion.countdown_text }}</p>
+      {% if offer_text and promotion.offer_text %}
+        <p class="price__offer">{{ promotion.offer_text }}</p>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endwith %}

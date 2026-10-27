@@ -1,4 +1,5 @@
 {% extends "manage_panel/base.html" %}
+{% load money %}
 
 {% block manage_content %}
 <header class="manage-head">
@@ -83,4 +84,66 @@
     {% include "includes/bilingual_field.html" with pair=form.bilingual.meta_description help="Up to 170 characters. Falls back to the summary." %}
   </section>
 </form>
+
+{% if course %}
+  {# Outside the course form: each delete button is a form of its own. #}
+  <section class="panel course-promotions" aria-labelledby="promotions-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="promotions-title">Promotions</h2>
+      <a class="btn-link btn-link--sm" href="{% url 'manage:promotion_new' course.slug %}">Add promotion</a>
+    </div>
+    {% if promotions %}
+      <div class="table-wrap">
+        <table class="dtable">
+          <caption class="visually-hidden">Promotions on {{ course.title }}, latest first</caption>
+          <thead>
+            <tr>
+              <th scope="col">Promotion</th>
+              <th scope="col">Discount</th>
+              <th scope="col">Dates</th>
+              <th scope="col">Status</th>
+              <th scope="col">Sold</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for promotion in promotions %}
+              <tr>
+                <th scope="row">
+                  <a class="dtable__name" href="{% url 'manage:promotion_edit' promotion.pk %}">{{ promotion.name }}</a>
+                </th>
+                <td class="u-nowrap">{{ promotion.discount_label }} · {{ promotion.sale_price|taka }}</td>
+                <td class="u-nowrap">{{ promotion.starts_on|date:"j M" }} – {{ promotion.ends_on|date:"j M Y" }}</td>
+                <td>
+                  {% if promotion.ends_on < today %}
+                    <span class="badge badge--status badge--neutral">Ended</span>
+                  {% elif promotion.starts_on > today %}
+                    <span class="badge badge--status badge--current">Scheduled</span>
+                  {% else %}
+                    <span class="badge badge--status badge--ok">Running</span>
+                  {% endif %}
+                </td>
+                <td class="u-nowrap">{{ promotion.sales }}</td>
+                <td>
+                  <span class="cluster">
+                    <a class="btn-link btn-link--sm" href="{% url 'manage:promotion_edit' promotion.pk %}">Edit<span class="visually-hidden"> {{ promotion.name }}</span></a>
+                    {% if not promotion.sales %}
+                      <form method="post" action="{% url 'manage:promotion_delete' promotion.pk %}"
+                            data-confirm="Delete “{{ promotion.name }}”? This cannot be undone.">
+                        {% csrf_token %}
+                        <button class="btn-link btn-link--sm" type="submit">Delete<span class="visually-hidden"> {{ promotion.name }}</span></button>
+                      </form>
+                    {% endif %}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="panel__body muted">No promotions yet. Add one to discount {{ course.price|taka }} for a run of days, e.g. ৳1,000 off for November.</p>
+    {% endif %}
+  </section>
+{% endif %}
 {% endblock %}

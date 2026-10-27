@@ -1,0 +1,35 @@
+{% extends "manage_panel/base.html" %}
+{% load money %}
+
+{% block manage_content %}
+<header class="manage-head">
+  <div class="stack u-gap-6">
+    <nav class="manage-head__crumbs" aria-label="Breadcrumb">
+      <a href="{% url 'manage:courses' %}">Courses</a> /
+      <a href="{% url 'manage:course_edit' course.slug %}">{{ course.title }}</a> /
+      {% if promotion %}{{ promotion.name }}{% else %}New promotion{% endif %}
+    </nav>
+    <h1>{% if promotion %}Edit promotion{% else %}New promotion{% endif %}</h1>
+  </div>
+  <button class="btn btn--sm" type="submit" form="promotion-form">
+    {% if promotion %}Save changes{% else %}Create promotion{% endif %}
+  </button>
+</header>
+
+<form method="post" id="promotion-form" class="stack u-gap-20 course-promotions" novalidate>
+  {% csrf_token %}
+  {% include "includes/form_errors.html" %}
+
+  <section class="panel panel--padded stack u-gap-16" aria-label="Promotion">
+    <p class="muted">The course costs {{ course.price|taka }}. During the promotion the course pages and checkout show the lower price, with the regular one struck through and the last day of the offer.</p>
+    {% include "includes/field.html" with field=form.name %}
+    <div class="field-grid">
+      {% include "includes/field.html" with field=form.kind %}
+      {% include "includes/field.html" with field=form.value %}
+      {% include "includes/field.html" with field=form.starts_on help="The offer starts at midnight, Dhaka time." %}
+      {% include "includes/field.html" with field=form.ends_on help="The offer runs to the end of this day." %}
+    </div>
+    {% include "includes/bilingual_field.html" with pair=form.bilingual.offer_text %}
+  </section>
+</form>
+{% endblock %}

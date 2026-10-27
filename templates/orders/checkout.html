@@ -48,9 +48,19 @@
       </div>
 
       <div class="stack u-gap-10" style="border-top:1px solid var(--line);padding-top:16px;font-size:16px">
-        <div class="split" style="align-items:baseline">
-          <span>{{ summary.label }}</span><span>{{ summary.price|taka:2 }}</span>
-        </div>
+        {% if summary.promotion %}
+          <div class="split" style="align-items:baseline">
+            <span>{{ summary.label }}</span><span>{{ summary.was_price|taka:2 }}</span>
+          </div>
+          <div class="split" style="align-items:baseline">
+            <span>{% blocktranslate with date=summary.promotion.ends_on|date:"j F" %}Discount, until {{ date }}{% endblocktranslate %}</span>
+            <span>{{ summary.discount|taka:2 }}</span>
+          </div>
+        {% else %}
+          <div class="split" style="align-items:baseline">
+            <span>{{ summary.label }}</span><span>{{ summary.price|taka:2 }}</span>
+          </div>
+        {% endif %}
         <div class="split muted" style="align-items:baseline">
           <span>{% translate "Gateway fee" %}</span><span>{% translate "Included" %}</span>
         </div>

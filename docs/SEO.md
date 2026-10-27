@@ -59,7 +59,9 @@ than sitting in unconnected blocks:
 | FAQ | `EducationalOrganization`, `FAQPage`, `BreadcrumbList` |
 | Legal | `EducationalOrganization`, `Article`, `BreadcrumbList` |
 
-The `Course` entity carries the price, the currency, what the course teaches
+The `Course` entity carries today's price (after any running promotion, so it
+matches the struck-through price on the page; during a promotion the `Offer`
+also has `priceValidUntil`, the offer's last day), the currency, what the course teaches
 (every module title), the level, the page's language (`inLanguage`, with
 names and descriptions in that language) and the fact that a free part
 exists — which is what both search engines and answer engines need to describe

@@ -35,8 +35,9 @@ def payment_methods():
 
 
 def start_payment(request, price, **item):
-    """Open a pending order for `item` (`course=` or `download=`) at `price`
-    and send the student to the gateway. Returns None, with a message, when
+    """Open a pending order for `item` (`course=` or `download=`, plus the
+    `promotion=` behind a course's price) at `price` and send the student to
+    the gateway. Returns None, with a message, when
     that fails."""
     selected = request.POST.get("method")
     if selected not in PaymentMethod.values:
@@ -64,7 +65,9 @@ def start_payment(request, price, **item):
 
 def render_checkout(request, summary, canonical_path, **context):
     """The checkout page. `summary` fills the order summary box: the item's
-    `title`, a `detail` line, the `label` beside the price, and the `price`."""
+    `title`, a `detail` line, the `label` beside the price, and the `price`.
+    A course on offer adds its `promotion`, the `was_price` before it and the
+    `discount`."""
     return render(
         request,
         "orders/checkout.html",
@@ -99,7 +102,11 @@ def checkout(request, slug):
         return redirect(prerequisite.get_absolute_url())
 
     if request.method == "POST":
-        response = start_payment(request, course.price, course=course)
+        # Priced again on POST, so an offer that ended while the page was
+        # open charges the full price.
+        response = start_payment(
+            request, course.current_price, course=course, promotion=course.current_promotion
+        )
         if response:
             return response
 
@@ -115,7 +122,11 @@ def checkout(request, slug):
             )
             % {"count": count},
             "label": _("Course"),
-            "price": course.price,
+            "price": course.current_price,
+            "promotion": course.current_promotion,
+            "was_price": course.price,
+            # Negative, so `taka` prints it with a minus sign.
+            "discount": course.current_price - course.price,
         },
         reverse("orders:checkout", kwargs={"slug": slug}),
         course=course,

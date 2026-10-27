@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DhakaBassist\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 00:19+0600\n"
+"POT-Creation-Date: 2026-10-27 11:46+0600\n"
 "Language: bn\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -290,601 +290,662 @@ msgstr "বন্ধ"
 msgid "Not started"
 msgstr "শুরু হয়নি"
 
-#: courses/models.py:47
+#: courses/models.py:49
 msgid "Paste a YouTube or Cloudflare Stream link to the video."
 msgstr ""
 
-#: courses/models.py:56
+#: courses/models.py:58
 #, python-format
 msgid "%(hours)s hr %(minutes)s min"
 msgstr "%(hours)s ঘণ্টা %(minutes)s মিনিট"
 
-#: courses/models.py:57
+#: courses/models.py:59
 #, python-format
 msgid "%(minutes)s min"
 msgstr "%(minutes)s মিনিট"
 
-#: courses/models.py:86
+#: courses/models.py:88
 msgid "name (Bangla)"
 msgstr ""
 
-#: courses/models.py:87
+#: courses/models.py:89
 msgid "name (English)"
 msgstr ""
 
-#: courses/models.py:89 courses/models.py:172 courses/models.py:415
-#: downloads/models.py:65
+#: courses/models.py:91 courses/models.py:174 courses/models.py:558
+#: downloads/models.py:70
 msgid "slug"
 msgstr ""
 
-#: courses/models.py:93
+#: courses/models.py:95
 msgid "Left blank, it is made from the English name."
 msgstr ""
 
-#: courses/models.py:96
+#: courses/models.py:98
 msgid "photo"
 msgstr ""
 
-#: courses/models.py:101
+#: courses/models.py:103
 msgid "A square JPG, PNG or WEBP, at least 320 × 320 px, up to 5 MB."
 msgstr ""
 
-#: courses/models.py:104
+#: courses/models.py:106
 msgid "bio (Bangla)"
 msgstr ""
 
-#: courses/models.py:106 courses/models.py:111
+#: courses/models.py:108 courses/models.py:113
 msgid "Markdown. Shown under “About the author” on the course page."
 msgstr ""
 
-#: courses/models.py:109
+#: courses/models.py:111
 msgid "bio (English)"
 msgstr ""
 
-#: courses/models.py:118 courses/models.py:255
+#: courses/models.py:120 courses/models.py:257
 msgid "author"
 msgstr ""
 
-#: courses/models.py:119
+#: courses/models.py:121
 msgid "authors"
 msgstr ""
 
-#: courses/models.py:167 courses/models.py:399 downloads/models.py:59
+#: courses/models.py:169 courses/models.py:542 downloads/models.py:60
 msgid "Draft"
 msgstr ""
 
-#: courses/models.py:168 courses/models.py:400 downloads/models.py:60
+#: courses/models.py:170 courses/models.py:543 downloads/models.py:61
 msgid "Published"
 msgstr ""
 
-#: courses/models.py:170 courses/models.py:413 courses/models.py:665
-#: courses/models.py:713 courses/models.py:867 courses/models.py:963
-#: downloads/models.py:62 pages/models.py:51
+#: courses/models.py:172 courses/models.py:556 courses/models.py:808
+#: courses/models.py:856 courses/models.py:1010 courses/models.py:1106
+#: downloads/models.py:67 pages/models.py:51
 msgid "title (Bangla)"
 msgstr ""
 
-#: courses/models.py:171 courses/models.py:414 courses/models.py:666
-#: courses/models.py:714 courses/models.py:868 courses/models.py:964
-#: downloads/models.py:63 pages/models.py:52
+#: courses/models.py:173 courses/models.py:557 courses/models.py:809
+#: courses/models.py:857 courses/models.py:1011 courses/models.py:1107
+#: downloads/models.py:68 pages/models.py:52
 msgid "title (English)"
 msgstr ""
 
-#: courses/models.py:173
+#: courses/models.py:175
 msgid "subtitle (Bangla)"
 msgstr ""
 
-#: courses/models.py:174
+#: courses/models.py:176
 msgid "subtitle (English)"
 msgstr ""
 
-#: courses/models.py:176 courses/models.py:416
+#: courses/models.py:178 courses/models.py:559
 msgid "summary (Bangla)"
 msgstr ""
 
-#: courses/models.py:178 courses/models.py:183
+#: courses/models.py:180 courses/models.py:185
 msgid "One or two sentences. Used on cards and in search results."
 msgstr ""
 
-#: courses/models.py:181 courses/models.py:417
+#: courses/models.py:183 courses/models.py:560
 msgid "summary (English)"
 msgstr ""
 
-#: courses/models.py:186 downloads/models.py:72
+#: courses/models.py:188 downloads/models.py:77
 msgid "description (Bangla)"
 msgstr ""
 
-#: courses/models.py:186 courses/models.py:189
+#: courses/models.py:188 courses/models.py:191
 msgid "Markdown. Shown on the course page."
 msgstr ""
 
-#: courses/models.py:189 downloads/models.py:77
+#: courses/models.py:191 downloads/models.py:82
 msgid "description (English)"
 msgstr ""
 
-#: courses/models.py:191
+#: courses/models.py:193
 msgid "level (Bangla)"
 msgstr ""
 
-#: courses/models.py:192
+#: courses/models.py:194
 msgid "level (English)"
 msgstr ""
 
-#: courses/models.py:194 downloads/models.py:100
+#: courses/models.py:196 downloads/models.py:114
 msgid "price (BDT)"
 msgstr ""
 
-#: courses/models.py:197 courses/models.py:432 downloads/models.py:108
-#: orders/models.py:82
+#: courses/models.py:199 courses/models.py:575 downloads/models.py:125
+#: orders/models.py:92
 msgid "status"
 msgstr ""
 
-#: courses/models.py:200
+#: courses/models.py:202
 msgid "banner"
 msgstr ""
 
-#: courses/models.py:205
+#: courses/models.py:207
 msgid "A 16:9 JPG, PNG or WEBP, at least 1280 × 720 px, up to 5 MB."
 msgstr ""
 
-#: courses/models.py:208
+#: courses/models.py:210
 msgid "trailer video link (Bangla)"
 msgstr ""
 
-#: courses/models.py:213 courses/models.py:223
+#: courses/models.py:215 courses/models.py:225
 msgid ""
 "A YouTube or Cloudflare Stream link. The trailer is public, so for "
 "Cloudflare turn off “require signed URLs” on this video."
 msgstr ""
 
-#: courses/models.py:218
+#: courses/models.py:220
 msgid "trailer video link (English)"
 msgstr ""
 
-#: courses/models.py:228
+#: courses/models.py:230
 msgid "trailer label (Bangla)"
 msgstr ""
 
-#: courses/models.py:231
+#: courses/models.py:233
 msgid "trailer label (English)"
 msgstr ""
 
-#: courses/models.py:234
+#: courses/models.py:236
 msgid "trailer duration (Bangla)"
 msgstr ""
 
-#: courses/models.py:237
+#: courses/models.py:239
 msgid "trailer duration (English)"
 msgstr ""
 
-#: courses/models.py:243
+#: courses/models.py:245
 msgid "requires"
 msgstr ""
 
-#: courses/models.py:248
+#: courses/models.py:250
 msgid "Students must own this course first."
 msgstr ""
 
-#: courses/models.py:250 courses/models.py:667 courses/models.py:740
-#: courses/models.py:1003 courses/models.py:1070 downloads/models.py:111
+#: courses/models.py:252 courses/models.py:810 courses/models.py:883
+#: courses/models.py:1146 courses/models.py:1213 downloads/models.py:128
 #: pages/models.py:21
 msgid "position"
 msgstr ""
 
-#: courses/models.py:262
+#: courses/models.py:264
 msgid "promote on home page"
 msgstr ""
 
-#: courses/models.py:265
+#: courses/models.py:267
 msgid ""
 "Feature this course on the home page. Only one course can be featured, so "
 "ticking this clears it on the others."
 msgstr ""
 
-#: courses/models.py:270
+#: courses/models.py:272
 msgid "meta title (Bangla)"
 msgstr ""
 
-#: courses/models.py:271
+#: courses/models.py:273
 msgid "meta title (English)"
 msgstr ""
 
-#: courses/models.py:273 pages/models.py:56
+#: courses/models.py:275 pages/models.py:56
 msgid "meta description (Bangla)"
 msgstr ""
 
-#: courses/models.py:276 pages/models.py:59
+#: courses/models.py:278 pages/models.py:59
 msgid "meta description (English)"
 msgstr ""
 
-#: courses/models.py:298 courses/models.py:403 courses/models.py:1118
-#: orders/models.py:63
+#: courses/models.py:300 courses/models.py:433 courses/models.py:546
+#: courses/models.py:1261 orders/models.py:63
 msgid "course"
 msgstr ""
 
-#: courses/models.py:299
+#: courses/models.py:301
 msgid "courses"
 msgstr ""
 
-#: courses/models.py:395
+#: courses/models.py:429
+msgid "BDT off"
+msgstr "টাকা ছাড়"
+
+#: courses/models.py:430
+msgid "% off"
+msgstr "% ছাড়"
+
+#: courses/models.py:436 pages/models.py:84
+msgid "name"
+msgstr "নাম"
+
+#: courses/models.py:436
+msgid "For staff only, e.g. “November offer”."
+msgstr "শুধু স্টাফদের জন্য, যেমন “নভেম্বর অফার”।"
+
+#: courses/models.py:438
+msgid "discount"
+msgstr "ছাড়"
+
+#: courses/models.py:440
+msgid "value"
+msgstr "পরিমাণ"
+
+#: courses/models.py:443
+msgid "Taka off the price, or the percentage off."
+msgstr "মূল্য থেকে কত টাকা, বা কত শতাংশ ছাড়।"
+
+#: courses/models.py:446
+msgid "first day"
+msgstr "প্রথম দিন"
+
+#: courses/models.py:447
+msgid "last day"
+msgstr "শেষ দিন"
+
+#: courses/models.py:449
+msgid "offer text (Bangla)"
+msgstr "অফারের লেখা (বাংলা)"
+
+#: courses/models.py:452 courses/models.py:458
+msgid "Optional. Shown under the price on the course page."
+msgstr "ঐচ্ছিক। কোর্স পেজে মূল্যের নিচে দেখানো হয়।"
+
+#: courses/models.py:455
+msgid "offer text (English)"
+msgstr "অফারের লেখা (ইংরেজি)"
+
+#: courses/models.py:466 orders/models.py:82
+msgid "promotion"
+msgstr "প্রমোশন"
+
+#: courses/models.py:467
+msgid "promotions"
+msgstr "প্রমোশন"
+
+#: courses/models.py:519 templates/includes/course_price.html:18
+#, python-brace-format
+msgid "Ends in {d}d {h}h {m}m {s}s"
+msgstr "শেষ হতে বাকি {d} দিন {h} ঘণ্টা {m} মিনিট {s} সেকেন্ড"
+
+#: courses/models.py:538
 msgid "Paid — enrolled students only"
 msgstr ""
 
-#: courses/models.py:396
+#: courses/models.py:539
 msgid "Free preview — any registered account"
 msgstr ""
 
-#: courses/models.py:408
+#: courses/models.py:551
 msgid "number"
 msgstr ""
 
-#: courses/models.py:410
+#: courses/models.py:553
 msgid "Enter one or two digits, e.g. 4 or 04."
 msgstr ""
 
-#: courses/models.py:411
+#: courses/models.py:554
 msgid "Sets the module's place in the course, e.g. \"04\"."
 msgstr ""
 
-#: courses/models.py:419
+#: courses/models.py:562
 msgid "lesson notes (Bangla)"
 msgstr ""
 
-#: courses/models.py:421 courses/models.py:426
+#: courses/models.py:564 courses/models.py:569
 msgid "Markdown. Headings, bold, lists, links, images and audio."
 msgstr ""
 
-#: courses/models.py:424
+#: courses/models.py:567
 msgid "lesson notes (English)"
 msgstr ""
 
-#: courses/models.py:429
+#: courses/models.py:572 downloads/models.py:105
 msgid "access"
 msgstr ""
 
-#: courses/models.py:436
+#: courses/models.py:579
 msgid "video provider"
 msgstr ""
 
-#: courses/models.py:440
+#: courses/models.py:583
 msgid "Cloudflare Stream"
 msgstr ""
 
-#: courses/models.py:441
+#: courses/models.py:584
 msgid "Uploaded file"
 msgstr ""
 
-#: courses/models.py:446
+#: courses/models.py:589
 msgid "Bangla video id or path"
 msgstr ""
 
-#: courses/models.py:449 courses/models.py:455
+#: courses/models.py:592 courses/models.py:598
 msgid "Cloudflare Stream UID, or a path under the media folder."
 msgstr ""
 
-#: courses/models.py:452
+#: courses/models.py:595
 msgid "English video id or path"
 msgstr ""
 
-#: courses/models.py:458
+#: courses/models.py:601
 msgid "Bangla video duration (seconds)"
 msgstr ""
 
-#: courses/models.py:461
+#: courses/models.py:604
 msgid "English video duration (seconds)"
 msgstr ""
 
-#: courses/models.py:464
+#: courses/models.py:607
 msgid "Bangla video has English subtitles"
 msgstr ""
 
-#: courses/models.py:467
+#: courses/models.py:610
 msgid "English video has English subtitles"
 msgstr ""
 
-#: courses/models.py:473 downloads/models.py:122
+#: courses/models.py:616 downloads/models.py:139
 msgid "downloads"
 msgstr ""
 
-#: courses/models.py:486 courses/models.py:663 courses/models.py:710
-#: courses/models.py:961 courses/models.py:1165
+#: courses/models.py:629 courses/models.py:806 courses/models.py:853
+#: courses/models.py:1104 courses/models.py:1308
 msgid "module"
 msgstr ""
 
-#: courses/models.py:487
+#: courses/models.py:630
 msgid "modules"
 msgstr ""
 
-#: courses/models.py:553
+#: courses/models.py:696
 msgid ""
 "Enter the 32-character video ID from the Cloudflare Stream dashboard, not a "
 "link."
 msgstr ""
 
-#: courses/models.py:645
+#: courses/models.py:788
 #, python-format
 msgid "Video %(duration)s"
 msgstr "ভিডিও %(duration)s"
 
-#: courses/models.py:647
+#: courses/models.py:790
 msgid "Reading"
 msgstr "পাঠ"
 
-#: courses/models.py:649 downloads/models.py:55
+#: courses/models.py:792 downloads/models.py:56
 #: templates/courses/lesson.html:86
 msgid "Audio"
 msgstr "অডিও"
 
-#: courses/models.py:653
+#: courses/models.py:796
 #, python-format
 msgid "Quiz, %(count)d question"
 msgid_plural "Quiz, %(count)d questions"
 msgstr[0] "কুইজ, %(count)dটি প্রশ্ন"
 msgstr[1] "কুইজ, %(count)dটি প্রশ্ন"
 
-#: courses/models.py:672
+#: courses/models.py:815
 msgid "lesson"
 msgstr ""
 
-#: courses/models.py:673
+#: courses/models.py:816
 msgid "lessons"
 msgstr ""
 
-#: courses/models.py:705
+#: courses/models.py:848
 msgid "Audio (MP3)"
 msgstr ""
 
-#: courses/models.py:706
+#: courses/models.py:849
 msgid "Notation or diagram (SVG)"
 msgstr ""
 
-#: courses/models.py:707
+#: courses/models.py:850
 msgid "Download (PDF)"
 msgstr ""
 
-#: courses/models.py:712
+#: courses/models.py:855
 msgid "kind"
 msgstr ""
 
-#: courses/models.py:717 downloads/models.py:86
+#: courses/models.py:860 downloads/models.py:91
 msgid "Bangla file"
 msgstr ""
 
-#: courses/models.py:720 downloads/models.py:93
+#: courses/models.py:863 downloads/models.py:98
 msgid "English file"
 msgstr ""
 
-#: courses/models.py:723
+#: courses/models.py:866
 msgid "alt text (Bangla)"
 msgstr ""
 
-#: courses/models.py:726 courses/models.py:732
+#: courses/models.py:869 courses/models.py:875
 msgid "Describes the image for screen readers. Required for notation."
 msgstr ""
 
-#: courses/models.py:729
+#: courses/models.py:872
 msgid "alt text (English)"
 msgstr ""
 
-#: courses/models.py:735
+#: courses/models.py:878
 msgid "Bangla file duration (seconds)"
 msgstr ""
 
-#: courses/models.py:738
+#: courses/models.py:881
 msgid "English file duration (seconds)"
 msgstr ""
 
-#: courses/models.py:748
+#: courses/models.py:891
 msgid "media asset"
 msgstr ""
 
-#: courses/models.py:749
+#: courses/models.py:892
 msgid "media assets"
 msgstr ""
 
-#: courses/models.py:817
+#: courses/models.py:960
 msgid "Both languages"
 msgstr ""
 
-#: courses/models.py:818
+#: courses/models.py:961
 msgid "Bangla only"
 msgstr ""
 
-#: courses/models.py:819
+#: courses/models.py:962
 msgid "English only"
 msgstr ""
 
-#: courses/models.py:822 templates/courses/lesson.html:81
+#: courses/models.py:965 templates/courses/lesson.html:81
 msgid "Lesson material"
 msgstr "পাঠের উপকরণ"
 
-#: courses/models.py:823
+#: courses/models.py:966
 msgid "Quiz material"
 msgstr ""
 
-#: courses/models.py:824
+#: courses/models.py:967
 msgid "Download material"
 msgstr ""
 
-#: courses/models.py:844
+#: courses/models.py:987
 msgid "material"
 msgstr ""
 
-#: courses/models.py:849
+#: courses/models.py:992
 msgid ""
 "What the file is for. Download material is always offered as a download."
 msgstr ""
 
-#: courses/models.py:854
+#: courses/models.py:997
 msgid "language"
 msgstr ""
 
-#: courses/models.py:858
+#: courses/models.py:1001
 msgid "Which language's pages offer it as a module download."
 msgstr ""
 
-#: courses/models.py:861
+#: courses/models.py:1004
 msgid "folder"
 msgstr ""
 
-#: courses/models.py:865
+#: courses/models.py:1008
 msgid "Group related files, e.g. “Module 3” or “Scales”."
 msgstr ""
 
-#: courses/models.py:870
+#: courses/models.py:1013
 msgid "file"
 msgstr ""
 
-#: courses/models.py:877
+#: courses/models.py:1020
 msgid "key"
 msgstr ""
 
-#: courses/models.py:883
+#: courses/models.py:1026
 msgid "library file"
 msgstr ""
 
-#: courses/models.py:884
+#: courses/models.py:1027
 msgid "library files"
 msgstr ""
 
-#: courses/models.py:966
+#: courses/models.py:1109
 msgid "require 100% to unlock the next module"
 msgstr ""
 
-#: courses/models.py:969
+#: courses/models.py:1112
 msgid "allow unlimited retries"
 msgstr ""
 
-#: courses/models.py:975 courses/models.py:999 courses/models.py:1247
+#: courses/models.py:1118 courses/models.py:1142 courses/models.py:1390
 msgid "quiz"
 msgstr ""
 
-#: courses/models.py:976
+#: courses/models.py:1119
 msgid "quizzes"
 msgstr ""
 
-#: courses/models.py:984
+#: courses/models.py:1127
 #, python-format
 msgid "Module %(number)s quiz"
 msgstr "মডিউল %(number)s কুইজ"
 
-#: courses/models.py:1001 pages/models.py:17
+#: courses/models.py:1144 pages/models.py:17
 msgid "question (Bangla)"
 msgstr ""
 
-#: courses/models.py:1002 pages/models.py:18
+#: courses/models.py:1145 pages/models.py:18
 msgid "question (English)"
 msgstr ""
 
-#: courses/models.py:1005
+#: courses/models.py:1148
 msgid "explanation (Bangla)"
 msgstr ""
 
-#: courses/models.py:1007 courses/models.py:1012
+#: courses/models.py:1150 courses/models.py:1155
 msgid "Shown once the correct answer is selected."
 msgstr ""
 
-#: courses/models.py:1010
+#: courses/models.py:1153
 msgid "explanation (English)"
 msgstr ""
 
-#: courses/models.py:1016
+#: courses/models.py:1159
 msgid "notation image"
 msgstr ""
 
-#: courses/models.py:1025
+#: courses/models.py:1168
 msgid "audio clip"
 msgstr ""
 
-#: courses/models.py:1037 courses/models.py:1063
+#: courses/models.py:1180 courses/models.py:1206
 msgid "question"
 msgstr ""
 
-#: courses/models.py:1038
+#: courses/models.py:1181
 msgid "questions"
 msgstr ""
 
-#: courses/models.py:1067 pages/models.py:19
+#: courses/models.py:1210 pages/models.py:19
 msgid "answer (Bangla)"
 msgstr ""
 
-#: courses/models.py:1068 pages/models.py:20
+#: courses/models.py:1211 pages/models.py:20
 msgid "answer (English)"
 msgstr ""
 
-#: courses/models.py:1069
+#: courses/models.py:1212
 msgid "correct answer"
 msgstr ""
 
-#: courses/models.py:1075
+#: courses/models.py:1218
 msgid "answer option"
 msgstr ""
 
-#: courses/models.py:1076
+#: courses/models.py:1219
 msgid "answer options"
 msgstr ""
 
-#: courses/models.py:1112 courses/models.py:1160 courses/models.py:1242
+#: courses/models.py:1255 courses/models.py:1303 courses/models.py:1385
 #: orders/models.py:56
 msgid "student"
 msgstr ""
 
-#: courses/models.py:1122
+#: courses/models.py:1265
 msgid "active"
 msgstr ""
 
-#: courses/models.py:1123
+#: courses/models.py:1266
 msgid "granted by an administrator"
 msgstr ""
 
-#: courses/models.py:1126
+#: courses/models.py:1269
 msgid "enrollment"
 msgstr ""
 
-#: courses/models.py:1127
+#: courses/models.py:1270
 msgid "enrollments"
 msgstr ""
 
-#: courses/models.py:1168
+#: courses/models.py:1311
 msgid "video position (seconds)"
 msgstr ""
 
-#: courses/models.py:1172
+#: courses/models.py:1315
 msgid "watched (seconds)"
 msgstr ""
 
-#: courses/models.py:1173
+#: courses/models.py:1316
 msgid "quiz passed at"
 msgstr ""
 
-#: courses/models.py:1174 courses/models.py:1252
+#: courses/models.py:1317 courses/models.py:1395
 msgid "completed at"
 msgstr ""
 
-#: courses/models.py:1175
+#: courses/models.py:1318
 msgid "last seen at"
 msgstr ""
 
-#: courses/models.py:1178 courses/models.py:1179
+#: courses/models.py:1321 courses/models.py:1322
 msgid "module progress"
 msgstr ""
 
-#: courses/models.py:1249
+#: courses/models.py:1392
 msgid "answers"
 msgstr ""
 
-#: courses/models.py:1250
+#: courses/models.py:1393
 msgid "wrong picks"
 msgstr ""
 
-#: courses/models.py:1251
+#: courses/models.py:1394
 msgid "score (%)"
 msgstr ""
 
-#: courses/models.py:1255
+#: courses/models.py:1398
 msgid "quiz attempt"
 msgstr ""
 
-#: courses/models.py:1256
+#: courses/models.py:1399
 msgid "quiz attempts"
 msgstr ""
 
@@ -969,37 +1030,57 @@ msgstr "আপনার ভর্তি হওয়া কোর্স ও অ�
 msgid "Enroll to continue"
 msgstr "চালিয়ে যেতে ভর্তি হোন"
 
-#: downloads/models.py:53
+#: downloads/models.py:54
 msgid "Worksheet"
 msgstr "ওয়ার্কশিট"
 
-#: downloads/models.py:54
+#: downloads/models.py:55
 msgid "PDF"
 msgstr "PDF"
 
-#: downloads/models.py:56
+#: downloads/models.py:57
 msgid "ZIP bundle"
 msgstr "ZIP বান্ডেল"
 
-#: downloads/models.py:69
+#: downloads/models.py:64
+msgid "Free — any signed-in account"
+msgstr "ফ্রি — যেকোনো সাইন-ইন করা অ্যাকাউন্ট"
+
+#: downloads/models.py:65
+msgid "Premium — paid for once"
+msgstr "প্রিমিয়াম — একবার কিনে নিতে হয়"
+
+#: downloads/models.py:74
 msgid "Left blank, it is made from the English title."
 msgstr "ফাঁকা রাখলে ইংরেজি শিরোনাম থেকে তৈরি হয়।"
 
-#: downloads/models.py:74 downloads/models.py:79
+#: downloads/models.py:79 downloads/models.py:84
 msgid "One or two sentences on what is inside."
 msgstr "ভেতরে কী আছে, এক বা দুই বাক্যে।"
 
-#: downloads/models.py:82
+#: downloads/models.py:87
 msgid "type"
 msgstr "ধরন"
 
-#: downloads/models.py:111
+#: downloads/models.py:120
+msgid ""
+"Premium: what the student pays. Free: optional, shown struck through as the "
+"usual price."
+msgstr ""
+"প্রিমিয়াম: শিক্ষার্থী যা পরিশোধ করবেন। ফ্রি: ঐচ্ছিক, সাধারণ মূল্য হিসেবে কেটে "
+"দেখানো হয়।"
+
+#: downloads/models.py:128
 msgid "Lower numbers are listed first."
 msgstr "ছোট সংখ্যা আগে দেখানো হয়।"
 
-#: downloads/models.py:121 orders/models.py:71
+#: downloads/models.py:138 orders/models.py:71
 msgid "download"
 msgstr "ডাউনলোড"
+
+#: downloads/models.py:151
+msgid "A premium download needs a price above 0."
+msgstr "প্রিমিয়াম ডাউনলোডের মূল্য 0-এর বেশি হতে হবে।"
 
 #: downloads/views.py:68
 msgid "Downloads: worksheets, PDFs and audio"
@@ -1018,7 +1099,9 @@ msgstr "সব"
 msgid ""
 "Music theory worksheets, PDFs, audio and ZIP bundles. Free ones need only an "
 "account; paid ones are a one-time payment in BDT."
-msgstr "মিউজিক থিওরির ওয়ার্কশিট, PDF, অডিও ও ZIP বান্ডেল। ফ্রিগুলোর জন্য শুধু একটি অ্যাকাউন্ট লাগে; পেইডগুলো টাকায় এককালীন পেমেন্ট।"
+msgstr ""
+"মিউজিক থিওরির ওয়ার্কশিট, PDF, অডিও ও ZIP বান্ডেল। ফ্রিগুলোর জন্য শুধু একটি অ্যাকাউন্ট "
+"লাগে; পেইডগুলো টাকায় এককালীন পেমেন্ট।"
 
 #: downloads/views.py:82 templates/courses/lesson.html:90
 #: templates/downloads/list.html:8 templates/includes/footer.html:16
@@ -1092,101 +1175,101 @@ msgstr ""
 msgid "amount (BDT)"
 msgstr ""
 
-#: orders/models.py:79
+#: orders/models.py:89
 msgid "payment method"
 msgstr ""
 
-#: orders/models.py:84
+#: orders/models.py:94
 msgid "gateway"
 msgstr ""
 
-#: orders/models.py:86
+#: orders/models.py:96
 msgid "gateway reference"
 msgstr ""
 
-#: orders/models.py:90
+#: orders/models.py:100
 msgid "callback token"
 msgstr ""
 
-#: orders/models.py:91
+#: orders/models.py:101
 msgid "paid at"
 msgstr ""
 
-#: orders/models.py:92
+#: orders/models.py:102
 msgid "failure reason"
 msgstr ""
 
-#: orders/models.py:95
+#: orders/models.py:105
 msgid "order"
 msgstr ""
 
-#: orders/models.py:96
+#: orders/models.py:106
 msgid "orders"
 msgstr ""
 
-#: orders/views.py:43
+#: orders/views.py:44
 msgid "Choose a payment method to continue."
 msgstr "চালিয়ে যেতে একটি পেমেন্ট পদ্ধতি বেছে নিন।"
 
-#: orders/views.py:60
+#: orders/views.py:61
 msgid "The payment gateway could not be reached. Please try again."
 msgstr "পেমেন্ট গেটওয়েতে পৌঁছানো যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।"
 
-#: orders/views.py:75 templates/orders/checkout.html:10
+#: orders/views.py:78 templates/orders/checkout.html:10
 msgid "Checkout"
 msgstr "চেকআউট"
 
-#: orders/views.py:90
+#: orders/views.py:93
 msgid "You already have access to this course."
 msgstr "এই কোর্সে আপনার আগে থেকেই অ্যাক্সেস আছে।"
 
-#: orders/views.py:97
+#: orders/views.py:100
 #, python-format
 msgid "%(course)s is required before this course."
 msgstr "এই কোর্সের আগে %(course)s করা প্রয়োজন।"
 
-#: orders/views.py:112
+#: orders/views.py:119
 #, python-format
 msgid "%(count)s module · lifetime access"
 msgid_plural "%(count)s modules · lifetime access"
 msgstr[0] "%(count)sটি মডিউল · আজীবন অ্যাক্সেস"
 msgstr[1] "%(count)sটি মডিউল · আজীবন অ্যাক্সেস"
 
-#: orders/views.py:117 templates/includes/footer.html:13
+#: orders/views.py:124 templates/includes/footer.html:13
 #: templates/includes/masthead.html:18 templates/orders/sandbox.html:19
 msgid "Course"
 msgstr "কোর্স"
 
-#: orders/views.py:133
+#: orders/views.py:144
 msgid "You already own this download."
 msgstr "এই ডাউনলোডটি আপনি আগেই কিনেছেন।"
 
-#: orders/views.py:146 templates/courses/lesson.html:126
-#: templates/includes/download_card.html:22 templates/orders/sandbox.html:19
+#: orders/views.py:157 templates/courses/lesson.html:126
+#: templates/includes/download_card.html:25 templates/orders/sandbox.html:19
 msgid "Download"
 msgstr "ডাউনলোড"
 
-#: orders/views.py:172
+#: orders/views.py:183
 msgid "Payment"
 msgstr "পেমেন্ট"
 
-#: orders/views.py:186 orders/views.py:229
+#: orders/views.py:197 orders/views.py:240
 msgid "The payment did not complete."
 msgstr "পেমেন্ট সম্পন্ন হয়নি।"
 
-#: orders/views.py:218
+#: orders/views.py:229
 msgid "That payment could not be matched to an order."
 msgstr "এই পেমেন্টের সঙ্গে কোনো অর্ডার মেলানো যায়নি।"
 
-#: orders/views.py:223
+#: orders/views.py:234
 msgid "Payment failed."
 msgstr "পেমেন্ট ব্যর্থ হয়েছে।"
 
-#: orders/views.py:224
+#: orders/views.py:235
 msgid "Payment cancelled."
 msgstr "পেমেন্ট বাতিল করা হয়েছে।"
 
-#: orders/views.py:275 templates/orders/receipt.html:12
+#: orders/views.py:286 templates/orders/receipt.html:12
 msgid "Your download is ready"
 msgstr "আপনার ডাউনলোড প্রস্তুত"
 
@@ -1271,10 +1354,6 @@ msgstr ""
 #: pages/models.py:69
 msgid "legal pages"
 msgstr ""
-
-#: pages/models.py:84
-msgid "name"
-msgstr "নাম"
 
 #: pages/models.py:85
 msgid "email"
@@ -1716,37 +1795,32 @@ msgstr "এই মডিউলটি খুলুন"
 msgid "Enrolment"
 msgstr "ভর্তি"
 
-#: templates/courses/detail.html:94 templates/courses/list.html:29
-#: templates/courses/paywall.html:53
-msgid "one-time"
-msgstr "এককালীন"
-
-#: templates/courses/detail.html:98
+#: templates/courses/detail.html:95
 msgid "Go to my courses"
 msgstr "আমার কোর্সে যান"
 
-#: templates/courses/detail.html:100 templates/pages/home.html:15
+#: templates/courses/detail.html:97 templates/pages/home.html:15
 msgid "Enroll now"
 msgstr "এখনই ভর্তি হোন"
 
-#: templates/courses/detail.html:103
+#: templates/courses/detail.html:100
 #, python-format
 msgid "Try Module %(number)s free"
 msgid_plural "Try Modules %(number)s free"
 msgstr[0] "মডিউল %(number)s বিনামূল্যে দেখুন"
 msgstr[1] "মডিউল %(number)s বিনামূল্যে দেখুন"
 
-#: templates/courses/detail.html:107 templates/pages/home.html:137
+#: templates/courses/detail.html:104 templates/pages/home.html:137
 #: templates/pages/home.html:179
 #, python-format
 msgid "Open Module %(number)s"
 msgstr "মডিউল %(number)s খুলুন"
 
-#: templates/courses/detail.html:121
+#: templates/courses/detail.html:118
 msgid "7-day refund if you have completed fewer than two modules."
 msgstr "দুটির কম মডিউল শেষ করলে 7 দিনের মধ্যে রিফান্ড।"
 
-#: templates/courses/detail.html:122
+#: templates/courses/detail.html:119
 msgid "Refund policy"
 msgstr "রিফান্ড নীতি"
 
@@ -1866,11 +1940,11 @@ msgid_plural "Modules %(number)s free"
 msgstr[0] "মডিউল %(number)s বিনামূল্যে"
 msgstr[1] "মডিউল %(number)s বিনামূল্যে"
 
-#: templates/courses/list.html:31
+#: templates/courses/list.html:28
 msgid "View curriculum"
 msgstr "পাঠ্যক্রম দেখুন"
 
-#: templates/courses/list.html:35
+#: templates/courses/list.html:32
 msgid "No courses are published yet."
 msgstr "এখনও কোনো কোর্স প্রকাশিত হয়নি।"
 
@@ -1920,11 +1994,11 @@ msgstr ""
 msgid "Unlock the full course"
 msgstr "পূর্ণ কোর্সটি খুলুন"
 
-#: templates/courses/paywall.html:56
+#: templates/courses/paywall.html:53
 msgid "Enroll and continue"
 msgstr "ভর্তি হয়ে চালিয়ে যান"
 
-#: templates/courses/paywall.html:60
+#: templates/courses/paywall.html:57
 #, python-format
 msgid "Review Module %(number)s again"
 msgstr "মডিউল %(number)s আবার দেখুন"
@@ -2002,7 +2076,9 @@ msgid ""
 "Worksheets, PDFs, audio and ZIP bundles to practise with. Free ones need "
 "only an account. Paid ones are a one-time payment in BDT and stay in My "
 "downloads."
-msgstr "অনুশীলনের জন্য ওয়ার্কশিট, PDF, অডিও ও ZIP বান্ডেল। ফ্রিগুলোর জন্য শুধু একটি অ্যাকাউন্ট লাগে। পেইডগুলো টাকায় এককালীন পেমেন্ট, এবং কেনার পর আমার ডাউনলোডে থেকে যায়।"
+msgstr ""
+"অনুশীলনের জন্য ওয়ার্কশিট, PDF, অডিও ও ZIP বান্ডেল। ফ্রিগুলোর জন্য শুধু একটি অ্যাকাউন্ট "
+"লাগে। পেইডগুলো টাকায় এককালীন পেমেন্ট, এবং কেনার পর আমার ডাউনলোডে থেকে যায়।"
 
 #: templates/downloads/list.html:16
 msgid "Filter downloads by type"
@@ -2017,29 +2093,36 @@ msgstr "এই ধরনের কোনো ডাউনলোড এখনও �
 msgid ""
 "You have not bought any downloads yet. <a href=\"%(list_url)s\">Browse the "
 "downloads</a>; the free ones need no purchase."
-msgstr "আপনি এখনও কোনো ডাউনলোড কেনেননি। <a href=\"%(list_url)s\">ডাউনলোডগুলো দেখুন</a>; ফ্রিগুলো কিনতে হয় না।"
+msgstr ""
+"আপনি এখনও কোনো ডাউনলোড কেনেননি। <a href=\"%(list_url)s\">ডাউনলোডগুলো দেখুন</"
+"a>; ফ্রিগুলো কিনতে হয় না।"
 
 #: templates/includes/captcha_field.html:10
 msgid "Quick check"
 msgstr "ছোট্ট যাচাই"
 
-#: templates/includes/download_card.html:10
+#: templates/includes/course_price.html:11
+#: templates/includes/download_card.html:11
+msgid "Usual price"
+msgstr "সাধারণ মূল্য"
+
+#: templates/includes/download_card.html:12
 msgid "Free"
 msgstr "ফ্রি"
 
-#: templates/includes/download_card.html:23
+#: templates/includes/download_card.html:26
 msgid "Bought · download again at any time"
 msgstr "কেনা হয়েছে · যেকোনো সময় আবার ডাউনলোড করুন"
 
-#: templates/includes/download_card.html:26
+#: templates/includes/download_card.html:29
 msgid "Download free"
 msgstr "ফ্রি ডাউনলোড"
 
-#: templates/includes/download_card.html:26
+#: templates/includes/download_card.html:29
 msgid "Log in to download"
 msgstr "ডাউনলোড করতে লগ ইন করুন"
 
-#: templates/includes/download_card.html:30
+#: templates/includes/download_card.html:33
 #, python-format
 msgid "Buy for %(price)s"
 msgstr "%(price)s দিয়ে কিনুন"
@@ -2138,24 +2221,29 @@ msgstr ""
 msgid "Order summary"
 msgstr "অর্ডারের সারাংশ"
 
-#: templates/orders/checkout.html:55
+#: templates/orders/checkout.html:56
+#, python-format
+msgid "Discount, until %(date)s"
+msgstr "ছাড়, %(date)s পর্যন্ত"
+
+#: templates/orders/checkout.html:65
 msgid "Gateway fee"
 msgstr "গেটওয়ে ফি"
 
-#: templates/orders/checkout.html:55
+#: templates/orders/checkout.html:65
 msgid "Included"
 msgstr "অন্তর্ভুক্ত"
 
-#: templates/orders/checkout.html:59 templates/orders/sandbox.html:22
+#: templates/orders/checkout.html:69 templates/orders/sandbox.html:22
 msgid "Total"
 msgstr "মোট"
 
-#: templates/orders/checkout.html:64
+#: templates/orders/checkout.html:74
 #, python-format
 msgid "Pay %(price)s"
 msgstr "%(price)s পরিশোধ করুন"
 
-#: templates/orders/checkout.html:68
+#: templates/orders/checkout.html:78
 #, python-format
 msgid ""
 "By paying you agree to the <a href=\"%(terms_url)s\">Terms</a> and <a "
@@ -2436,6 +2524,13 @@ msgstr "যোগাযোগ করুন"
 msgid "Last updated %(date)s"
 msgstr "সর্বশেষ হালনাগাদ %(date)s"
 
+#~ msgid "one-time"
+#~ msgstr "এককালীন"
+
+#, python-format
+#~ msgid "Offer ends %(date)s"
+#~ msgstr "অফার শেষ %(date)s"
+
 #, python-format
 #~ msgid "Your %(site)s account"
 #~ msgstr "আপনার %(site)s অ্যাকাউন্ট"
@@ -2583,27 +2678,3 @@ msgstr "সর্বশেষ হালনাগাদ %(date)s"
 #~ "Like it? Enroll once to open all %(total)s modules, with lifetime access."
 #~ msgstr ""
 #~ "ভালো লাগলে একবার ভর্তি হয়ে সব %(total)sটি মডিউল খুলে নিন, আজীবন অ্যাক্সেসসহ।"
-
-#: downloads/models.py:64
-msgid "Free — any signed-in account"
-msgstr "ফ্রি — যেকোনো সাইন-ইন করা অ্যাকাউন্ট"
-
-#: downloads/models.py:65
-msgid "Premium — paid for once"
-msgstr "প্রিমিয়াম — একবার কিনে নিতে হয়"
-
-#: downloads/models.py:120
-msgid ""
-"Premium: what the student pays. Free: optional, shown struck through as the "
-"usual price."
-msgstr ""
-"প্রিমিয়াম: শিক্ষার্থী যা পরিশোধ করবেন। ফ্রি: ঐচ্ছিক, সাধারণ মূল্য হিসেবে কেটে "
-"দেখানো হয়।"
-
-#: downloads/models.py:151
-msgid "A premium download needs a price above 0."
-msgstr "প্রিমিয়াম ডাউনলোডের মূল্য 0-এর বেশি হতে হবে।"
-
-#: templates/includes/download_card.html:11
-msgid "Usual price"
-msgstr "সাধারণ মূল্য"

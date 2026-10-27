@@ -30,6 +30,7 @@ from courses.models import (
     Course,
     LibraryFile,
     Module,
+    Promotion,
     Question,
     Quiz,
 )
@@ -236,9 +237,15 @@ class CoursesView(ManageBase):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         courses = list(
-            Course.objects.annotate(modules_count=Count("modules")).order_by(
-                "position", *columns("title")
+            Course.objects.annotate(modules_count=Count("modules"))
+            .prefetch_related(
+                Prefetch(
+                    "promotions",
+                    queryset=Promotion.objects.running(),
+                    to_attr="running_promotions",
+                )
             )
+            .order_by("position", *columns("title"))
         )
         selected_slug = self.request.GET.get("course")
         selected = next(
@@ -273,6 +280,10 @@ def course_edit(request, slug=None):
         {
             "form": form,
             "course": course,
+            "promotions": (
+                course.promotions.annotate(sales=Count("orders")) if course else []
+            ),
+            "today": timezone.localdate(),
             "section": "courses",
             "counts": nav_counts(),
             "seo": noindex(course.title if course else "New course"),

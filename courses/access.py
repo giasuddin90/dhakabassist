@@ -10,7 +10,7 @@ from django.db.models import Prefetch, Q
 from django.utils.translation import gettext as _
 
 from .i18n import columns
-from .models import Course, Enrollment, Module, ModuleProgress
+from .models import Course, Enrollment, Module, ModuleProgress, Promotion
 
 
 @dataclass(frozen=True)
@@ -177,6 +177,11 @@ def course_queryset():
     One query per relation instead of one per module.
     """
     return Course.objects.select_related("author").prefetch_related(
+        Prefetch(
+            "promotions",
+            queryset=Promotion.objects.running(),
+            to_attr="running_promotions",
+        ),
         Prefetch(
             "modules",
             queryset=Module.objects.prefetch_related(

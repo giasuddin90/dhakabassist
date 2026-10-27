@@ -318,6 +318,12 @@ body.manage {
   gap: 16px;
 }
 
+/* The promotions panel and form, as wide as the course form above them. */
+.course-promotions {
+  max-width: 860px;
+  margin-top: 20px;
+}
+
 /* A translated field: Bangla and English stacked on phones, side by side
    from md up. */
 .lang-pair {
