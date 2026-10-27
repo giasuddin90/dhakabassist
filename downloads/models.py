@@ -1,8 +1,9 @@
 """Downloads sold or given away on their own: worksheets, PDFs, audio and ZIPs.
 
-Separate from the course and its media library. A free download opens to any
-signed-in account; a paid one to a student with a paid `orders.Order` for it.
-Access is read from the orders, so a refund closes it again by itself.
+Separate from the course and its media library. The access flag decides who
+gets the file: a free download opens to any signed-in account, a premium one
+to a student with a paid `orders.Order` for it. Access is read from the
+orders, so a refund closes it again by itself.
 """
 
 from pathlib import Path
@@ -59,6 +60,10 @@ class Download(TimeStampedModel):
         DRAFT = "draft", _("Draft")
         PUBLISHED = "published", _("Published")
 
+    class Access(models.TextChoices):
+        FREE = "free", _("Free — any signed-in account")
+        PREMIUM = "premium", _("Premium — paid for once")
+
     title_bn = models.CharField(_("title (Bangla)"), max_length=200, blank=True)
     title_en = models.CharField(_("title (English)"), max_length=200, blank=True)
     slug = models.SlugField(
@@ -96,13 +101,25 @@ class Download(TimeStampedModel):
         blank=True,
         validators=[FileExtensionValidator(EXTENSIONS)],
     )
+    access = models.CharField(
+        _("access"),
+        max_length=8,
+        choices=Access.choices,
+        default=Access.PREMIUM,
+        db_index=True,
+    )
+    # A free download may still carry a price: it is shown struck through as
+    # the usual price, and never charged.
     price = models.DecimalField(
         _("price (BDT)"),
         max_digits=10,
         decimal_places=2,
         default=0,
         validators=[MinValueValidator(0)],
-        help_text=_("0 makes it free for any signed-in account."),
+        help_text=_(
+            "Premium: what the student pays. Free: optional, shown struck "
+            "through as the usual price."
+        ),
     )
     status = models.CharField(
         _("status"), max_length=12, choices=Status.choices, default=Status.DRAFT
@@ -127,6 +144,11 @@ class Download(TimeStampedModel):
             in_some_language("download", "file"),
             models.CheckConstraint(
                 condition=models.Q(price__gte=0), name="download_price_not_negative"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(access="free") | models.Q(price__gt=0),
+                name="download_premium_has_price",
+                violation_error_message=_("A premium download needs a price above 0."),
             ),
         ]
 
@@ -157,8 +179,13 @@ class Download(TimeStampedModel):
 
     @property
     def is_free(self):
-        """True when any signed-in account may download it."""
-        return self.price == 0
+        """True when any signed-in account may download it, whatever its price."""
+        return self.access == self.Access.FREE
+
+    @property
+    def shows_usual_price(self):
+        """True for a free download with a price to show struck through."""
+        return self.is_free and self.price > 0
 
     @property
     def filename(self):

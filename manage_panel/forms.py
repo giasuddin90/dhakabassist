@@ -195,7 +195,7 @@ class DownloadForm(BilingualFormMixin, forms.ModelForm):
         model = Download
         fields = (
             *bilingual("title"), "slug", "kind", *bilingual("description", "file"),
-            "price", "status", "position",
+            "access", "price", "status", "position",
         )
         widgets = bilingual_widgets(
             description=forms.Textarea(attrs={"rows": 3}),

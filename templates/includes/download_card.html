@@ -7,7 +7,10 @@ free, bought (`download.pk` in `owned`, or `mine` on My downloads) or for sale.
   <div class="download-card__head">
     <span class="file-tag{% if download.kind == 'audio' %} file-tag--audio{% endif %}" aria-hidden="true">{{ download.extension|upper|truncatechars:5 }}</span>
     {% if download.is_free %}
-      <span class="badge badge--status badge--ok">{% translate "Free" %}</span>
+      <span class="download-card__price">
+        {% if download.shows_usual_price %}<s class="muted u-fs-14"><span class="visually-hidden">{% translate "Usual price" %} </span>{{ download.price|taka }}</s>{% endif %}
+        <span class="badge badge--status badge--ok">{% translate "Free" %}</span>
+      </span>
     {% else %}
       <span class="badge badge--status badge--current">{{ download.price|taka }}</span>
     {% endif %}

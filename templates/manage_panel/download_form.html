@@ -43,7 +43,8 @@
     </div>
   </section>
 
-  <section class="panel panel--padded field-grid" aria-label="Price and listing">
+  <section class="panel panel--padded field-grid" aria-label="Access, price and listing">
+    {% include "includes/field.html" with field=form.access %}
     {% include "includes/field.html" with field=form.price %}
     {% include "includes/field.html" with field=form.status %}
     {% include "includes/field.html" with field=form.position %}

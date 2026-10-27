@@ -8,8 +8,9 @@
   <div class="stack u-gap-6">
     <h1>Downloads</h1>
     <p class="manage-head__date">Worksheets, PDFs, audio and ZIPs on the public
-      <a href="{% url 'downloads:list' %}">downloads page</a>. A price of 0 makes one free
-      for any signed-in account; a paid one is unlocked by its order.</p>
+      <a href="{% url 'downloads:list' %}">downloads page</a>. Free ones open to any signed-in
+      account, and a price on one shows struck through as its usual price; premium ones are
+      unlocked by their order.</p>
   </div>
   <a class="btn btn--sm" href="{% url 'manage:download_new' %}">New download</a>
 </header>
@@ -23,6 +24,7 @@
           <tr>
             <th scope="col">Download</th>
             <th scope="col">Type</th>
+            <th scope="col">Access</th>
             <th scope="col">Price</th>
             <th scope="col">Status</th>
             <th scope="col">Sold</th>
@@ -37,7 +39,8 @@
                 <span class="dtable__sub">{{ download.detail_line }}</span>
               </th>
               <td class="u-nowrap">{{ download.get_kind_display }}</td>
-              <td class="u-nowrap">{% if download.is_free %}Free{% else %}{{ download.price|taka }}{% endif %}</td>
+              <td class="u-nowrap">{% if download.is_free %}Free{% else %}Premium{% endif %}</td>
+              <td class="u-nowrap">{% if download.price %}{% if download.is_free %}<s>{{ download.price|taka }}</s>{% else %}{{ download.price|taka }}{% endif %}{% else %}—{% endif %}</td>
               <td>
                 <span class="badge badge--status {% if download.status == 'published' %}badge--ok{% else %}badge--neutral{% endif %}">{{ download.get_status_display }}</span>
               </td>

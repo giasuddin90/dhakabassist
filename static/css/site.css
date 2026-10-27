@@ -2809,6 +2809,13 @@ a.pager__step:hover {
   gap: 12px;
 }
 
+/* A free download's usual price, struck through beside its Free badge. */
+.download-card__price {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .download-card__title {
   font-family: var(--font-display);
   font-size: 22px;

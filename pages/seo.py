@@ -231,7 +231,8 @@ def downloads_schema(downloads, path):
                     "provider": {"@id": absolute("/") + "#organization"},
                     "offers": {
                         "@type": "Offer",
-                        "price": f"{item.price:.0f}",
+                        # What the student pays: a free item's price is only its usual price.
+                        "price": "0" if item.is_free else f"{item.price:.0f}",
                         "priceCurrency": settings.SITE["currency"],
                         "availability": "https://schema.org/InStock",
                         "category": "Free" if item.is_free else "Paid",

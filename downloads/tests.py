@@ -25,12 +25,14 @@ PASSWORD = "quite-a-long-test-password"
 MEDIA = Path(tempfile.mkdtemp())
 
 
-def make_download(title="Major scales worksheet", price=0, **extra):
+def make_download(title="Major scales worksheet", price=0, access=None, **extra):
+    """Free when no price is given, premium otherwise, unless `access` says."""
     defaults = {
         "title_en": title,
         "description_en": "Fill in every major scale.",
         "file_en": SimpleUploadedFile("scales.pdf", b"%PDF-1.4 test"),
         "price": price,
+        "access": access or (Download.Access.PREMIUM if price else Download.Access.FREE),
         "status": Download.Status.PUBLISHED,
     }
     defaults.update(extra)
@@ -49,7 +51,7 @@ def pay_for(student, download, status=Order.Status.PAID):
 
 def json_ld_types(response):
     script = re.search(
-        r'<script type="application/ld\+json">(.*?)</script>', response.content.decode(), re.S
+        r'<script type="application/ld\+json">(.*?)</script>', response.content.decode(), re.DOTALL
     )
     return {node["@type"] for node in json.loads(script.group(1))["@graph"]}
 
@@ -73,6 +75,14 @@ class AccessRuleTests(MediaTestCase):
     def test_a_free_download_is_open_to_any_signed_in_account(self):
         download = make_download()
         self.assertTrue(download.is_available_to(self.student))
+
+    def test_a_free_download_with_a_price_needs_no_order(self):
+        download = make_download(price=300, access=Download.Access.FREE)
+        self.assertTrue(download.is_available_to(self.student))
+
+    def test_a_premium_download_needs_a_price(self):
+        with self.assertRaises(IntegrityError):
+            make_download(price=0, access=Download.Access.PREMIUM)
 
     def test_a_paid_download_needs_a_paid_order(self):
         download = make_download(price=250)
@@ -149,7 +159,9 @@ class FileViewTests(MediaTestCase):
         download = make_download(price=250, status=Download.Status.DRAFT)
         self.client.force_login(self.student)
         self.assertEqual(self.client.get(download.get_file_url()).status_code, 404)
-        staff = User.objects.create_user(email="staff@example.com", password=PASSWORD, is_staff=True)
+        staff = User.objects.create_user(
+            email="staff@example.com", password=PASSWORD, is_staff=True
+        )
         self.client.force_login(staff)
         self.assertEqual(self.client.get(download.get_file_url()).status_code, 200)
 
@@ -202,7 +214,7 @@ class BuyingTests(EnglishPagesMixin, MediaTestCase):
         self.assertRedirects(response, reverse("downloads:mine"), fetch_redirect_response=False)
 
     def test_a_free_download_has_no_checkout(self):
-        free = make_download("Free sheet")
+        free = make_download("Free sheet", price=300, access=Download.Access.FREE)
         response = self.client.post(free.get_buy_url(), {"method": PaymentMethod.NAGAD})
         self.assertRedirects(response, reverse("downloads:list"), fetch_redirect_response=False)
         self.assertFalse(Order.objects.exists())
@@ -246,6 +258,16 @@ class ListPageTests(EnglishPagesMixin, MediaTestCase):
         self.assertContains(response, free.get_file_url())
         self.assertContains(response, paid.get_file_url())
         self.assertNotContains(response, paid.get_buy_url())
+
+    def test_a_free_download_shows_its_usual_price_struck_through(self):
+        free = make_download("Worth having", price=300, access=Download.Access.FREE)
+        self.client.force_login(self.student)
+        response = self.client.get(reverse("downloads:list"))
+        self.assertContains(response, "Usual price")
+        self.assertContains(response, "৳300</s>")
+        self.assertContains(response, "Download free")
+        self.assertNotContains(response, free.get_buy_url())
+        self.assertIn('"price": "0"', response.content.decode())
 
     def test_the_list_is_paginated_and_each_page_has_its_own_canonical(self):
         for number in range(13):
@@ -308,6 +330,7 @@ class ManagePanelTests(MediaTestCase):
                 "title_en": "Chord chart",
                 "kind": Download.Kind.PDF,
                 "file_bn": SimpleUploadedFile("chart.pdf", b"%PDF-1.4"),
+                "access": Download.Access.PREMIUM,
                 "price": "150",
                 "status": Download.Status.PUBLISHED,
                 "position": "0",
@@ -321,9 +344,32 @@ class ManagePanelTests(MediaTestCase):
     def test_a_download_needs_a_file(self):
         response = self.client.post(
             reverse("manage:download_new"),
-            {"title_en": "No file", "kind": "pdf", "price": "0", "status": "draft", "position": "0"},
+            {
+                "title_en": "No file",
+                "kind": "pdf",
+                "access": Download.Access.FREE,
+                "price": "0",
+                "status": "draft",
+                "position": "0",
+            },
         )
         self.assertEqual(response.status_code, 200)
+        self.assertFalse(Download.objects.exists())
+
+    def test_a_premium_download_without_a_price_is_refused(self):
+        response = self.client.post(
+            reverse("manage:download_new"),
+            {
+                "title_en": "Priceless",
+                "kind": "pdf",
+                "file_en": SimpleUploadedFile("p.pdf", b"%PDF-1.4"),
+                "access": Download.Access.PREMIUM,
+                "price": "0",
+                "status": "draft",
+                "position": "0",
+            },
+        )
+        self.assertContains(response, "A premium download needs a price above 0.")
         self.assertFalse(Download.objects.exists())
 
     def test_a_sold_download_cannot_be_deleted(self):

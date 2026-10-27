@@ -993,10 +993,6 @@ msgstr "ভেতরে কী আছে, এক বা দুই বাক্�
 msgid "type"
 msgstr "ধরন"
 
-#: downloads/models.py:105
-msgid "0 makes it free for any signed-in account."
-msgstr "0 দিলে যেকোনো সাইন-ইন করা অ্যাকাউন্টের জন্য ফ্রি।"
-
 #: downloads/models.py:111
 msgid "Lower numbers are listed first."
 msgstr "ছোট সংখ্যা আগে দেখানো হয়।"
@@ -2587,3 +2583,27 @@ msgstr "সর্বশেষ হালনাগাদ %(date)s"
 #~ "Like it? Enroll once to open all %(total)s modules, with lifetime access."
 #~ msgstr ""
 #~ "ভালো লাগলে একবার ভর্তি হয়ে সব %(total)sটি মডিউল খুলে নিন, আজীবন অ্যাক্সেসসহ।"
+
+#: downloads/models.py:64
+msgid "Free — any signed-in account"
+msgstr "ফ্রি — যেকোনো সাইন-ইন করা অ্যাকাউন্ট"
+
+#: downloads/models.py:65
+msgid "Premium — paid for once"
+msgstr "প্রিমিয়াম — একবার কিনে নিতে হয়"
+
+#: downloads/models.py:120
+msgid ""
+"Premium: what the student pays. Free: optional, shown struck through as the "
+"usual price."
+msgstr ""
+"প্রিমিয়াম: শিক্ষার্থী যা পরিশোধ করবেন। ফ্রি: ঐচ্ছিক, সাধারণ মূল্য হিসেবে কেটে "
+"দেখানো হয়।"
+
+#: downloads/models.py:151
+msgid "A premium download needs a price above 0."
+msgstr "প্রিমিয়াম ডাউনলোডের মূল্য 0-এর বেশি হতে হবে।"
+
+#: templates/includes/download_card.html:11
+msgid "Usual price"
+msgstr "সাধারণ মূল্য"

@@ -148,6 +148,9 @@ nothing to do with the media library. Their files live under
 `media/downloads/<slug>/` and go out only through `downloads.views.download_file`,
 which asks `Download.is_available_to`: staff always; any signed-in account for
 a published free download; otherwise only a student with a paid order for it.
+The access flag (`free` or `premium`) decides, not the price: a free download
+may show a struck-through usual price and is never charged, and the database
+refuses a premium download priced at 0 (`download_premium_has_price`).
 Access is read from the order, so refunding it, or changing its status in
 `/manage/`, closes the file again with nothing else to update. A buyer keeps
 the file if staff later unpublish it. A download with orders cannot be
